@@ -1,0 +1,71 @@
+# Reference BIA4 Development Environment in Conda.
+# YU Zhejian based on Prof. Romano's `requirements.txt`.
+# Use `conda env create -f [THIS FILE]` to set up the environment.
+# WARNING: This environment is optimized for Intel CPU.
+# WARNING: This environment assumes presence of NVidia GPU. See comments for details.
+# WARNING: This environment contains YU Zhejian's preference over acceleration and test libraries.
+# WARNING: This environment is HUGE. This means it may consume lots of time to resolve dependencies by Conda, and may take your IDE (pycharm, etc.) a long time to parse the environment.
+# Version 1
+name: BIA4Env
+channels:
+  - conda-forge
+  - anaconda
+  - base
+  - nvidia
+dependencies:
+  # Core libraries
+  - python=3.8
+  - matplotlib>=3.5
+  - napari=0.4 # For 3D TIFF/DICOM images
+  - pydicom=2.3 # For CT/MRI DICOM format
+  - simpleitk=2.1 # For CT/MRI DICOM format
+  - pyqt=5 # Matplotlib plotting backend. If you have Tk you may safely ignore this.
+  - scipy=1.9
+  - numpy=1.23
+  - pandas=1.5
+
+  # general-purposed Image Processing Libraries
+  - pillow=9.2
+  - opencv=4.6
+  - scikit-image=0.19
+
+  # ML Libs
+  - scikit-learn=1.1
+  - scikit-learn-intelex # On Intel Platform for acceleration.
+
+  # Recommended libraries
+  - seaborn=0.11 # A high-level plotting library over matplotlib.
+  - joblib=1.1 # An easy-to-use parallel helper.
+  - tqdm=4.64 # Progress bar.
+  - line_profiler=3.4 # Profile Python code line by line in time.
+  - memory_profiler=0.60 # Profile Python code line by line in memory.
+
+  # Jupyter Notebook Related
+  - ipython
+  - notebook
+  - jupyter
+  - jupytext
+
+  # Sphinx documentation
+  - sphinx
+  - sphinx-book-theme
+  - rst2pdf
+  - myst-parser
+
+  # Pandas acceleration libraries
+  - bottleneck>=1.3.1
+  - numexpr>=2.8
+  - numba>=0.53 # Acceleration by JIT-compiling of Python machine code using LLVM
+  - pyarrow>=6.0.1 # Pandas Parquet/ORC format,also contains accelerated Pandas CSV parser.
+
+  # GPU Support. Comment them out if you do not need them.
+  - cudatoolkit>=11.2
+  - cudnn>=8.1.0
+
+  - pip
+
+  - pip: # ML Libraries prefer pip.
+    - tensorflow~=2.10
+    - keras~=2.10
+    - torch~=1.12
+    - torchvision
