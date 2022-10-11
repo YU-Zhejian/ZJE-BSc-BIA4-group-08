@@ -2,25 +2,8 @@
 # Shell script that counts how many lines of code was written by us.
 # shellcheck disable=SC2086
 
-#!/usr/bin/env bash
-#===============================================================================
-# Copyright (C) 2021. tetgs authors
-#
-# This file is a part of tetgs, which is licensed under MIT,
-# a copy of which can be obtained at <https://opensource.org/licenses/MIT>.
-#
-# NAME: repo_info.sh -- Generate repository information.
-#
-# VERSION HISTORY:
-# 2021-07-15 0.1  : Purposed and added by YU Zhejian, support last commit only.
-# 2021-08-17 0.1  : Author commits, names and e-mail information added.
-# 2021-08-19 0.1  : Author add/delete information added. Cdde line count added.
-#
-#===============================================================================
-
-
 builtin set -ue
-NAME="repo_info.sh"
+NAME="scc.sh"
 VERSION=0.1
 
 # SHDIR="$(dirname "$(readlink -f "${0}")")"
