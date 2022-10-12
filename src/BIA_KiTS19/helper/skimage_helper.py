@@ -9,14 +9,11 @@ def image_mask_slice_to_rgba(
         mask_slice: npt.NDArray
 ) -> npt.NDArray:
     """
-    pass
+    Add marks to image and form a 3D RGBA image.
 
     :param image_slice: A 2-dimension ``npt.NDArray``, representing a slice of the original image.
-    The imaghe should be in ``uint8`` data type.
-    :param mask_slice: A 2-dimension ``npt.NDArray``, representing a slice of the mask.
-    The mask should contain no more than 3 distinct values.
-    :return: A 3-dimension ``npt.NDArray``, representing ``[X, Y, COLOR_CHANNEL]``,
-    whose value would be color level.
+    :param mask_slice: A 2-dimension ``npt.NDArray``, representing a slice of the mask. The mask should contain no more than 3 distinct values.
+    :return: A 3-dimension ``npt.NDArray``, representing ``[X, Y, COLOR_CHANNEL]``, whose value would be color level in ``uint8`` data type..
     """
     if image_slice.shape != mask_slice.shape:
         raise ValueError(f"Shape mismatch image_slice: {image_slice.shape} mask_slice: {mask_slice.shape}")
@@ -67,8 +64,8 @@ def image_mask_to_rgba(
     """
     pass
 
-    :param image_slice: A 2-dimension ``npt.NDArray``, representing the original image.
-    :param mask_slice: A 2-dimension ``npt.NDArray``, representing the mask.
+    :param image: A 2-dimension ``npt.NDArray``, representing the original image.
+    :param mask: A 2-dimension ``npt.NDArray``, representing the mask.
     The mask should contain no more than 3 distinct values.
     :return: A 4-dimension ``npt.NDArray``, representing ``[Z, X, Y, COLOR_CHANNEL]``,
     whose value would be color level.
