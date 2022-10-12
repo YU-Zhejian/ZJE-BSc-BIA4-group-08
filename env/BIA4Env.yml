@@ -12,22 +12,19 @@ channels:
   - anaconda
   - base
   - nvidia
+  - SimpleITK
 dependencies:
   # Core libraries
   - python=3.8
   - matplotlib>=3.5
-  - napari=0.4 # For 3D TIFF/DICOM images
-  - pydicom=2.3 # For CT/MRI DICOM format
-  - simpleitk=2.1 # For CT/MRI DICOM format
+  - simpleitk=2.2 # For CT/MRI DICOM format
   - pyqt=5 # Matplotlib plotting backend. If you have Tk you may safely ignore this.
   - scipy=1.9
   - numpy=1.23
   - pandas=1.5
-  - k3d==2.14
 
   # general-purposed Image Processing Libraries
   - pillow=9.2
-  - opencv=4.6
   - scikit-image=0.19
 
   # ML Libs
@@ -40,6 +37,7 @@ dependencies:
   - tqdm=4.64 # Progress bar.
   - line_profiler=3.4 # Profile Python code line by line in time.
   - memory_profiler=0.60 # Profile Python code line by line in memory.
+  - click # For CLI applications
 
   # Jupyter Notebook Related
   - ipython
@@ -64,6 +62,7 @@ dependencies:
   - cudnn>=8.1.0
 
   - pip
+  - setuptools
 
   - pip: # ML Libraries prefer pip.
     - tensorflow~=2.10

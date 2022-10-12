@@ -13,12 +13,12 @@ class ImageSet:
     """
     Lazy-Evaluated Image set
     """
-    _raw_nifti_image: Optional[sitk.Image] = None
-    _raw_nifti_mask: Optional[sitk.Image] = None
-    _space_resampled_nifti_image: Optional[sitk.Image] = None
-    _space_resampled_nifti_mask: Optional[sitk.Image] = None
-    _space_resampled_np_image: Optional[npt.NDArray] = None
-    _space_resampled_np_mask: Optional[npt.NDArray] = None
+    _raw_nifti_image: Optional[sitk.Image]
+    _raw_nifti_mask: Optional[sitk.Image]
+    _space_resampled_nifti_image: Optional[sitk.Image]
+    _space_resampled_nifti_mask: Optional[sitk.Image]
+    _space_resampled_np_image: Optional[npt.NDArray]
+    _space_resampled_np_mask: Optional[npt.NDArray]
     image_dir: str
 
     def __init__(self, image_dir: str = ""):
@@ -26,6 +26,7 @@ class ImageSet:
         :param image_dir: Directory where cases are saved
         """
         self.image_dir = image_dir
+        self.clear_all_cache()
 
     def _ensure_raw(self, _property_name: str, cache_filename: str):
         if self.__getattribute__(_property_name) is None:
@@ -45,7 +46,7 @@ class ImageSet:
             self,
             cache_property_name: str,
             cache_filename: str,
-            cache_file_loader: Callable[[str], Any],
+            cache_file_reader: Callable[[str], Any],
             cache_file_writer: Callable[[Any, str], None],
             prev_step_property_name: str,
             transform_from_previous_step: Callable[[Any], Any],
@@ -56,7 +57,7 @@ class ImageSet:
 
         :param cache_property_name: Name of property cache.
         :param cache_filename: Name of on-disk cache.
-        :param cache_file_loader: Function that loads the file.
+        :param cache_file_reader: Function that loads the file.
         :param cache_file_writer: Function that writes data to on-disk cache.
         :param prev_step_property_name: Property of previous step.
         :param transform_from_previous_step: Transformer function that transforms data from previous step to this step.
@@ -65,7 +66,7 @@ class ImageSet:
         if self.__getattribute__(cache_property_name) is None:
             _cache_filename = os.path.join(self.image_dir, cache_filename)
             if os.path.exists(_cache_filename):
-                self.__setattr__(cache_property_name, cache_file_loader(_cache_filename))
+                self.__setattr__(cache_property_name, cache_file_reader(_cache_filename))
             else:
                 self.__setattr__(cache_property_name,
                                  transform_from_previous_step(self.__getattribute__(prev_step_property_name)))
@@ -74,47 +75,41 @@ class ImageSet:
 
     @property
     def space_resampled_nifti_image(self) -> sitk.Image:
-        return self._ensure(
-            cache_property_name="_space_resampled_nifti_image",
-            cache_filename="imaging_space_resampled.nii.gz",
-            cache_file_loader=sitk.ReadImage,
-            cache_file_writer=sitk.WriteImage,
-            prev_step_property_name="raw_nifti_image",
-            transform_from_previous_step=sitk_helper.resample_spacing
-        )
+        return self._ensure(cache_property_name="_space_resampled_nifti_image",
+                            cache_filename="imaging_space_resampled.nii.gz", cache_file_reader=sitk.ReadImage,
+                            cache_file_writer=sitk.WriteImage, prev_step_property_name="raw_nifti_image",
+                            transform_from_previous_step=sitk_helper.resample_spacing)
 
     @property
     def space_resampled_nifti_mask(self) -> sitk.Image:
-        return self._ensure(
-            cache_property_name="_space_resampled_nifti_mask",
-            cache_filename="mask_space_resampled.nii.gz",
-            cache_file_loader=sitk.ReadImage,
-            cache_file_writer=sitk.WriteImage,
-            prev_step_property_name="raw_nifti_mask",
-            transform_from_previous_step=sitk_helper.resample_spacing
-        )
+        return self._ensure(cache_property_name="_space_resampled_nifti_mask",
+                            cache_filename="mask_space_resampled.nii.gz", cache_file_reader=sitk.ReadImage,
+                            cache_file_writer=sitk.WriteImage, prev_step_property_name="raw_nifti_mask",
+                            transform_from_previous_step=sitk_helper.resample_spacing)
 
     @property
     def space_resampled_np_image(self) -> npt.NDArray:
-        return self._ensure(
-            cache_property_name="_space_resampled_np_image",
-            cache_filename="imaging_space_resampled.npy",
-            cache_file_loader=np.load,
-            cache_file_writer=np.save,
-            prev_step_property_name="space_resampled_nifti_image",
-            transform_from_previous_step=sitk.GetArrayViewFromImage
-        )
+        return self._ensure(cache_property_name="_space_resampled_np_image",
+                            cache_filename="imaging_space_resampled.npy", cache_file_reader=np.load,
+                            cache_file_writer=lambda data, file_name: np.save(file_name, data),
+                            prev_step_property_name="space_resampled_nifti_image",
+                            transform_from_previous_step=sitk.GetArrayViewFromImage)
 
     @property
     def space_resampled_np_mask(self) -> npt.NDArray:
-        return self._ensure(
-            cache_property_name="_space_resampled_np_mask",
-            cache_filename="mask_space_resampled.npy",
-            cache_file_loader=np.load,
-            cache_file_writer=np.save,
-            prev_step_property_name="space_resampled_nifti_mask",
-            transform_from_previous_step=sitk.GetArrayViewFromImage
-        )
+        return self._ensure(cache_property_name="_space_resampled_np_mask", cache_filename="mask_space_resampled.npy",
+                            cache_file_reader=np.load,
+                            cache_file_writer=lambda data, file_name: np.save(file_name, data),
+                            prev_step_property_name="space_resampled_nifti_mask",
+                            transform_from_previous_step=sitk.GetArrayViewFromImage)
+
+    def clear_all_cache(self):
+        self._raw_nifti_image = None
+        self._raw_nifti_mask = None
+        self._space_resampled_nifti_image = None
+        self._space_resampled_nifti_mask = None
+        self._space_resampled_np_image = None
+        self._space_resampled_np_mask = None
 
 
 class DataSet:
