@@ -12,13 +12,13 @@ def rgb_to_hex(r: int, g: int, b: int) -> int:
 def image_to_k3d_points(
         image: npt.NDArray
 ) -> k3d.objects.Points:
-    positions = np.array(list(itertools.product(
-        *map(range, image.shape)
-    )))
-    opacities = image.ravel()
+    positions = list(itertools.product(
+        *map(np.arange, image.shape)
+    ))
+    opacities = image.ravel() / 256
     return k3d.points(
         positions=positions,
-        colors=0xffffff,
+        color=0xffffff,
         opacities=opacities
     )
 
