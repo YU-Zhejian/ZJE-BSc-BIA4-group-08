@@ -8,6 +8,7 @@
       <excludeFolder url="file://$MODULE_DIR$/doc/_build" />
       <excludeFolder url="file://$MODULE_DIR$/doc/_root" />
       <excludeFolder url="file://$MODULE_DIR$/doc/_templates" />
+      <excludeFolder url="file://$MODULE_DIR$/src/ipynb/.ipynb_checkpoints" />
     </content>
     <orderEntry type="jdk" jdkName="Python 3.8 (BIA4Env)" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />

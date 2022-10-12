@@ -13,6 +13,7 @@
 # ---
 
 # %%
+# Development Block which can be safely ignored.
 # %load_ext autoreload
 # %autoreload 2
 import os
@@ -21,31 +22,65 @@ import sys
 THIS_DIR_PATH = os.path.abspath(globals()["_dh"][0])
 sys.path.insert(0, os.path.dirname(THIS_DIR_PATH))
 
+# %% [markdown]
+# # Examples of BIA_KiTS19 Data Pre-Processing Infrastructure
+#
+# Here contains some examples on how to use the infrastructure.
+#
+# We would first import important libraries.
+
 # %%
+# Import some SKLearn acceleration libraries
 try:
     import sklearnex
 
     sklearnex.patch_sklearn()
 except ImportError:
-    pass
+    sklearnex = None
 
 import numpy as np
 import skimage
 import skimage.exposure as skiexp
 import skimage.filters as skifilt
 
+# Import the infrastructure
 from BIA_KiTS19.helper import dataset_helper
 from BIA_KiTS19.helper import matplotlib_helper
 from BIA_KiTS19.helper import skimage_helper
 
+# %% [markdown]
+# ## Loading DataSet
+#
+# The `dataset_helper.DataSet` infrastructure automatically loads, processes and caches CT data in NIFTI into images stored in 3d `npt.NDArray[float]`.
+
 # %%
 dataset = dataset_helper.DataSet("/media/yuzj/BUP/kits19/data")
+
+# %% [markdown]
+# Print the name of top 10 dataset. The `dataset.iter_case_names()` method would create an iterable which iterates case names. For example:
+#
+# ```python
+# from typing import List
+# from BIA_KiTS19.helper import dataset_helper
+#
+# dataset: dataset_helper.DataSet = None
+# dataset_case_names: List[str] = list(dataset.iter_case_names())
+# dataset_image_sets: List[dataset_helper.ImageSet] = list(dataset)
+# ```
+#
+# would load all `dataset_helper.ImageSet` inside the dataset.
 
 # %%
 list(dataset.iter_case_names())[0:10]
 
+# %% [markdown]
+# Noe we load the first dataset.
+
 # %%
 case1 = dataset["/media/yuzj/BUP/kits19/data/case_00001/"]
+
+# %% [markdown]
+# Pre-processed image ikn numpy format would be automatically loaded (or processed and loaded) using `space_resampled_np_image` and `space_resampled_np_mask` properties.
 
 # %%
 case1_img, case1_mask = case1.space_resampled_np_image, case1.space_resampled_np_mask
@@ -53,11 +88,17 @@ case1_img, case1_mask = case1.space_resampled_np_image, case1.space_resampled_np
 # %%
 case1_img.shape, case1_mask.shape
 
+# %% [markdown]
+# Use `matplotlib_helper.plot_3d_rgba` to plot several slices of the image on some axis.
+
 # %%
 matplotlib_helper.plot_3d_rgba(case1_img, axis=1)
 
 # %%
 matplotlib_helper.plot_3d_rgba(case1_mask, axis=0)
+
+# %% [markdown]
+# Add masks to images and plot them.
 
 # %%
 case1_rgba = skimage_helper.image_mask_to_rgba(case1_img, case1_mask)

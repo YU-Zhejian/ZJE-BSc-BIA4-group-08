@@ -1,3 +1,7 @@
+"""
+Helpers related to SimpleITK (sitk) libraries for data preprocessing.
+"""
+
 import glob
 import os.path
 from typing import Tuple

@@ -1,3 +1,7 @@
+"""
+The DataSet Abstraction
+"""
+
 import glob
 import os
 from typing import Dict, Optional, Iterable, Callable, Any

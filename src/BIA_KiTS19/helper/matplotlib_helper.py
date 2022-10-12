@@ -1,3 +1,8 @@
+"""
+Helper function in visualization of explorization and preprocessing steps.
+"""
+from typing import Union
+
 import matplotlib.pyplot as plt
 import numpy as np
 import numpy.typing as npt
@@ -5,14 +10,28 @@ import numpy.typing as npt
 from BIA_KiTS19.helper import skimage_helper
 
 EMPTY_IMG = np.zeros((1, 1), dtype="uint8")
+"""An 1*1 empty image"""
 
 
 def plot_3d_rgba(
         img_3d_rgba: npt.NDArray,
         num_slices: int = 9,
         ncols: int = 3,
-        axis: int = 0
+        axis: int = 0,
+        width: Union[int, float] = 10
 ):
+    """
+    Slice and plot 3d greyscale, RGB or RGBA images.
+
+    Coloring: If the image is greyscale, the color map would be `"bone"`. Otherwise, would show an RGB image on black
+    background.
+
+    :param img_3d_rgba: 3d greyscale, RGB or RGBA images
+    :param num_slices: Number of slices to take. Recommended to be a
+    :param ncols: Number oif columns. Recommended to be less than 5.
+    :param axis: Axis to be sliced. Can be `0`, `1` or `2`.
+    :param width: Width of produced image in inches.
+    """
     z_len = img_3d_rgba.shape[axis]
     step = z_len // num_slices
     downsampled_img = skimage_helper.sample_along(
@@ -44,7 +63,7 @@ def plot_3d_rgba(
         else:
             ax.imshow(downsampled_img[index], cmap=cmap)
     ds_len, ds_wid = downsampled_img[0].shape[0:2]
-    fig.set_size_inches(10, 10 * ds_len / ds_wid)
+    fig.set_size_inches(width, width * ds_len / ds_wid)
 
 
 def plot_histogram(
@@ -59,7 +78,8 @@ def plot_histogram(
 
     :param img: image to be plotted
     :param num_bins: number of bins in the histogram
-    :param show_img: if True, the image is plotted
+    :param show_img: if True, the image is plotted alongside the histograms. Require the image to be a 2d greyscale,
+    RGB or RGBA image.
     :param log: if True, the histogram is plotted in log scale
     :param cumulative: if True, show cumulative histogram
     """

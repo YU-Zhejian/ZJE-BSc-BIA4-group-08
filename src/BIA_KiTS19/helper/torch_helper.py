@@ -1,3 +1,7 @@
+"""
+Utility functions and tools for pytorch.
+"""
+
 from typing import Dict
 
 import torch.utils.data as tud
@@ -6,6 +10,10 @@ from BIA_KiTS19.helper import dataset_helper
 
 
 class KiTS19DataSet(tud.Dataset):
+    """
+    The KiTS19 dataset in a `pytorch` manner.
+    """
+
     def __getitem__(self, index: int) -> dataset_helper.ImageSet:
         return self._dataset[index]
 

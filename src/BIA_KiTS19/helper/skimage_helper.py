@@ -1,6 +1,7 @@
 import numpy as np
 import numpy.typing as npt
 
+
 def sample_along(
         img: npt.NDArray,
         axis: int = 0,
@@ -8,6 +9,16 @@ def sample_along(
         end: int = -1,
         step: int = 1
 ) -> npt.NDArray:
+    """
+    Sample an image alongside an axis.
+
+    :param img: A 2D/3D greyscale/RGB/RGBA image
+    :param axis: Axis to be sampled. `0` or `1` for 2D image, `0`, `1` or `2` for 3D image.
+    :param start: Sample start.
+    :param end: Sample end. Use `-1` to make it the end of the image.
+    :param step: Sample step.
+    :return: Sampled image in `npt.NDArray`, which can be considered an array of image strips/ slices.
+    """
     if end == -1:
         end = img.shape[axis]
     return np.moveaxis(img.take(indices=np.arange(start, end, step), axis=axis), axis, 0)
@@ -24,7 +35,7 @@ def image_mask_to_rgba(
         mask: npt.NDArray
 ) -> npt.NDArray:
     """
-    pass
+    Merge existing 3D CT image and mask into an RGBA image.
 
     :param image: A 3-dimension ``npt.NDArray``, representing the original image.
     :param mask: A 3-dimension ``npt.NDArray``, representing the mask. The mask should contain no more than 3 distinct values.
@@ -55,4 +66,5 @@ def is_img_rgb(img: npt.NDArray) -> bool:
 
 
 def dice(mask_1: npt.NDArray, mask_2: npt.NDArray):
+    """Get similarity between 2 masks"""
     return np.sum(mask_1 == mask_2) / np.product(mask_1.size)
