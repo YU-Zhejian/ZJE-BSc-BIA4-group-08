@@ -80,10 +80,10 @@ list(dataset.iter_case_names())[0:10]
 case1 = dataset["/media/yuzj/BUP/kits19/data/case_00001/"]
 
 # %% [markdown]
-# Pre-processed image ikn numpy format would be automatically loaded (or processed and loaded) using `space_resampled_np_image` and `space_resampled_np_mask` properties.
+# Pre-processed image ikn numpy format would be automatically loaded (or processed and loaded) using `np_image_final` and `np_mask_final` properties.
 
 # %%
-case1_img, case1_mask = case1.space_resampled_np_image, case1.space_resampled_np_mask
+case1_img, case1_mask = case1.np_image_final, case1.np_mask_final
 
 # %%
 case1_img.shape, case1_mask.shape

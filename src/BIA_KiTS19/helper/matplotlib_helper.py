@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import numpy.typing as npt
 
-from BIA_KiTS19.helper import skimage_helper
+from BIA_KiTS19.helper import skimage_helper, ndarray_helper
 
 EMPTY_IMG = np.zeros((1, 1), dtype="uint8")
 """An 1*1 empty image"""
@@ -34,7 +34,7 @@ def plot_3d_rgba(
     """
     z_len = img_3d_rgba.shape[axis]
     step = z_len // num_slices
-    downsampled_img = skimage_helper.sample_along(
+    downsampled_img = ndarray_helper.sample_along(
         img=img_3d_rgba,
         start=0,
         end=z_len,

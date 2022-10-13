@@ -7,8 +7,8 @@ from BIA_KiTS19.helper import dataset_helper
 
 
 def _ensure_np_image(image_set: dataset_helper.ImageSet):
-    _ = image_set.space_resampled_np_image
-    _ = image_set.space_resampled_np_mask
+    _ = image_set.np_image_final
+    _ = image_set.np_mask_final
     image_set.clear_all_cache()
 
 

@@ -1,33 +1,12 @@
 import numpy as np
 import numpy.typing as npt
 
+__all__ = (
+    "image_mask_to_rgba",
+    "is_img_rgb"
+)
 
-def sample_along(
-        img: npt.NDArray,
-        axis: int = 0,
-        start: int = 0,
-        end: int = -1,
-        step: int = 1
-) -> npt.NDArray:
-    """
-    Sample an image alongside an axis.
-
-    :param img: A 2D/3D greyscale/RGB/RGBA image
-    :param axis: Axis to be sampled. `0` or `1` for 2D image, `0`, `1` or `2` for 3D image.
-    :param start: Sample start.
-    :param end: Sample end. Use `-1` to make it the end of the image.
-    :param step: Sample step.
-    :return: Sampled image in `npt.NDArray`, which can be considered an array of image strips/ slices.
-    """
-    if end == -1:
-        end = img.shape[axis]
-    return np.moveaxis(img.take(indices=np.arange(start, end, step), axis=axis), axis, 0)
-
-
-def scale(x, out_range=(0, 1)):
-    domain = np.min(x), np.max(x)
-    y = (x - (domain[1] + domain[0]) / 2) / (domain[1] - domain[0])
-    return y * (out_range[1] - out_range[0]) + (out_range[1] + out_range[0]) / 2
+import BIA_KiTS19.helper.ndarray_helper
 
 
 def image_mask_to_rgba(
@@ -51,7 +30,7 @@ def image_mask_to_rgba(
     image_rgba[:, :, :, 1] = np.array(255 * (mask == colors[1]), dtype=int)
     image_rgba[:, :, :, 2] = np.array(255 * (mask == colors[2]), dtype=int)
     image_rgba[:, :, :, 3] = np.array(
-        255 * scale(image),
+        255 * BIA_KiTS19.helper.ndarray_helper.scale_np_array(image),
         dtype=int
     )
     return image_rgba
@@ -63,8 +42,3 @@ def is_img_rgb(img: npt.NDArray) -> bool:
         return True
     else:
         return False
-
-
-def dice(mask_1: npt.NDArray, mask_2: npt.NDArray):
-    """Get similarity between 2 masks"""
-    return np.sum(mask_1 == mask_2) / np.product(mask_1.size)
