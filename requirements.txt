@@ -11,3 +11,5 @@ matplotlib~=3.6.1
 torchvision~=0.13.1
 
 pillow~=9.2.0
+
+joblib~=1.1.1

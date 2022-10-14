@@ -34,13 +34,7 @@ def plot_3d_rgba(
     """
     z_len = img_3d_rgba.shape[axis]
     step = z_len // num_slices
-    downsampled_img = ndarray_helper.sample_along(
-        img=img_3d_rgba,
-        start=0,
-        end=z_len,
-        step=step,
-        axis=axis
-    )
+    downsampled_img = ndarray_helper.sample_along_np(array=img_3d_rgba, axis=axis, start=0, end=z_len, step=step)
     axs: npt.NDArray[plt.Axes]
     fig: plt.Figure
     fig, axs = plt.subplots(nrows=num_slices // ncols, ncols=ncols)

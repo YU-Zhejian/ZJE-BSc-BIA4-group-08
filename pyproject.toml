@@ -1,0 +1,34 @@
+[build-system]
+requires = [
+    "setuptools",
+    "wheel",
+    "cython",
+]
+build-backend = "setuptools.build_meta"
+
+
+[tool.pytest.ini_options]
+addopts = "-vv --continue-on-collection-errors 	--junitxml=pytest/junit.xml --cov --cov-report=html --html=pytest/pytest_report.html --self-contained-html"
+testpaths = "test"
+log_level = 8
+log_file = "log/pytest.log"
+log_file_level = 8
+log_cli = false
+junit_logging = "all"
+junit_log_passing_tests = true
+junit_duration_report = "call"
+
+[tool.coverage.run]
+source = [
+    "src",
+]
+# plugins = Cython.Coverage
+omit = [
+    "*/scripts/*",
+]
+
+[tool.coverage.report]
+skip_empty = true
+
+[tool.coverage.html]
+directory = "pytest/cov_html"

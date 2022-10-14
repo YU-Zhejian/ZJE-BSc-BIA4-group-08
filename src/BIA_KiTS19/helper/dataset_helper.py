@@ -1,19 +1,29 @@
 """
 The DataSet Abstraction
 """
+__all__ = (
+    "AbstractCachedLazyEvaluatedLinkedChain",
+    "ImageSet",
+    "DataSet"
+)
 
+import gc
 import glob
 import os
 from typing import Dict, Optional, Iterable, Callable, Any, TypeVar, Tuple
 
 import SimpleITK as sitk
-import numpy as np
 import numpy.typing as npt
 import skimage.transform as skitrans
+import torch
 
+from BIA_KiTS19 import get_lh
+from BIA_KiTS19.helper import io_helper
 from BIA_KiTS19.helper import sitk_helper, converter
 
 _CacheType = TypeVar("_CacheType")
+
+_lh = get_lh(__name__)
 
 
 class AbstractCachedLazyEvaluatedLinkedChain:
@@ -38,11 +48,16 @@ class AbstractCachedLazyEvaluatedLinkedChain:
         :param cache_file_reader: Function that loads the file.
         :return: The desired property, initialized.
         """
+        _lh.debug("Request property %s", cache_property_name)
         if self.__getattribute__(cache_property_name) is None:
+            _lh.debug("Request property %s -- Load from %s", cache_property_name, cache_filename)
             if os.path.exists(cache_filename):
                 self.__setattr__(cache_property_name, cache_file_reader(cache_filename))
+                _lh.debug("Request property %s -- Load from %s FIN", cache_property_name, cache_filename)
             else:
+                _lh.debug("Request property %s -- Load from %s ERR", cache_property_name, cache_filename)
                 raise FileNotFoundError(f"Read desired property {cache_property_name} from {cache_filename} failed")
+        _lh.debug("Request property %s FIN", cache_property_name)
         return self.__getattribute__(cache_property_name)
 
     def _ensure_from_previous_step(
@@ -60,11 +75,15 @@ class AbstractCachedLazyEvaluatedLinkedChain:
         :param transform_from_previous_step: Transformer function that transforms data from previous step to this step.
         :return: The desired property, initialized.
         """
+        _lh.debug("Request property %s", cache_property_name)
         if self.__getattribute__(cache_property_name) is None:
+            _lh.debug("Request property %s -- generate from %s", cache_property_name, prev_step_property_name)
             self.__setattr__(
                 cache_property_name,
                 transform_from_previous_step(self.__getattribute__(prev_step_property_name))
             )
+            _lh.debug("Request property %s -- generate from %s FIN", cache_property_name, prev_step_property_name)
+        _lh.debug("Request property %s FIN", cache_property_name)
         return self.__getattribute__(cache_property_name)
 
     def _ensure_from_cache_and_previous_step(
@@ -89,18 +108,20 @@ class AbstractCachedLazyEvaluatedLinkedChain:
         :return: The desired property, initialized.
         """
         try:
-            _property = self._ensure_from_cache_file(
+            _property: _CacheType = self._ensure_from_cache_file(
                 cache_property_name,
                 cache_filename,
                 cache_file_reader
             )
         except FileNotFoundError:
-            _property = self._ensure_from_previous_step(
+            _property: _CacheType = self._ensure_from_previous_step(
                 cache_property_name,
                 prev_step_property_name,
                 transform_from_previous_step
             )
+            _lh.debug("Request property %s -- save to %s", cache_property_name, cache_filename)
             cache_file_writer(_property, cache_filename)
+            _lh.debug("Request property %s -- save to %s FIN", cache_property_name, cache_filename)
         return _property
 
 
@@ -116,8 +137,11 @@ class ImageSet(AbstractCachedLazyEvaluatedLinkedChain):
     _space_resampled_np_mask: Optional[npt.NDArray[float]]
     _rescaled_np_image: Optional[npt.NDArray[float]]
     _rescaled_np_mask: Optional[npt.NDArray[float]]
+    _tensor_image: Optional[torch.Tensor]
+    _tensor_mask: Optional[torch.Tensor]
     image_dir: str
     """Directory where cases are saved"""
+    case_name: str
 
     def __init__(self, image_dir: str = ""):
         """
@@ -125,6 +149,7 @@ class ImageSet(AbstractCachedLazyEvaluatedLinkedChain):
         """
         self.image_dir = image_dir
         self.clear_all_cache()
+        self.case_name = os.path.basename(self.image_dir.strip(os.path.sep))
 
     @property
     def raw_nifti_image(self) -> sitk.Image:
@@ -134,6 +159,12 @@ class ImageSet(AbstractCachedLazyEvaluatedLinkedChain):
             cache_filename=os.path.join(self.image_dir, "imaging.nii.gz"),
             cache_file_reader=sitk.ReadImage
         )
+
+    def __repr__(self):
+        return f"{self.__class__.__name__} at {self.case_name}"
+
+    def __str__(self):
+        return repr(self)
 
     @property
     def raw_nifti_mask(self) -> sitk.Image:
@@ -167,53 +198,83 @@ class ImageSet(AbstractCachedLazyEvaluatedLinkedChain):
             prev_step_property_name="raw_nifti_mask",
             transform_from_previous_step=sitk_helper.resample_spacing
         )
+
     @property
     def space_resampled_np_image(self) -> npt.NDArray[float]:
-        """The image in ``npt.NDArray.``, whose spacing was sampled to 1mm*1mm*1mm."""
+        """The image in ``npt.NDArray.``, whose spacing was sampled to 1mm*1mm*1mm with values in ``[0.0, 1.0]``"""
         return self._ensure_from_cache_and_previous_step(
             cache_property_name="_space_resampled_np_image",
-            cache_filename=os.path.join(self.image_dir, "imaging_space_resampled.npy"),
-            cache_file_reader=np.load,
-            cache_file_writer=lambda data, file_name: np.save(file_name, data),
+            cache_filename=os.path.join(self.image_dir, "imaging_space_resampled.npy.xz"),
+            cache_file_reader=io_helper.read_np_xz,
+            cache_file_writer=io_helper.save_np_xz,
             prev_step_property_name="space_resampled_nifti_image",
             transform_from_previous_step=converter.sitk_to_normalized_np
         )
 
     @property
     def space_resampled_np_mask(self) -> npt.NDArray[float]:
-        """The mask in ``npt.NDArray.``, whose spacing was sampled to 1mm*1mm*1mm."""
+        """The mask in ``npt.NDArray.``, whose spacing was sampled to 1mm*1mm*1mm with unique ``(0, 1, 2)``"""
         return self._ensure_from_cache_and_previous_step(
             cache_property_name="_space_resampled_np_mask",
-            cache_filename=os.path.join(self.image_dir, "mask_space_resampled.npy"),
-            cache_file_reader=np.load,
-            cache_file_writer=lambda data, file_name: np.save(file_name, data),
+            cache_filename=os.path.join(self.image_dir, "mask_space_resampled.npy.xz"),
+            cache_file_reader=io_helper.read_np_xz,
+            cache_file_writer=io_helper.save_np_xz,
             prev_step_property_name="space_resampled_nifti_mask",
-            transform_from_previous_step=converter.sitk_to_normalized_np
+            transform_from_previous_step=lambda img: converter.sitk_to_np(img, dtype=int)
         )
 
     @property
     def rescaled_np_image(self) -> npt.NDArray[float]:
+        """3D Numpy arrays of shape ``(128, 128, 80)`` with values in ``[0.0, 1.0]``"""
         return self._ensure_from_cache_and_previous_step(
             cache_property_name="_rescaled_np_image",
-            cache_filename=os.path.join(self.image_dir, "image_rescaled.npy"),
-            cache_file_reader=np.load,
-            cache_file_writer=lambda data, file_name: np.save(file_name, data),
+            cache_filename=os.path.join(self.image_dir, "image_rescaled.npy.xz"),
+            cache_file_reader=io_helper.read_np_xz,
+            cache_file_writer=io_helper.save_np_xz,
             prev_step_property_name="space_resampled_np_image",
-            transform_from_previous_step=lambda image: skitrans.resize(image, output_shape=(128,128,80))
+            transform_from_previous_step=lambda image: skitrans.resize(image, output_shape=(256, 256, 160))
         )
 
     @property
     def rescaled_np_mask(self) -> npt.NDArray[float]:
+        """3D Numpy arrays of shape ``(128, 128, 80)`` with unique ``(0.0, 0.5, 1.0)``"""
         return self._ensure_from_cache_and_previous_step(
             cache_property_name="_rescaled_np_mask",
-            cache_filename=os.path.join(self.image_dir, "mask_rescaled.npy"),
-            cache_file_reader=np.load,
-            cache_file_writer=lambda data, file_name: np.save(file_name, data),
-            prev_step_property_name="space_resampled_np_image",
-            transform_from_previous_step=lambda image: skitrans.resize(image, output_shape=(128, 128, 80))
+            cache_filename=os.path.join(self.image_dir, "mask_rescaled.npy.xz"),
+            cache_file_reader=io_helper.read_np_xz,
+            cache_file_writer=io_helper.save_np_xz,
+            prev_step_property_name="space_resampled_np_mask",
+            transform_from_previous_step=lambda image: skitrans.resize(
+                image,
+                order=0,
+                output_shape=(256, 256, 160),
+                preserve_range=True
+            )
         )
 
+    @property
+    def tensor_image(self) -> torch.Tensor:
+        """3D pytorch Tensor of shape ``(128, 128, 80)`` with values in ``[0.0, 1.0]``"""
+        return self._ensure_from_cache_and_previous_step(
+            cache_property_name="_tensor_image",
+            cache_filename=os.path.join(self.image_dir, "tensor_image.pt.xz"),
+            cache_file_reader=io_helper.read_tensor_xz,
+            cache_file_writer=io_helper.save_tensor_xz,
+            prev_step_property_name="rescaled_np_image",
+            transform_from_previous_step=torch.Tensor
+        )
 
+    @property
+    def tensor_mask(self) -> torch.Tensor:
+        """4D pytorch Tensor of shape ``(128, 128, 80, 3)`` with unique ``(0.0, 1.0)``"""
+        return self._ensure_from_cache_and_previous_step(
+            cache_property_name="_tensor_mask",
+            cache_filename=os.path.join(self.image_dir, "tensor_mask.pt.xz"),
+            cache_file_reader=io_helper.read_tensor_xz,
+            cache_file_writer=io_helper.save_tensor_xz,
+            prev_step_property_name="rescaled_np_mask",
+            transform_from_previous_step=lambda mask: torch.Tensor(converter.mask_3d_to_4d(mask))
+        )
 
     @property
     def np_image_final(self) -> npt.NDArray[float]:
@@ -222,6 +283,14 @@ class ImageSet(AbstractCachedLazyEvaluatedLinkedChain):
     @property
     def np_mask_final(self) -> npt.NDArray[float]:
         return self.rescaled_np_mask
+
+    @property
+    def tensor_image_final(self) -> torch.Tensor:
+        return self.tensor_image
+
+    @property
+    def tensor_mask_final(self) -> torch.Tensor:
+        return self.tensor_mask
 
     def clear_all_cache(self):
         """Clear all cache to save memory."""
@@ -233,6 +302,9 @@ class ImageSet(AbstractCachedLazyEvaluatedLinkedChain):
         self._space_resampled_np_mask = None
         self._rescaled_np_image = None
         self._rescaled_np_mask = None
+        self._tensor_image = None
+        self._tensor_mask = None
+        gc.collect()
 
 
 class DataSet:
