@@ -28,7 +28,7 @@ def _ensure_np_image(image_set: dataset_helper.ImageSet):
 def main(data_dir: str):
     _lh.info("Loading dataset at %s", data_dir)
     dataset = dataset_helper.DataSet(data_dir=data_dir)
-    _ = list(joblib_helper.parallel_map(_ensure_np_image, tqdm.tqdm(iterable=dataset)))
+    _ = list(joblib_helper.parallel_map(_ensure_np_image, tqdm.tqdm(iterable=dataset), n_jobs=10))
     _lh.info("Loading dataset at %s FIN", data_dir)
 
 

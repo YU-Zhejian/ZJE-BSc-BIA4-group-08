@@ -1,6 +1,12 @@
 """
 Helper function in visualization of explorization and preprocessing steps.
 """
+
+__all__ = (
+    "plot_3d_rgba",
+    "plot_histogram"
+)
+
 from typing import Union
 
 import matplotlib.pyplot as plt

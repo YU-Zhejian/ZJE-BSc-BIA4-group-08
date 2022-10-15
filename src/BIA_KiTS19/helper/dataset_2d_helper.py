@@ -1,3 +1,0 @@
-class DataSet2D:
-    def __init__(self, data_dir: str):
-        ...

@@ -59,18 +59,6 @@ def sample_along_tensor(
     return torch.moveaxis(array.index_select(index=torch.arange(start, end, step), dim=axis), axis, 0)
 
 
-def merge_along_np(
-        array: Iterable[npt.NDArray[Any]],
-        axis: int = 0,
-) -> npt.NDArray[Any]:
-    imgs_list = list(array)
-    first_img = imgs_list[0]
-    merged_array = np.ndarray(shape=(len(imgs_list), *first_img.shape), dtype=first_img.dtype)
-    for i, img in enumerate(imgs_list):
-        merged_array[i, ...] = img
-    return np.moveaxis(merged_array, 0, axis)
-
-
 def scale_np_array(x: npt.NDArray[Union[int, float]], out_range: Tuple[int, int] = (0, 1)):
     domain = np.min(x), np.max(x)
     y = (x - (domain[1] + domain[0]) / 2) / (domain[1] - domain[0])
@@ -84,5 +72,15 @@ def scale_torch_array(x: torch.Tensor, out_range: Tuple[int, int] = (0, 1)):
 
 
 def describe(array: Union[npt.NDArray[Union[float, int]], torch.Tensor]) -> str:
-    _quantiles = list(map(lambda f: f"{f:.2f}", np.quantile(array, q=[0, 0.25, 0.5, 0.75, 1])))
-    return f"{type(array).__name__}[{array.dtype}] with shape={array.shape}; quantiles={_quantiles}"
+    q = [0, 0.25, 0.5, 0.75, 1]
+    if isinstance(array, torch.Tensor):
+        try:
+            array_float = array.float()
+            _quantiles = list(map(lambda _q: f"{torch.quantile(array_float, q=_q):.2f}", q))
+        except RuntimeError:
+            _quantiles = "ERROR"
+        _shape = tuple(array.shape)
+    else:
+        _quantiles = list(map(lambda f: f"{f:.2f}", np.quantile(array, q=[0, 0.25, 0.5, 0.75, 1])))
+        _shape = array.shape
+    return f"{type(array).__name__}[{array.dtype}] with shape={_shape}; quantiles={_quantiles}"

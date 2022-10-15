@@ -1,13 +1,22 @@
 """
 Utility functions and tools for pytorch.
 """
+__all__ = (
+    "KiTS19DataSet",
+    "KiTS19DataSet2D"
+)
+
 from typing import Dict, Tuple
 
 import torch
 import torch.utils.data as tud
 import tqdm
+from torchvision.transforms import functional as TF
 
+from BIA_KiTS19 import get_lh
 from BIA_KiTS19.helper import dataset_helper, ndarray_helper
+
+_lh = get_lh(__name__)
 
 
 class KiTS19DataSet(tud.Dataset):
@@ -20,8 +29,8 @@ class KiTS19DataSet(tud.Dataset):
     def __getitem__(self, index: int) -> Tuple[torch.Tensor, torch.Tensor]:
         image_set = self._dataset[index]
         return (
-            torch.tensor(image_set.np_image_final),
-            torch.tensor(image_set.np_mask_final)
+            torch.unsqueeze(torch.tensor(image_set.np_image_final), dim=0),
+            torch.unsqueeze(torch.tensor(image_set.np_mask_final), dim=0)
         )
 
     def __init__(self, dataset: dataset_helper.DataSet):
@@ -42,16 +51,20 @@ class KiTS19DataSet2D(tud.Dataset):
         self._index = {}
         image_set: dataset_helper.ImageSet
         for image_set in tqdm.tqdm(iterable=dataset, desc="Loading Data..."):
-            if image_set.tensor_image_final.shape != image_set.tensor_mask_final.shape[0:3]:
-                _lh.error(image_set.tensor_image_final)
+            if image_set.np_image_final.shape != image_set.np_mask_final.shape:
+                _lh.error(
+                    f"image %s and mask %s shape mismatch!",
+                    str(image_set.np_image_final.shape),
+                    str(image_set.np_mask_final.shape)
+                )
                 continue
             for image_2d, mask_2d in zip(
-                    ndarray_helper.sample_along_np(image_set.tensor_image_final, axis=axis),
-                    ndarray_helper.sample_along_np(image_set.tensor_mask_final, axis=axis),
+                    ndarray_helper.sample_along_np(image_set.np_image_final, axis=axis),
+                    ndarray_helper.sample_along_np(image_set.np_mask_final, axis=axis),
             ):
                 self._index[i] = (
-                    torch.Tensor(image_2d),
-                    torch.Tensor(mask_2d)
+                    TF.to_tensor(image_2d),
+                    torch.unsqueeze(torch.tensor(mask_2d), 0)
                 )
                 i += 1
                 image_set.clear_all_cache()

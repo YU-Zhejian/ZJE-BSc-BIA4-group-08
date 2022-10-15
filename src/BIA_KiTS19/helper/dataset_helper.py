@@ -206,7 +206,7 @@ class ImageSet(AbstractCachedLazyEvaluatedLinkedChain):
             cache_property_name="_space_resampled_np_image",
             cache_filename=os.path.join(self.image_dir, "imaging_space_resampled.npy.xz"),
             cache_file_reader=io_helper.read_np_xz,
-            cache_file_writer=io_helper.save_np_xz,
+            cache_file_writer=io_helper.write_np_xz,
             prev_step_property_name="space_resampled_nifti_image",
             transform_from_previous_step=converter.sitk_to_normalized_np
         )
@@ -218,7 +218,7 @@ class ImageSet(AbstractCachedLazyEvaluatedLinkedChain):
             cache_property_name="_space_resampled_np_mask",
             cache_filename=os.path.join(self.image_dir, "mask_space_resampled.npy.xz"),
             cache_file_reader=io_helper.read_np_xz,
-            cache_file_writer=io_helper.save_np_xz,
+            cache_file_writer=io_helper.write_np_xz,
             prev_step_property_name="space_resampled_nifti_mask",
             transform_from_previous_step=lambda img: converter.sitk_to_np(img, dtype=int)
         )
@@ -230,19 +230,19 @@ class ImageSet(AbstractCachedLazyEvaluatedLinkedChain):
             cache_property_name="_rescaled_np_image",
             cache_filename=os.path.join(self.image_dir, "image_rescaled.npy.xz"),
             cache_file_reader=io_helper.read_np_xz,
-            cache_file_writer=io_helper.save_np_xz,
+            cache_file_writer=io_helper.write_np_xz,
             prev_step_property_name="space_resampled_np_image",
             transform_from_previous_step=lambda image: skitrans.resize(image, output_shape=(256, 256, 160))
         )
 
     @property
     def rescaled_np_mask(self) -> npt.NDArray[float]:
-        """3D Numpy arrays of shape ``(128, 128, 80)`` with unique ``(0.0, 0.5, 1.0)``"""
+        """3D Numpy arrays of shape ``(128, 128, 80)`` with unique ``(0, 1, 2)``"""
         return self._ensure_from_cache_and_previous_step(
             cache_property_name="_rescaled_np_mask",
             cache_filename=os.path.join(self.image_dir, "mask_rescaled.npy.xz"),
             cache_file_reader=io_helper.read_np_xz,
-            cache_file_writer=io_helper.save_np_xz,
+            cache_file_writer=io_helper.write_np_xz,
             prev_step_property_name="space_resampled_np_mask",
             transform_from_previous_step=lambda image: skitrans.resize(
                 image,
@@ -259,21 +259,21 @@ class ImageSet(AbstractCachedLazyEvaluatedLinkedChain):
             cache_property_name="_tensor_image",
             cache_filename=os.path.join(self.image_dir, "tensor_image.pt.xz"),
             cache_file_reader=io_helper.read_tensor_xz,
-            cache_file_writer=io_helper.save_tensor_xz,
+            cache_file_writer=io_helper.write_tensor_xz,
             prev_step_property_name="rescaled_np_image",
-            transform_from_previous_step=torch.Tensor
+            transform_from_previous_step=torch.tensor
         )
 
     @property
     def tensor_mask(self) -> torch.Tensor:
-        """4D pytorch Tensor of shape ``(128, 128, 80, 3)`` with unique ``(0.0, 1.0)``"""
+        """4D pytorch Tensor of shape ``(128, 128, 80, 3)`` with unique ``(0, 1, 2)``"""
         return self._ensure_from_cache_and_previous_step(
             cache_property_name="_tensor_mask",
             cache_filename=os.path.join(self.image_dir, "tensor_mask.pt.xz"),
             cache_file_reader=io_helper.read_tensor_xz,
-            cache_file_writer=io_helper.save_tensor_xz,
+            cache_file_writer=io_helper.write_tensor_xz,
             prev_step_property_name="rescaled_np_mask",
-            transform_from_previous_step=lambda mask: torch.Tensor(converter.mask_3d_to_4d(mask))
+            transform_from_previous_step=torch.tensor
         )
 
     @property

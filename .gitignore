@@ -284,3 +284,9 @@ dmypy.json
 # Cython debug symbols
 cython_debug/
 
+/.idea/rGraphicsSettings.xml
+/.idea/rSettings.xml
+/.idea/runConfigurations/_template__of_Autodetect.xml
+/.idea/runConfigurations/_template__of_Doctests.xml
+/.idea/runConfigurations/_template__of_Unittests.xml
+/.idea/runConfigurations/_template__of_py_test.xml

@@ -22,7 +22,7 @@ _test_cases = {
     ids=_test_cases.keys()
 )
 def test_np_xz(kwargs):
-    io_helper.save_np_xz(kwargs, "tmp.xz")
+    io_helper.write_np_xz(kwargs, "tmp.xz")
     assert np.array_equiv(io_helper.read_np_xz("tmp.xz"), kwargs)
     os.remove("tmp.xz")
 
@@ -34,6 +34,6 @@ def test_np_xz(kwargs):
 )
 def test_tensor_xz(kwargs):
     kwargs = torch.tensor(kwargs)
-    io_helper.save_tensor_xz(kwargs, "tmp.xz")
+    io_helper.write_tensor_xz(kwargs, "tmp.xz")
     assert torch.equal(io_helper.read_tensor_xz("tmp.xz"), kwargs)
     os.remove("tmp.xz")

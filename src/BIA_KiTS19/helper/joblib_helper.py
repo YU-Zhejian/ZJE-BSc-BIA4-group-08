@@ -1,3 +1,7 @@
+__all__ = (
+    "parallel_map"
+)
+
 import multiprocessing
 from typing import Callable, TypeVar, Iterable
 
