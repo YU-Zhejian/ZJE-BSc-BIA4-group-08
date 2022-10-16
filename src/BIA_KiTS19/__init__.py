@@ -28,7 +28,8 @@ stream = logging.StreamHandler(sys.stderr)
 stream.setLevel(logging.INFO)
 stream.setFormatter(streamFmt)
 
-persistent_file = logging.FileHandler(os.path.join(LOG_DIR, f"{time.strftime('%Y_%m_%d-%H_%M_%S')}.log"), 'w')
+log_file_path = os.path.join(LOG_DIR, f"{time.strftime('%Y_%m_%d-%H_%M_%S')}.log")
+persistent_file = logging.FileHandler(log_file_path, 'w')
 persistent_file.setLevel(logging.DEBUG)
 persistent_file.setFormatter(fileFmt)
 
@@ -45,3 +46,7 @@ def get_lh(name: str = "ROOT") -> logging.Logger:
     log.addHandler(stream)
     log.addHandler(persistent_file)
     return log
+
+
+_lh = get_lh(__name__)
+_lh.info("Logging set up successful at %s", log_file_path)

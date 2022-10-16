@@ -6,7 +6,7 @@ __all__ = (
     "describe"
 )
 
-from typing import Any, Iterable, Union, Tuple
+from typing import Any, Iterable, Union, Tuple, TypeVar
 
 import numpy as np
 import torch
@@ -47,6 +47,18 @@ def merge_along_np(
     return np.moveaxis(merged_array, 0, axis)
 
 
+def merge_along_tensor(
+        arrays: Iterable[torch.Tensor],
+        axis: int = 0,
+) -> torch.Tensor:
+    imgs_list = list(arrays)
+    first_img = imgs_list[0]
+    merged_array = torch.zeros(size=(len(imgs_list), *first_img.shape), dtype=first_img.dtype)
+    for i, img in enumerate(imgs_list):
+        merged_array[i, ...] = img
+    return torch.moveaxis(merged_array, 0, axis)
+
+
 def sample_along_tensor(
         array: torch.Tensor,
         axis: int = 0,
@@ -59,28 +71,61 @@ def sample_along_tensor(
     return torch.moveaxis(array.index_select(index=torch.arange(start, end, step), dim=axis), axis, 0)
 
 
-def scale_np_array(x: npt.NDArray[Union[int, float]], out_range: Tuple[int, int] = (0, 1)):
+_Tensor = TypeVar("_Tensor", npt.NDArray[Union[float, int]], torch.Tensor)
+
+
+def _scale_impl(
+        x: _Tensor,
+        out_range: Tuple[Union[int, float], Union[int, float]],
+        domain: Tuple[Union[int, float], Union[int, float]]
+) -> _Tensor:
+    if domain[1] == domain[0]:
+        return x
+    y = (x - (domain[1] + domain[0]) / 2) / (domain[1] - domain[0])
+    return y * (out_range[1] - out_range[0]) + (out_range[1] + out_range[0]) / 2
+
+
+def scale_np_array(
+        x: npt.NDArray[Union[int, float]],
+        out_range: Tuple[Union[int, float], Union[int, float]] = (0, 1)
+) -> npt.NDArray[Union[int, float]]:
     domain = np.min(x), np.max(x)
-    y = (x - (domain[1] + domain[0]) / 2) / (domain[1] - domain[0])
-    return y * (out_range[1] - out_range[0]) + (out_range[1] + out_range[0]) / 2
+    return _scale_impl(x, out_range, domain)
 
 
-def scale_torch_array(x: torch.Tensor, out_range: Tuple[int, int] = (0, 1)):
+def scale_torch_array(
+        x: torch.Tensor,
+        out_range: Tuple[Union[int, float], Union[int, float]] = (0, 1)
+) -> torch.Tensor:
     domain = torch.min(x), torch.max(x)
-    y = (x - (domain[1] + domain[0]) / 2) / (domain[1] - domain[0])
-    return y * (out_range[1] - out_range[0]) + (out_range[1] + out_range[0]) / 2
+    return _scale_impl(x, out_range, domain)
 
 
-def describe(array: Union[npt.NDArray[Union[float, int]], torch.Tensor]) -> str:
+def describe(array: _Tensor) -> str:
     q = [0, 0.25, 0.5, 0.75, 1]
     if isinstance(array, torch.Tensor):
         try:
             array_float = array.float()
             _quantiles = list(map(lambda _q: f"{torch.quantile(array_float, q=_q):.2f}", q))
-        except RuntimeError:
-            _quantiles = "ERROR"
+        except RuntimeError as e:
+            _quantiles = f"ERROR {e}"
         _shape = tuple(array.shape)
     else:
         _quantiles = list(map(lambda f: f"{f:.2f}", np.quantile(array, q=[0, 0.25, 0.5, 0.75, 1])))
         _shape = array.shape
     return f"{type(array).__name__}[{array.dtype}] with shape={_shape}; quantiles={_quantiles}"
+
+
+class DimensionMismatchException(ValueError):
+    def __init__(
+            self,
+            _arr1: _Tensor,
+            _arr2: _Tensor,
+            _arr1_name: str = "arr1",
+            _arr2_name: str = "arr2"
+    ):
+        super().__init__(
+            f"Array {_arr1_name} and {_arr2_name}  dimension mismatch!\n"
+            f"\twhere {_arr1_name} is {describe(_arr1)}\n"
+            f"\twhere {_arr2_name} is {describe(_arr2)}\n"
+        )

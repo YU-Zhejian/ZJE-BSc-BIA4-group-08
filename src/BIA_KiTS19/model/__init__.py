@@ -1,6 +1,9 @@
 from torch import nn
 
+from BIA_KiTS19 import get_lh
 from BIA_KiTS19.helper import ndarray_helper
+
+_lh = get_lh(__name__)
 
 
 class Describe(nn.Module):
@@ -9,5 +12,5 @@ class Describe(nn.Module):
         self.describe = lambda x: print(prefix + ndarray_helper.describe(x))
 
     def forward(self, x):
-        self.describe(x)
+        _lh.debug(self.describe(x))
         return x

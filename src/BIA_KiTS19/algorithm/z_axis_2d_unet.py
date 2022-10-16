@@ -3,8 +3,9 @@ import torch
 from torch import nn, optim
 from torch.utils.data import DataLoader
 
+import BIA_KiTS19.helper.ml_helper
 from BIA_KiTS19 import get_lh
-from BIA_KiTS19.helper import dataset_helper, torch_helper, ml_helper, ml_2d_helper
+from BIA_KiTS19.helper import dataset_helper, torch_helper, ml_helper
 from BIA_KiTS19.model import unet_2d
 
 device = ml_helper.get_torch_device()
@@ -12,9 +13,9 @@ device = ml_helper.get_torch_device()
 _lh = get_lh(__name__)
 
 if __name__ == '__main__':
-    train_dataset = dataset_helper.DataSet('/media/yuzj/BUP/kits19/data', range=(0, 50))
+    train_dataset = dataset_helper.DataSet('/media/yuzj/BUP/kits19/data', range=(0, 1))
     _lh.info(f"{len(train_dataset)} train datasets loaded")
-    test_dataset = dataset_helper.DataSet('/media/yuzj/BUP/kits19/data', range=(201, 209))
+    test_dataset = dataset_helper.DataSet('/media/yuzj/BUP/kits19/data', range=(201, 202))
     _lh.info(f"{len(train_dataset)} test datasets loaded")
     test_case_names = list(test_dataset.iter_case_names())
     dataset = torch_helper.KiTS19DataSet2D(
@@ -53,14 +54,12 @@ if __name__ == '__main__':
         train_dice = np.mean(
             list(map(
                 lambda imageset: ml_helper.evaluate(
-                    ml_2d_helper.convert_2d_predictor_to_3d_predictor(
-                        lambda img: ml_2d_helper.predict_2d(net, img, device),
+                    BIA_KiTS19.helper.ml_helper.convert_2d_predictor_to_3d_predictor(
+                        lambda img: BIA_KiTS19.helper.ml_helper.predict(net, img, device),
                         axis=2
                     ),
                     imageset
                 ),
                 test_dataset
             )))
-        _lh.info('%d dice: %f.2', epoch, train_dice * 100)
-        with open("1.log", "a") as writer:
-            writer.write(f"{train_dice}\n")
+        _lh.info('%d dice: %5.2f', epoch, train_dice * 100)
