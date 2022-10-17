@@ -22,7 +22,6 @@ _encoder = {
 _decoder = {v: k for k, v in _encoder.items()}
 
 
-
 def get_sklearn_dataset(
         dataset_path: str,
         desired_size=1024 * 1024,
@@ -48,6 +47,7 @@ def get_sklearn_dataset(
 
     return X, y
 
+
 def get_ray_dataset(
         dataset_path: str,
         desired_size=1024 * 1024,
@@ -64,13 +64,14 @@ def get_ray_dataset(
             iterable=all_image_paths,
             desc="loading data..."
     )):
-        X_df = X_df.append(
-            pd.DataFrame(np.ravel(io_helper.read_np_xz(image_path)))
-        )
-        y_df = y_df.append(
-            pd.DataFrame(_encoder[os.path.split(os.path.split(image_path)[0])[1]])
-        )
+        X_df = pd.concat([
+            X_df,
+            pd.DataFrame(np.ravel(io_helper.read_np_xz(image_path)).reshape((1, desired_size)))
+        ])
+        y_df = pd.concat([
+            y_df,
+            pd.DataFrame([_encoder[os.path.split(os.path.split(image_path)[0])[1]]])
+        ])
     df = pd.merge(X_df, y_df)
 
     return ray.data.from_pandas(df)
-

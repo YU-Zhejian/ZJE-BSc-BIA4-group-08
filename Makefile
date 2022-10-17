@@ -5,3 +5,7 @@ dist:
 .PHONY: doc
 doc:
 	$(MAKE) -C doc
+
+.PHONY: test
+test:
+	PYTHONPATH=src pytest .

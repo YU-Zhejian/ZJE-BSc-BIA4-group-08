@@ -13,8 +13,12 @@
       <excludeFolder url="file://$MODULE_DIR$/pytest" />
       <excludeFolder url="file://$MODULE_DIR$/.pytest_cache" />
       <excludeFolder url="file://$MODULE_DIR$/src/BIA_KiTS19/ipynb/.ipynb_checkpoints" />
+      <excludeFolder url="file://$MODULE_DIR$/.empty" />
+      <excludeFolder url="file://$MODULE_DIR$/build" />
+      <excludeFolder url="file://$MODULE_DIR$/dist" />
+      <excludeFolder url="file://$MODULE_DIR$/src/BIA_COVID_CLASS.egg-info" />
     </content>
-    <orderEntry type="jdk" jdkName="Python 3.8 (BIA4Env)" jdkType="Python SDK" />
+    <orderEntry type="jdk" jdkName="Python 3.8 (BIA4Env) (3)" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
   </component>
 </module>

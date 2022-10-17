@@ -3,9 +3,9 @@ import numpy as np
 import numpy.typing as npt
 import ray
 from ray.util.joblib import register_ray
+from sklearn.metrics import confusion_matrix
 from sklearn.model_selection import train_test_split
 from sklearn.neighbors import KNeighborsClassifier as KNN
-from sklearn.metrics import confusion_matrix
 
 from BIA_COVID_CLASS.covid_helper import covid_dataset
 from BIA_G8 import get_lh
