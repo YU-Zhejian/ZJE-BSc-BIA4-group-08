@@ -2,7 +2,9 @@ __all__ = (
     "sample_along_np",
     "merge_along_np",
     "scale_np_array",
+    "scale_torch_array",
     "sample_along_tensor",
+    "merge_along_tensor",
     "describe"
 )
 
@@ -11,6 +13,8 @@ from typing import Any, Iterable, Union, Tuple, TypeVar
 import numpy as np
 import torch
 from numpy import typing as npt
+
+_Tensor = TypeVar("_Tensor", npt.NDArray[Union[float, int]], torch.Tensor)
 
 
 def sample_along_np(
@@ -47,18 +51,6 @@ def merge_along_np(
     return np.moveaxis(merged_array, 0, axis)
 
 
-def merge_along_tensor(
-        arrays: Iterable[torch.Tensor],
-        axis: int = 0,
-) -> torch.Tensor:
-    imgs_list = list(arrays)
-    first_img = imgs_list[0]
-    merged_array = torch.zeros(size=(len(imgs_list), *first_img.shape), dtype=first_img.dtype)
-    for i, img in enumerate(imgs_list):
-        merged_array[i, ...] = img
-    return torch.moveaxis(merged_array, 0, axis)
-
-
 def sample_along_tensor(
         array: torch.Tensor,
         axis: int = 0,
@@ -71,8 +63,16 @@ def sample_along_tensor(
     return torch.moveaxis(array.index_select(index=torch.arange(start, end, step), dim=axis), axis, 0)
 
 
-_Tensor = TypeVar("_Tensor", npt.NDArray[Union[float, int]], torch.Tensor)
-
+def merge_along_tensor(
+        arrays: Iterable[torch.Tensor],
+        axis: int = 0,
+) -> torch.Tensor:
+    imgs_list = list(arrays)
+    first_img = imgs_list[0]
+    merged_array = torch.zeros(size=(len(imgs_list), *first_img.shape), dtype=first_img.dtype)
+    for i, img in enumerate(imgs_list):
+        merged_array[i, ...] = img
+    return torch.moveaxis(merged_array, 0, axis)
 
 def _scale_impl(
         x: _Tensor,

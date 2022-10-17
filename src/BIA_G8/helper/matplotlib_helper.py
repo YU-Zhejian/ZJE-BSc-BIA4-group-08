@@ -19,53 +19,6 @@ EMPTY_IMG = np.zeros((1, 1), dtype="uint8")
 """An 1*1 empty image"""
 
 
-def plot_3d_rgba(
-        img_3d_rgba: npt.NDArray,
-        num_slices: int = 9,
-        ncols: int = 3,
-        axis: int = 0,
-        width: Union[int, float] = 10
-):
-    """
-    Slice and plot 3d greyscale, RGB or RGBA images.
-
-    Coloring: If the image is greyscale, the color map would be `"bone"`. Otherwise, would show an RGB image on black
-    background.
-
-    :param img_3d_rgba: 3d greyscale, RGB or RGBA images
-    :param num_slices: Number of slices to take. Recommended to be a
-    :param ncols: Number oif columns. Recommended to be less than 5.
-    :param axis: Axis to be sliced. Can be `0`, `1` or `2`.
-    :param width: Width of produced image in inches.
-    """
-    z_len = img_3d_rgba.shape[axis]
-    step = z_len // num_slices
-    downsampled_img = ndarray_helper.sample_along_np(array=img_3d_rgba, axis=axis, start=0, end=z_len, step=step)
-    axs: npt.NDArray[plt.Axes]
-    fig: plt.Figure
-    fig, axs = plt.subplots(nrows=num_slices // ncols, ncols=ncols)
-    fig.set_facecolor("black")
-    if is_img_rgb(img_3d_rgba):
-        cmap = None
-    else:
-        cmap = "bone"
-    for index, ax in enumerate(axs.ravel()):
-        ax: plt.Axes
-        ax.minorticks_off()
-        ax.grid(visible=False)
-        ax.set_facecolor("black")
-        ax.set_frame_on(True)
-        plt.setp(ax.spines.values(), color="white")
-        plt.setp([ax.get_xticklines(), ax.get_yticklines()], color="white")
-        ax.set_alpha(0)
-        if index >= len(downsampled_img):
-            ax.imshow(EMPTY_IMG, cmap=cmap)
-        else:
-            ax.imshow(downsampled_img[index], cmap=cmap)
-    ds_len, ds_wid = downsampled_img[0].shape[0:2]
-    fig.set_size_inches(width, width * ds_len / ds_wid)
-
-
 def plot_histogram(
         img: npt.NDArray,
         num_bins: int = 256,

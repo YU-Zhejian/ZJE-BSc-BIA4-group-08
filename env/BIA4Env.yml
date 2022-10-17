@@ -1,10 +1,13 @@
 # Reference BIA4 Development Environment in Conda.
 # YU Zhejian based on Prof. Romano's `requirements.txt`.
-# Use `conda env create -f [THIS FILE]` to set up the environment.
+# CONDA USERS: Use `conda env create -f [THIS FILE]`
+# MAMBA USERS: `mamba env create -f [THIS FILE]`
+# MICROMAMBA USERS: `micromamba create -f [THIS FILE]`
 # WARNING: This environment is optimized for Intel CPU.
 # WARNING: This environment assumes presence of NVidia GPU. See comments for details.
 # WARNING: This environment contains YU Zhejian's preference over acceleration and test libraries.
-# WARNING: This environment is HUGE. This means it may consume lots of time to resolve dependencies by Conda, and may take your IDE (pycharm, etc.) a long time to parse the environment.
+# WARNING: This environment is HUGE. This means it may consume lots of time to resolve dependencies by Conda,
+# WARNING: and may take your IDE (pycharm, etc.) a long time to parse the environment.
 # Version 1
 name: BIA4Env
 channels:
@@ -12,10 +15,14 @@ channels:
   - https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/conda-forge
   - https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/bioconda
   - https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/simpleitk
-  - https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/plotly
+  - https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/pytorch
   - https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/main
   - https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/free
-  - https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/r
+  # - conda-forge
+  # - bioconda
+  # - main
+  # - free
+
 dependencies:
   # Core libraries
   - python=3.8
@@ -29,20 +36,24 @@ dependencies:
   # general-purposed Image Processing Libraries
   - pillow=9.2
   - scikit-image=0.19
+  - opencv>=4
 
   # ML Libs
   - scikit-learn=1.1
   - scikit-learn-intelex # On Intel Platform for acceleration.
   - pytorch>=1.12
   - torchvision
+  - tensorflow>=2.9
+  - keras
 
   # Recommended libraries
   - seaborn=0.11 # A high-level plotting library over matplotlib.
   - joblib=1.1 # An easy-to-use parallel helper.
   - tqdm=4.64 # Progress bar.
-  # - line_profiler>=3.4 # Profile Python code line by line in time.
-  # - memory_profiler>=0.60 # Profile Python code line by line in memory.
+  - line_profiler>=3.4 # Profile Python code line by line in time.
+  - memory_profiler>=0.60 # Profile Python code line by line in memory.
   - click # For CLI applications
+  - napari # For viewing 3d applications
 
   # Jupyter Notebook Related
   - ipython
@@ -62,6 +73,9 @@ dependencies:
   - numexpr>=2.8
   - numba>=0.53 # Acceleration by JIT-compiling of Python machine code using LLVM
   - pyarrow>=6.0.1 # Pandas Parquet/ORC format,also contains accelerated Pandas CSV parser.
+  - h5py
+  - hdf5
+  - pytables
 
   # GPU Support. Comment them out if you do not need them.
   - cudatoolkit>=11.2
@@ -73,8 +87,9 @@ dependencies:
   - pytest-html=3.1
   - coverage=6.5
 
-  # Gradient
+  # Gradient Boosting Trees
   - lightgbm>=3.3
+  - py-xgboost-gpu>=1.6
 
   # Ray distributed framework
   - ray-core=2.0.0
@@ -86,3 +101,6 @@ dependencies:
 
   - pip
   - setuptools
+  - pip:
+    - lightgbm-ray
+    - xgboost-ray

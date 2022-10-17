@@ -1,0 +1,42 @@
+# Execution environment for the Project
+# WARNING: Subject to change
+
+name: BIA_COVID_CLASS_ENV_Exec
+channels:
+  - nodefaults
+  - https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/conda-forge
+  - https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/bioconda
+  - https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/main
+  - https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/free
+  # - conda-forge
+  # - bioconda
+  # - main
+  # - free
+
+dependencies:
+  - python=3.8
+  - matplotlib>=3.5
+  - pyqt=5
+  - scipy=1.9
+  - numpy=1.23
+  - pandas=1.5
+  - scikit-image=0.19
+  - scikit-learn=1.1
+  - pytorch>=1.12
+  - torchvision
+  - seaborn=0.11
+  - joblib=1.1
+  - tqdm=4.64
+  - click
+  - pyarrow>=6.0.1
+  - cudatoolkit>=11.2
+  - cudnn>=8.1.0
+  - lightgbm>=3.3
+  - ray-core=2.0.0
+  - ray-dashboard
+  - ray-data
+  - ray-default
+  - ray-rllib
+  - ray-tune
+  - pip:
+    - lightgbm-ray
