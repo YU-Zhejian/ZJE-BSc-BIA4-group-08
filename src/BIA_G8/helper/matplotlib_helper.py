@@ -11,9 +11,9 @@ from typing import Union
 
 import matplotlib.pyplot as plt
 import numpy as np
-import numpy.typing as npt
+from numpy import typing as npt
 
-from BIA_KiTS19.helper import skimage_helper, ndarray_helper
+from BIA_G8.helper import ndarray_helper
 
 EMPTY_IMG = np.zeros((1, 1), dtype="uint8")
 """An 1*1 empty image"""
@@ -45,7 +45,7 @@ def plot_3d_rgba(
     fig: plt.Figure
     fig, axs = plt.subplots(nrows=num_slices // ncols, ncols=ncols)
     fig.set_facecolor("black")
-    if skimage_helper.is_img_rgb(img_3d_rgba):
+    if is_img_rgb(img_3d_rgba):
         cmap = None
     else:
         cmap = "bone"
@@ -96,7 +96,7 @@ def plot_histogram(
         sf1 = subfigs[1]
     else:
         sf1 = fig.subfigures()
-    if skimage_helper.is_img_rgb(img):
+    if is_img_rgb(img):
         # print(sf1.subplots(3, 1))
         paxs = sf1.subplots(3, 1)
         for n, color in enumerate("rgb"):
@@ -104,3 +104,11 @@ def plot_histogram(
     else:
         pax = sf1.subplots()
         pax.hist(img.ravel(), facecolor="grey", **shared_opts)
+
+
+def is_img_rgb(img: npt.NDArray) -> bool:
+    """Determine whether the image is RGB"""
+    if img.shape[-1] == 3:
+        return True
+    else:
+        return False

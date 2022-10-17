@@ -290,3 +290,21 @@ cython_debug/
 /.idea/runConfigurations/_template__of_Doctests.xml
 /.idea/runConfigurations/_template__of_Unittests.xml
 /.idea/runConfigurations/_template__of_py_test.xml
+
+
+## pytorch & numpy
+*.pt
+*.npy
+*.npz
+
+## Archives
+*.xz
+*.gz
+*.bz2
+*.7z
+*.tar
+*.lzma
+*.lz
+*.t[lxbg]z
+*.tar.*
+*.brotli

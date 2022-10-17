@@ -103,17 +103,24 @@ def scale_torch_array(
 
 def describe(array: _Tensor) -> str:
     q = [0, 0.25, 0.5, 0.75, 1]
+    _shape = tuple(array.shape)
     if isinstance(array, torch.Tensor):
-        try:
-            array_float = array.float()
-            _quantiles = list(map(lambda _q: f"{torch.quantile(array_float, q=_q):.2f}", q))
-        except RuntimeError as e:
-            _quantiles = f"ERROR {e}"
-        _shape = tuple(array.shape)
+        _unique = array.unique()
     else:
-        _quantiles = list(map(lambda f: f"{f:.2f}", np.quantile(array, q=[0, 0.25, 0.5, 0.75, 1])))
-        _shape = array.shape
-    return f"{type(array).__name__}[{array.dtype}] with shape={_shape}; quantiles={_quantiles}"
+        _unique = np.unique(array)
+    if len(_unique) > 10:
+        try:
+            if isinstance(array, torch.Tensor):
+                array = array.float()
+                _quantiles = list(map(lambda _q: f"{array.quantile(q=_q):.2f}", q))
+            else:
+                _quantiles = np.quantile(array, q=q)
+        except (IndexError, RuntimeError) as e:
+            _quantiles = f"ERROR {e}"
+        _quantiles_str = f"quantiles={_quantiles}"
+    else:
+        _quantiles_str = f"uniques={_unique}"
+    return f"{type(array).__name__}[{array.dtype}] with shape={_shape}; {_quantiles_str}"
 
 
 class DimensionMismatchException(ValueError):

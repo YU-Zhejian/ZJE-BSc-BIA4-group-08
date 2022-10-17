@@ -3,15 +3,22 @@ __all__ = (
     "read_dicom"
 )
 
+import numpy as np
+from numpy import typing as npt
+
+from BIA_G8.helper import ndarray_helper
+
 """
 Helpers related to SimpleITK (sitk) libraries for data preprocessing.
 """
 
 import glob
 import os.path
-from typing import Tuple
+from typing import Tuple, TypeVar
 
 import SimpleITK as sitk
+
+_T = TypeVar("_T")
 
 
 def resample_spacing(
@@ -63,3 +70,11 @@ def read_dicom(
             return reader.Execute()
     else:
         return sitk.ReadImage(abs_path)
+
+
+def sitk_to_np(img: sitk.Image, dtype: _T) -> npt.NDArray[_T]:
+    return np.array(sitk.GetArrayViewFromImage(img), dtype=dtype)
+
+
+def sitk_to_normalized_np(img: sitk.Image) -> npt.NDArray[float]:
+    return np.array(ndarray_helper.scale_np_array(sitk.GetArrayViewFromImage(img)), dtype=np.float16)

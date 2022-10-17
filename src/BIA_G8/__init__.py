@@ -12,6 +12,13 @@ __version__ = "0.0.1"  # NOTE: Change ROOT_DIR/VERSION while updating
 
 import time
 
+try:
+    import sklearnex
+
+    sklearnex.patch_sklearn()
+except ImportError:
+    sklearnex = None
+
 sys.setrecursionlimit(int(1e8))
 PACKAGE_ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
 PROJECT_ROOT_DIR = os.path.dirname(
@@ -48,5 +55,5 @@ def get_lh(name: str = "ROOT") -> logging.Logger:
     return log
 
 
-_lh = get_lh(__name__)
+_lh = get_lh("ROOT")
 _lh.info("Logging set up successful at %s", log_file_path)

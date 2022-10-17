@@ -75,3 +75,8 @@ dependencies:
     - keras~=2.10
     - torch~=1.12
     - torchvision
+    # Ray accelerator
+    - ray[default]==2.0.0
+    - ray[air]==2.0.0
+    - ray[tune]==2.0.0
+    - ray[rllib]==2.0.0

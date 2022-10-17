@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 import torch
 
-from BIA_KiTS19.helper import ndarray_helper
+from BIA_G8.helper import ndarray_helper
 
 _test_cases = {
     "1d_1": [

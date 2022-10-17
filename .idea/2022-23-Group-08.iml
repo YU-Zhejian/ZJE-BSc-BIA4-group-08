@@ -9,10 +9,10 @@
       <excludeFolder url="file://$MODULE_DIR$/doc/_build" />
       <excludeFolder url="file://$MODULE_DIR$/doc/_root" />
       <excludeFolder url="file://$MODULE_DIR$/doc/_templates" />
-      <excludeFolder url="file://$MODULE_DIR$/src/ipynb/.ipynb_checkpoints" />
       <excludeFolder url="file://$MODULE_DIR$/log" />
       <excludeFolder url="file://$MODULE_DIR$/pytest" />
       <excludeFolder url="file://$MODULE_DIR$/.pytest_cache" />
+      <excludeFolder url="file://$MODULE_DIR$/src/BIA_KiTS19/ipynb/.ipynb_checkpoints" />
     </content>
     <orderEntry type="jdk" jdkName="Python 3.8 (BIA4Env)" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />

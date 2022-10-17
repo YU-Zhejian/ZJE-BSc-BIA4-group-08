@@ -4,7 +4,7 @@ import numpy as np
 import pytest
 import torch
 
-from BIA_KiTS19.helper import io_helper
+from BIA_G8.helper import io_helper
 
 _test_cases = {
     "0d": 1.1,

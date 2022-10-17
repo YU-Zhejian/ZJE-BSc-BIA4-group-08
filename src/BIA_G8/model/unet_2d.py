@@ -3,19 +3,19 @@ From: https://github.com/aryaman4152/model-implementations-PyTorch
 """
 
 __all__ = (
-    "UNET3D",
+    "UNet2D",
 )
 
 import torch
+import torch.nn.functional as F
 from torch import nn
-from torch.nn import functional as F
 
 
-class Section3D(nn.Module):
+class Section(nn.Module):
     def __init__(self, in_channels: int, out_channels: int, kernel_size: int):
-        super(Section3D, self).__init__()
+        super(Section, self).__init__()
         self.process = nn.Sequential(
-            nn.Conv3d(
+            nn.Conv2d(
                 in_channels=in_channels,
                 out_channels=out_channels,
                 kernel_size=kernel_size,
@@ -23,7 +23,7 @@ class Section3D(nn.Module):
                 padding='same'
             ),
             nn.ReLU(inplace=True),
-            nn.Conv3d(
+            nn.Conv2d(
                 in_channels=out_channels,
                 out_channels=out_channels,
                 kernel_size=kernel_size,
@@ -38,26 +38,26 @@ class Section3D(nn.Module):
         return px
 
 
-class UNET3D(nn.Module):
+class UNet2D(nn.Module):
     def __init__(self, in_channels=1, out_channels=1):
-        super(UNET3D, self).__init__()
+        super(UNet2D, self).__init__()
         # Contraction
-        self.pool = nn.MaxPool3d(kernel_size=2, stride=2)
-        self.down1 = Section3D(in_channels=in_channels, out_channels=64, kernel_size=3)
-        self.down2 = Section3D(in_channels=64, out_channels=128, kernel_size=3)
-        self.down3 = Section3D(in_channels=128, out_channels=256, kernel_size=3)
-        self.down4 = Section3D(in_channels=256, out_channels=512, kernel_size=3)
-        self.down5 = Section3D(in_channels=512, out_channels=1024, kernel_size=3)
+        self.pool = nn.MaxPool2d(kernel_size=2, stride=2)
+        self.down1 = Section(in_channels=in_channels, out_channels=64, kernel_size=3)
+        self.down2 = Section(in_channels=64, out_channels=128, kernel_size=3)
+        self.down3 = Section(in_channels=128, out_channels=256, kernel_size=3)
+        self.down4 = Section(in_channels=256, out_channels=512, kernel_size=3)
+        self.down5 = Section(in_channels=512, out_channels=1024, kernel_size=3)
         # Expansion
-        self.up_conv1 = nn.ConvTranspose3d(in_channels=1024, out_channels=512, kernel_size=2, stride=2)
-        self.up_conv2 = nn.ConvTranspose3d(in_channels=512, out_channels=256, kernel_size=2, stride=2)
-        self.up_conv3 = nn.ConvTranspose3d(in_channels=256, out_channels=128, kernel_size=2, stride=2)
-        self.up_conv4 = nn.ConvTranspose3d(in_channels=128, out_channels=64, kernel_size=2, stride=2)
-        self.up1 = Section3D(in_channels=1024, out_channels=512, kernel_size=3)
-        self.up2 = Section3D(in_channels=512, out_channels=256, kernel_size=3)
-        self.up3 = Section3D(in_channels=256, out_channels=128, kernel_size=3)
-        self.up4 = Section3D(in_channels=128, out_channels=64, kernel_size=3)
-        self.output = nn.Conv3d(
+        self.up_conv1 = nn.ConvTranspose2d(in_channels=1024, out_channels=512, kernel_size=2, stride=2)
+        self.up_conv2 = nn.ConvTranspose2d(in_channels=512, out_channels=256, kernel_size=2, stride=2)
+        self.up_conv3 = nn.ConvTranspose2d(in_channels=256, out_channels=128, kernel_size=2, stride=2)
+        self.up_conv4 = nn.ConvTranspose2d(in_channels=128, out_channels=64, kernel_size=2, stride=2)
+        self.up1 = Section(in_channels=1024, out_channels=512, kernel_size=3)
+        self.up2 = Section(in_channels=512, out_channels=256, kernel_size=3)
+        self.up3 = Section(in_channels=256, out_channels=128, kernel_size=3)
+        self.up4 = Section(in_channels=128, out_channels=64, kernel_size=3)
+        self.output = nn.Conv2d(
             in_channels=64,
             out_channels=out_channels,
             kernel_size=1,
@@ -117,9 +117,10 @@ class UNET3D(nn.Module):
 
         x = self.output(x)
         x = F.interpolate(x, orig_x_size[2:])
+        x = torch.sigmoid(x)
         return x
 
 # if __name__ == '__main__':
-#     x = torch.randn((1, 1, 128, 128, 60))
-#     pred = UNET3D(out_channels=3)(x)
+#     x = torch.randn((1, 1, 128, 128))
+#     pred = UNet2D(out_channels=3)(x)
 #     print(pred.shape)
