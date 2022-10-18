@@ -104,4 +104,3 @@ class AbstractCachedLazyEvaluatedLinkedChain:
             cache_file_writer(_property, cache_filename)
             _lh.debug("Request property %s -- save to %s FIN", cache_property_name, cache_filename)
         return _property
-

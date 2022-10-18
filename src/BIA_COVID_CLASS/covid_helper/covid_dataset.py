@@ -1,25 +1,33 @@
 from __future__ import annotations
 
-import copy
+__all__ = (
+    "encode",
+    "decode",
+    "IN_MEMORY_INDICATOR",
+    "CovidImage",
+    "CovidDataSet",
+    "resolve_label_from_path"
+)
+
 import glob
 import os
 import random
 from collections import defaultdict
-from typing import Tuple, List, Dict, Callable, Iterable, Optional
+from typing import Tuple, List, Dict, Callable, Iterable, Optional, Any
 
 import numpy as np
 import numpy.typing as npt
 import pandas as pd
 import ray.data
-import tqdm
-
 import skimage.io as skiio
+import tqdm
 
 from BIA_G8 import get_lh
 from BIA_G8.helper import io_helper, joblib_helper
 
 _lh = get_lh(__name__)
 _encoder = {
+    "NA": 100,
     "COVID-19": 0,
     "NORMAL": 1,
     "Viral_Pneumonia": 2
@@ -28,6 +36,14 @@ _encoder = {
 _decoder = {v: k for k, v in _encoder.items()}
 
 IN_MEMORY_INDICATOR = "IN_MEMORY"
+
+
+def encode(label_str: str) -> int:
+    return _encoder[label_str]
+
+
+def decode(label: int) -> str:
+    return _decoder[label]
 
 
 def resolve_label_from_path(abspath: str) -> str:
@@ -80,9 +96,15 @@ class CovidImage:
             self._label
         )
 
+    @property
+    def image_path(self):
+        return self._image_path
+
     def save(self, image_path: Optional[str] = None):
         if image_path is None:
             image_path = self._image_path
+        if image_path == IN_MEMORY_INDICATOR:
+            raise ValueError("Cannot save to in-memory data.")
         self._image_path = image_path
         if image_path.endswith(".npy.xz"):
             io_helper.write_np_xz(self._image, image_path)
@@ -90,66 +112,85 @@ class CovidImage:
             skiio.imsave(image_path, self._image)
 
 
-class CovidDataSet():
-    _all_image_paths: List[str]
-    _image_paths_with_label: Dict[str, List[str]]
+def _get_max_size_helper(
+        size: int,
+        balanced: bool,
+        full_size: int,
+        image_with_label: Dict[Any, Any]
+):
+    max_balanced_size = min(map(len, image_with_label.values())) * 3
+    if size == -1:
+        if balanced:
+            size = max_balanced_size
+        else:
+            size = full_size
+    if balanced:
+        if size > max_balanced_size:
+            raise ValueError("Requested too many images!")
+    else:
+        if size > full_size:
+            raise ValueError("Requested too many images!")
+    return size
+
+
+class CovidDataSet:
     _loaded_image: List[CovidImage]
+    _loaded_image_with_label: Dict[int, List[CovidImage]]
     _dataset_path: str
 
-    def __init__(
-            self,
-            dataset_path: str
+    @property
+    def data_path(self):
+        return self._dataset_path
+
+    def __init__(self):
+        self._loaded_image = []
+        self._loaded_image_with_label = defaultdict(lambda: [])
+        self.data_path = IN_MEMORY_INDICATOR
+
+    @classmethod
+    def from_directory(
+            cls,
+            dataset_path: str,
+            size: int = -1,
+            balanced: bool = True
     ):
-        self._dataset_path = dataset_path
-        if self._dataset_path == IN_MEMORY_INDICATOR:
-            _lh.info("Requested in-memory dataset")
-            self._all_image_paths = []
-            self._image_paths_with_label = {}
-            return
-        _lh.info("Requested data from %s...", self._dataset_path)
-        _all_image_paths = list(glob.glob(os.path.join(self._dataset_path, "*", "*.npy.xz")))
-        self._image_paths_with_label = defaultdict(lambda: [])
+        new_ds = cls()
+        new_ds._dataset_path = dataset_path
+        _lh.info("Requested data from %s...", new_ds._dataset_path)
+        _all_image_paths = list(glob.glob(os.path.join(new_ds._dataset_path, "*", "*.npy.xz")))
+        _image_paths_with_label: Dict[int, List[str]] = defaultdict(lambda: [])
         for image_path in tqdm.tqdm(
                 iterable=_all_image_paths,
                 desc="Parsing image directory..."
         ):
-            label = resolve_label_from_path(image_path)
-            self._image_paths_with_label[label].append(image_path)
-            self._all_image_paths.append(image_path)
+            label = encode(resolve_label_from_path(image_path))
+            _image_paths_with_label[label].append(image_path)
+            _all_image_paths.append(image_path)
+        size = _get_max_size_helper(size, balanced, len(_all_image_paths), _image_paths_with_label)
+        _lh.info("Loading %d data from %s...", size, new_ds._dataset_path)
+        if balanced:
+            for image_path in random.sample(_all_image_paths, size):
+                img = CovidImage.from_file(image_path)
+                new_ds._loaded_image.append(img)
+                new_ds._loaded_image_with_label[img.label].append(img)
+        else:
+            for image_paths in _image_paths_with_label.values():
+                for image_path in random.sample(image_paths, size // 3):
+                    img = CovidImage.from_file(image_path)
+                    new_ds._loaded_image.append(img)
+                    new_ds._loaded_image_with_label[img.label].append(img)
+        _lh.info("Shuffling loaded data...")
+        random.shuffle(new_ds._loaded_image)
+        _lh.info("Finished loading data...")
+        return new_ds
 
     @classmethod
     def from_loaded_image(cls, loaded_image: List[CovidImage]):
-        new_ds = cls(IN_MEMORY_INDICATOR)
+        new_ds = cls()
         new_ds._loaded_image = loaded_image
+        for img in new_ds._loaded_image:
+            new_ds._loaded_image_with_label[img.label].append(img)
         return new_ds
-
-    def load(self, size: int = -1, balanced: bool = True):
-        if self._dataset_path == IN_MEMORY_INDICATOR:
-            raise ValueError("Cannot reload an in-memory dataset")
-        self._loaded_image = []
-        max_balanced_size = min(map(len, self._image_paths_with_label.values())) * 3
-        if size == -1:
-            if balanced:
-                size = max_balanced_size
-            else:
-                size = len(self._all_image_paths)
-        if balanced:
-            if size > max_balanced_size:
-                raise ValueError("Requested too many images!")
-        else:
-            if size > len(self._all_image_paths):
-                raise ValueError("Requested too many images!")
-        _lh.info("Loading %d data from %s...", size, self._dataset_path)
-        if balanced:
-            for image_path in random.sample(self._all_image_paths, size):
-                self._loaded_image.append(CovidImage.from_file(image_path))
-        else:
-            for image_paths in self._image_paths_with_label.values():
-                for image_path in random.sample(image_paths, size // 3):
-                    self._loaded_image.append(CovidImage.from_file(image_path))
-        _lh.info("Shuffling loaded data...")
-        random.shuffle(self._loaded_image)
-        _lh.info("Finished loading data...")
 
     def __len__(self):
         return len(self._loaded_image)
@@ -166,7 +207,7 @@ class CovidDataSet():
     def apply(
             self,
             operation: Callable[[npt.NDArray], npt.NDArray],
-            n_jobs:int
+            n_jobs: int
     ) -> CovidDataSet:
         new_ds = CovidDataSet.from_loaded_image(list(joblib_helper.parallel_map(
             lambda image: image.apply(operation),

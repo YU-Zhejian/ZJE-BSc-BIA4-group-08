@@ -7,13 +7,9 @@ __all__ = (
     "plot_histogram"
 )
 
-from typing import Union
-
 import matplotlib.pyplot as plt
 import numpy as np
 from numpy import typing as npt
-
-from BIA_G8.helper import ndarray_helper
 
 EMPTY_IMG = np.zeros((1, 1), dtype="uint8")
 """An 1*1 empty image"""

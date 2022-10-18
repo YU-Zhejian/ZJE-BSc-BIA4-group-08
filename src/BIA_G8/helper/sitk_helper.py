@@ -2,23 +2,21 @@
 Helpers related to SimpleITK (sitk) libraries for data preprocessing.
 """
 
-
 __all__ = (
     "resample_spacing",
     "read_dicom"
 )
 
+import glob
+import os.path
+import warnings
+from typing import Tuple, TypeVar
+
+import SimpleITK as sitk
 import numpy as np
 from numpy import typing as npt
 
 from BIA_G8.helper import ndarray_helper
-
-import glob
-import os.path
-from typing import Tuple, TypeVar
-import warnings
-
-import SimpleITK as sitk
 
 warnings.warn("Module deprecated", DeprecationWarning)
 

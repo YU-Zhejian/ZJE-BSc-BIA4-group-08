@@ -74,6 +74,7 @@ def merge_along_tensor(
         merged_array[i, ...] = img
     return torch.moveaxis(merged_array, 0, axis)
 
+
 def _scale_impl(
         x: _Tensor,
         out_range: Tuple[Union[int, float], Union[int, float]],
