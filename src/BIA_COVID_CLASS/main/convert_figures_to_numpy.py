@@ -7,6 +7,7 @@ import skimage.io as skiio
 import skimage.transform as skitrans
 import tqdm
 
+from BIA_COVID_CLASS.covid_helper import covid_dataset
 from BIA_G8.helper import io_helper, matplotlib_helper, joblib_helper
 
 
@@ -50,4 +51,6 @@ def main(source_path: str, dest_path: str):
 
 
 if __name__ == '__main__':
-    main("/media/yuzj/BUP/covid19-database", "/media/yuzj/BUP/covid19-database-np")
+    covid_dataset.CovidDataSet.from_directory("/media/yuzj/BUP/covid19-database-np", size=600).save(
+        "/media/yuzj/BUP/covid19-database-np-s")
+    # main("/media/yuzj/BUP/covid19-database", "/media/yuzj/BUP/covid19-database-np")

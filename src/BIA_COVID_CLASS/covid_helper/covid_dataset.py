@@ -10,8 +10,10 @@ __all__ = (
 )
 
 import glob
+import itertools
 import os
 import random
+import uuid
 from collections import defaultdict
 from typing import Tuple, List, Dict, Callable, Iterable, Optional, Any
 
@@ -118,18 +120,14 @@ def _get_max_size_helper(
         full_size: int,
         image_with_label: Dict[Any, Any]
 ):
-    max_balanced_size = min(map(len, image_with_label.values())) * 3
-    if size == -1:
-        if balanced:
-            size = max_balanced_size
-        else:
-            size = full_size
     if balanced:
-        if size > max_balanced_size:
-            raise ValueError("Requested too many images!")
+        max_size = min(map(len, image_with_label.values())) * 3
     else:
-        if size > full_size:
-            raise ValueError("Requested too many images!")
+        max_size = full_size
+    if size == -1:
+        size = max_size
+    if size > max_size:
+        raise ValueError(f"Requested too many images! Max: {max_size}")
     return size
 
 
@@ -139,13 +137,13 @@ class CovidDataSet:
     _dataset_path: str
 
     @property
-    def data_path(self):
+    def dataset_path(self):
         return self._dataset_path
 
     def __init__(self):
         self._loaded_image = []
         self._loaded_image_with_label = defaultdict(lambda: [])
-        self.data_path = IN_MEMORY_INDICATOR
+        self._dataset_path = IN_MEMORY_INDICATOR
 
     @classmethod
     def from_directory(
@@ -158,27 +156,30 @@ class CovidDataSet:
         new_ds._dataset_path = dataset_path
         _lh.info("Requested data from %s...", new_ds._dataset_path)
         _all_image_paths = list(glob.glob(os.path.join(new_ds._dataset_path, "*", "*.npy.xz")))
-        _image_paths_with_label: Dict[int, List[str]] = defaultdict(lambda: [])
+        _image_paths_with_label = defaultdict(lambda: [])
         for image_path in tqdm.tqdm(
                 iterable=_all_image_paths,
                 desc="Parsing image directory..."
         ):
             label = encode(resolve_label_from_path(image_path))
             _image_paths_with_label[label].append(image_path)
-            _all_image_paths.append(image_path)
         size = _get_max_size_helper(size, balanced, len(_all_image_paths), _image_paths_with_label)
         _lh.info("Loading %d data from %s...", size, new_ds._dataset_path)
+
         if balanced:
-            for image_path in random.sample(_all_image_paths, size):
-                img = CovidImage.from_file(image_path)
-                new_ds._loaded_image.append(img)
-                new_ds._loaded_image_with_label[img.label].append(img)
-        else:
-            for image_paths in _image_paths_with_label.values():
-                for image_path in random.sample(image_paths, size // 3):
-                    img = CovidImage.from_file(image_path)
-                    new_ds._loaded_image.append(img)
-                    new_ds._loaded_image_with_label[img.label].append(img)
+            _all_image_paths = list(itertools.chain(
+                *list(map(
+                    lambda image_paths: random.sample(image_paths, size // 3),
+                    _image_paths_with_label.values()
+                ))
+            ))
+        for image_path in tqdm.tqdm(
+                random.sample(_all_image_paths, size),
+                desc="Loading data..."
+        ):
+            img = CovidImage.from_file(image_path)
+            new_ds._loaded_image.append(img)
+            new_ds._loaded_image_with_label[img.label].append(img)
         _lh.info("Shuffling loaded data...")
         random.shuffle(new_ds._loaded_image)
         _lh.info("Finished loading data...")
@@ -206,15 +207,65 @@ class CovidDataSet:
 
     def apply(
             self,
+            operation: Callable[[npt.NDArray], npt.NDArray]
+    ) -> CovidDataSet:
+        new_ds = CovidDataSet.from_loaded_image(list(map(
+            lambda image: image.apply(operation),
+            self._loaded_image
+        )))
+        return new_ds
+
+    def parallel_apply(
+            self,
             operation: Callable[[npt.NDArray], npt.NDArray],
-            n_jobs: int
+            **kwargs
     ) -> CovidDataSet:
         new_ds = CovidDataSet.from_loaded_image(list(joblib_helper.parallel_map(
             lambda image: image.apply(operation),
             self._loaded_image,
-            n_jobs=n_jobs
+            **kwargs
         )))
         return new_ds
+
+    def sample(self, size: int = -1, balanced: bool = True):
+        new_ds = CovidDataSet()
+        new_ds._dataset_path = self.dataset_path
+        _lh.info("Sampling data...")
+        size = _get_max_size_helper(size, balanced, len(self._loaded_image), self._loaded_image_with_label)
+        _lh.info("Loading %d data from %s...", size, new_ds._dataset_path)
+        if balanced:
+            for image_catagory in self._loaded_image_with_label.values():
+                for img in random.sample(image_catagory, size // 3):
+                    new_ds._loaded_image.append(img)
+                    new_ds._loaded_image_with_label[img.label].append(img)
+        else:
+            for img in random.sample(self._loaded_image, size):
+                new_ds._loaded_image.append(img)
+                new_ds._loaded_image_with_label[img.label].append(img)
+        _lh.info("Shuffling loaded data...")
+        random.shuffle(new_ds._loaded_image)
+        _lh.info("Finished loading data...")
+        return new_ds
+
+    def save(self, dataset_path: str = None):
+        if dataset_path is None:
+            dataset_path = self._dataset_path
+        if dataset_path == IN_MEMORY_INDICATOR:
+            raise ValueError("Cannot save to in-memory data.")
+        self._dataset_path = dataset_path
+        os.makedirs(self._dataset_path, exist_ok=True)
+        for label, imgs in self._loaded_image_with_label.items():
+            label_str = decode(label)
+            new_label_dir = os.path.join(self._dataset_path, label_str)
+            os.makedirs(new_label_dir, exist_ok=True)
+            for img in tqdm.tqdm(iterable=imgs, desc=f"Saving images for {label_str}..."):
+                if img.image_path == IN_MEMORY_INDICATOR:
+                    _image_path = str(uuid.uuid4()) + ".npy.xz"
+                else:
+                    _image_path = img.image_path
+                img.save(os.path.join(new_label_dir, os.path.basename(_image_path)))
+
+        # TODO: parallel save
 
 
 def get_sklearn_dataset(
