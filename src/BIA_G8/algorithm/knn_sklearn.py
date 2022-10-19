@@ -9,6 +9,7 @@ from sklearn.neighbors import KNeighborsClassifier as KNN
 
 from BIA_G8.covid_helper import covid_dataset
 from BIA_G8 import get_lh
+from BIA_G8.helper import ml_helper
 
 _lh = get_lh(__name__)
 
@@ -38,7 +39,11 @@ def evaluate(result_1: npt.NDArray, result_2: npt.NDArray) -> float:
     _lh.info("Evaluation started with %d cases", len(result_2))
     accuracy = np.sum(result_1 == result_2) / len(result_2)
     _confusion_matrix = confusion_matrix(result_1, result_2)
-    _lh.info("Evaluation finished with accuracy=%.2f%% cmatrix=\n%s", accuracy * 100, str(_confusion_matrix))
+    _lh.info(
+        "Evaluation finished with accuracy=%.2f%% cmatrix=\n%s",
+        accuracy * 100,
+        ml_helper.print_confusion_matrix(_confusion_matrix, ["COVID-19", "NORMAL",  "Viral_Pneumonia"])
+    )
     return accuracy
 
 
@@ -46,11 +51,12 @@ if __name__ == '__main__':
     if not ray.is_initialized():
         ray.init()
     register_ray()
+    dataset = covid_dataset.CovidDataSet.parallel_from_directory(
+        "/media/yuzj/BUP/covid19-database-np",
+        size=600
+    )
     with joblib.parallel_backend('ray'):
-        X, y = covid_dataset.get_sklearn_dataset(
-            "/media/yuzj/BUP/covid19-database-np",
-            size=1200
-        )
+        X, y = dataset.get_sklearn_dataset
         X_train, X_test, y_train, y_test = train_test_split(X, y, shuffle=True)
         print("Train-test-Split FIN")
         model = train_model(X_train, y_train)

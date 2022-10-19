@@ -23,6 +23,7 @@ import numpy.typing as npt
 import pandas as pd
 import ray.data
 import skimage.io as skiio
+import skimage.transform
 import tqdm
 
 from BIA_G8 import get_lh
@@ -146,6 +147,41 @@ class CovidDataSet:
         self._loaded_image_with_label = defaultdict(lambda: [])
         self._dataset_path = IN_MEMORY_INDICATOR
 
+    def _load_impl(self, image_path: str):
+        img = CovidImage.from_file(image_path)
+        self._loaded_image.append(img)
+        self._loaded_image_with_label[img.label].append(img)
+
+    def _preload_hook(
+            self,
+            dataset_path: str,
+            size: int = -1,
+            balanced: bool = True
+    ) -> List[str]:
+        self._dataset_path = dataset_path
+        _lh.info("Requested data from %s...", self._dataset_path)
+        all_image_paths = list(glob.glob(os.path.join(self._dataset_path, "*", "*.npy.xz")))
+        image_paths_with_label = defaultdict(lambda: [])
+        for image_path in tqdm.tqdm(
+                iterable=all_image_paths,
+                desc="Parsing image directory..."
+        ):
+            label = encode(resolve_label_from_path(image_path))
+            image_paths_with_label[label].append(image_path)
+        size = _get_max_size_helper(size, balanced, len(all_image_paths), image_paths_with_label)
+        _lh.info("Loading %d data from %s...", size, self._dataset_path)
+
+        if balanced:
+            all_image_paths = list(itertools.chain(
+                *list(map(
+                    lambda image_paths: random.sample(image_paths, size // 3),
+                    image_paths_with_label.values()
+                ))
+            ))
+        else:
+            all_image_paths = random.sample(all_image_paths, size)
+        return all_image_paths
+
     @classmethod
     def from_directory(
             cls,
@@ -154,36 +190,49 @@ class CovidDataSet:
             balanced: bool = True
     ):
         new_ds = cls()
-        new_ds._dataset_path = dataset_path
-        _lh.info("Requested data from %s...", new_ds._dataset_path)
-        _all_image_paths = list(glob.glob(os.path.join(new_ds._dataset_path, "*", "*.npy.xz")))
-        _image_paths_with_label = defaultdict(lambda: [])
+        all_image_paths = new_ds._preload_hook(
+            dataset_path=dataset_path,
+            size=size,
+            balanced=balanced
+        )
         for image_path in tqdm.tqdm(
-                iterable=_all_image_paths,
-                desc="Parsing image directory..."
-        ):
-            label = encode(resolve_label_from_path(image_path))
-            _image_paths_with_label[label].append(image_path)
-        size = _get_max_size_helper(size, balanced, len(_all_image_paths), _image_paths_with_label)
-        _lh.info("Loading %d data from %s...", size, new_ds._dataset_path)
-
-        if balanced:
-            _all_image_paths = list(itertools.chain(
-                *list(map(
-                    lambda image_paths: random.sample(image_paths, size // 3),
-                    _image_paths_with_label.values()
-                ))
-            ))
-        for image_path in tqdm.tqdm(
-                random.sample(_all_image_paths, size),
+                all_image_paths,
                 desc="Loading data..."
         ):
-            img = CovidImage.from_file(image_path)
-            new_ds._loaded_image.append(img)
-            new_ds._loaded_image_with_label[img.label].append(img)
+            new_ds._load_impl(image_path)
         _lh.info("Shuffling loaded data...")
         random.shuffle(new_ds._loaded_image)
         _lh.info("Finished loading data...")
+        return new_ds
+
+    @classmethod
+    def parallel_from_directory(
+            cls,
+            dataset_path: str,
+            size: int = -1,
+            balanced: bool = True,
+            **kwargs
+    ):
+        if kwargs.get("backend") is not None:
+            raise ValueError("backend should not be set!")
+        new_ds = cls()
+        all_image_paths = new_ds._preload_hook(
+            dataset_path=dataset_path,
+            size=size,
+            balanced=balanced
+        )
+        _ = list(joblib_helper.parallel_map(
+            new_ds._load_impl,
+            tqdm.tqdm(
+                all_image_paths,
+                desc="Loading data..."
+            ),
+            backend="threading",
+            **kwargs
+        ))
+        _lh.info("Shuffling loaded data...")
+        random.shuffle(new_ds._loaded_image)
+        _lh.info("Finished loading data with %d images loaded", len(new_ds._loaded_image))
         return new_ds
 
     @classmethod
@@ -300,7 +349,7 @@ class CovidDataSet:
         y = np.ndarray((num_images,), dtype=int)
         for i, img in enumerate(tqdm.tqdm(
                 iterable=self._loaded_image,
-                desc="loading data..."
+                desc="Parsing to SKLearn..."
         )):
             X[i] = np.ravel(img.as_np_array)
             y[i] = img.label
@@ -311,35 +360,9 @@ class CovidDataSet:
         return X, y
 
 
-def get_sklearn_dataset(
-        dataset_path: str,
-        desired_size=1024 * 1024,
-        size: int = -1
-) -> Tuple[npt.NDArray, npt.NDArray]:
-    _lh.info("Requested data from %s...", dataset_path)
-    all_image_paths = list(glob.glob(os.path.join(dataset_path, "*", "*.npy.xz")))
-    _lh.info("Requested data from %s...found %d datasets", dataset_path, len(all_image_paths))
-    if size != -1:
-        all_image_paths = random.sample(all_image_paths, size)
-    num_images = len(all_image_paths)
-    X = np.ndarray((num_images, desired_size), dtype=float)
-    y = np.ndarray((num_images,), dtype=int)
-    for i, image_path in enumerate(tqdm.tqdm(
-            iterable=all_image_paths,
-            desc="loading data..."
-    )):
-        X[i] = np.ravel(io_helper.read_np_xz(image_path))
-        y[i] = _encoder[os.path.split(os.path.split(image_path)[0])[1]]
-    labels, counts = np.unique(y, return_counts=True)
-    labels = [_decoder[label] for label in labels]
-    _lh.info("Loaded labels %s with corresponding counts %s", str(labels), str(counts))
-
-    return X, y
-
-
 def get_ray_dataset(
         dataset_path: str,
-        desired_size=1024 * 1024,
+        desired_size=20 * 20,
         size: int = -1
 ) -> ray.data.Dataset:
     _lh.info("Requested data from %s...", dataset_path)
@@ -347,20 +370,18 @@ def get_ray_dataset(
     _lh.info("Requested data from %s...found %d datasets", dataset_path, len(all_image_paths))
     if size != -1:
         all_image_paths = random.sample(all_image_paths, size)
-    X_df = pd.DataFrame(columns=list(map(str, range(desired_size))))
-    y_df = pd.DataFrame(columns=["label"])
+    df = pd.DataFrame(columns=["img", "label"])
     for i, image_path in enumerate(tqdm.tqdm(
             iterable=all_image_paths,
             desc="loading data..."
     )):
-        X_df = pd.concat([
-            X_df,
-            pd.DataFrame(np.ravel(io_helper.read_np_xz(image_path)).reshape((1, desired_size)))
+        df = pd.concat([
+            df,
+            pd.DataFrame(
+                {
+                    "img":skimage.transform.resize(io_helper.read_np_xz(image_path), (20, 20)).ravel(),
+                    "label":resolve_label_from_path(image_path)
+                },
+            )
         ])
-        y_df = pd.concat([
-            y_df,
-            pd.DataFrame([_encoder[os.path.split(os.path.split(image_path)[0])[1]]])
-        ])
-    df = pd.merge(X_df, y_df)
-
     return ray.data.from_pandas(df)

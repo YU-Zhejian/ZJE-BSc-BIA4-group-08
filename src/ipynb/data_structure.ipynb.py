@@ -7,7 +7,7 @@
 #       format_version: '1.3'
 #       jupytext_version: 1.14.0
 #   kernelspec:
-#     display_name: Python 3
+#     display_name: Python 3.8.13 ('BIA4Env')
 #     language: python
 #     name: python3
 # ---
@@ -22,16 +22,20 @@ import os
 import sys
 
 THIS_DIR_PATH = os.path.abspath(globals()["_dh"][0])
-sys.path.insert(0, os.path.dirname(THIS_DIR_PATH))
+NEW_PYTHON_PATH = os.path.dirname(THIS_DIR_PATH)
+sys.path.insert(0, NEW_PYTHON_PATH)
+os.environ["PYTHONPATH"] = os.sep.join((NEW_PYTHON_PATH, os.environ.get("PYTHONPATH", "")))
 
 # %% [markdown]
 # # Fast In-Memory Analytics using COVID Data Infrastructure
+#
+# The COVID data infrastructure is a dataframe-like data loader optimized for fast **interactive** in-memory analytics of small datasets.
 #
 # In this example, we would show how to use the COVID data infrastructure to accomplish following tasks:
 #
 # - Explore the dataset.
 # - Apply a function to the dataset.
-# - Perform machine-learning on the dataset.
+# - Perform machine-learning (classification using KNN) on the dataset.
 # - Save the dataset.
 #
 # Before we start, we would import several Python packages. They are mainly:
@@ -42,6 +46,8 @@ sys.path.insert(0, os.path.dirname(THIS_DIR_PATH))
 # - `sklearn`, the simpliest machine-learning package.
 
 # %%
+import random
+
 import skimage
 import skimage.transform as skitrans
 import skimage.draw as skidraw
@@ -59,7 +65,12 @@ from sklearn.model_selection import train_test_split
 from sklearn.neighbors import KNeighborsClassifier as KNN
 
 from BIA_G8.covid_helper import covid_dataset
+from BIA_G8.helper import ml_helper
 
+# %% [markdown]
+# Start `ray` distributed scheduler on our machine and register it as `joblib` backend.
+
+# %%
 if not ray.is_initialized():
     ray.init()
 register_ray()
@@ -83,6 +94,23 @@ rr, cc = skidraw.rectangle(start=(20, 20), extent=(60, 60))
 square[rr, cc] = 100
 square = skimage.img_as_int(square)
 
+# %% [markdown]
+# Display sample data.
+
+# %%
+fig, axs = plt.subplots(1, 3, figsize=(12, 12))
+
+sample_figures = (stride, circle, square)
+
+ax: plt.Axes
+for i, ax in enumerate(axs.ravel()):
+    ax.imshow(sample_figures[i])
+    ax.axis("off")
+
+# %% [markdown]
+# Create a dataset with 2 strides, 2 circles and 2 squares.
+
+# %%
 _IMAGES = [
     covid_dataset.CovidImage.from_image(stride, 0),
     covid_dataset.CovidImage.from_image(stride, 0),
@@ -105,13 +133,38 @@ d1_sampled = d1.sample(3, balanced=True)
 # Plot them.
 
 # %%
-fig, axs = plt.subplots(1, 3)
+fig, axs = plt.subplots(1, 3, figsize=(12, 12))
 
 ax: plt.Axes
 for i, ax in enumerate(axs.ravel()):
     ax.imshow(d1_sampled[i].as_np_array)
     ax.axis("off")
     ax.set_title(d1_sampled[i].label_str)
+
+# %% [markdown]
+# We may also perform unbalanced sampling.
+
+# %%
+d1_sampled = d1.sample(4, balanced=False)
+
+fig, axs = plt.subplots(1, len(d1_sampled), figsize=(12, 12))
+
+ax: plt.Axes
+for i, ax in enumerate(axs.ravel()):
+    ax.imshow(d1_sampled[i].as_np_array)
+    ax.axis("off")
+    ax.set_title(d1_sampled[i].label_str)
+
+# %% [markdown]
+# To make the task more complicate, we will now enlarge the dataset to 1200 cases. The variable `ds_enlarged` would contain 1200 cases and how it was generated does not need to be understood.
+
+# %%
+ds_enlarged = covid_dataset.CovidDataSet.from_loaded_image(
+    list(itertools.chain(*itertools.repeat(list(d1), 200)))
+)
+
+# %%
+print(len(ds_enlarged))
 
 # %% [markdown]
 # ## Map-like `apply` Function
@@ -121,7 +174,10 @@ for i, ax in enumerate(axs.ravel()):
 # For example, here we would rotate all sampled images:
 
 # %%
-d1_sampled_applied = d1_sampled.apply(lambda x: skitrans.rotate(x, 30))
+d1_sampled_applied = d1.sample(3).apply(lambda x: skitrans.rotate(x, 30))
+
+# %% [markdown]
+# Plot them.
 
 # %%
 fig, axs = plt.subplots(1, 3)
@@ -132,22 +188,40 @@ for i, ax in enumerate(axs.ravel()):
     ax.set_title(d1_sampled[i].label_str)
 
 # %% [markdown]
+# The `apply` function also have its parallel function, `parallel_apply`. The following example addes noise to enlarged dataset:
+
+# %%
+backend = "loky"
+
+ds_enlarged_with_noise = ds_enlarged.parallel_apply(
+    lambda img: skimage.img_as_int(
+        skiutil.random_noise(
+            skimage.img_as_float(img), 
+            mode="pepper"
+        )
+    ),
+    backend=backend
+).parallel_apply(
+    lambda img: skimage.img_as_int(
+        skitrans.rotate(
+            img, 
+            random.random() * 120 - 60
+        )
+    ),
+    backend=backend
+)
+
+
+# %% [markdown]
 # ## Machine-Learning Using SKLearn
 #
 
-# %%
-ds_enlarged = covid_dataset.CovidDataSet.from_loaded_image(
-    list(itertools.chain(*itertools.repeat(list(d1), 200)))
-).apply(
-    lambda img: skimage.img_as_int(
-        skiutil.random_noise(
-            skimage.img_as_float(img), mode="pepper"
-        )
-    )
-)
-ds_enlarged_sampled = ds_enlarged.sample(9)
+# %% [markdown]
+# Before applying ML algorithms, we would plot some example dataset:
 
 # %%
+ds_enlarged_sampled = ds_enlarged_with_noise.sample(9)
+
 fig, axs = plt.subplots(3, 3, figsize=(12, 12))
 
 for i, ax in enumerate(axs.ravel()):
@@ -155,8 +229,14 @@ for i, ax in enumerate(axs.ravel()):
     ax.axis("off")
     ax.set_title(ds_enlarged_sampled[i].label_str)
 
+# %% [markdown]
+# Convert the dataset to SKLearn-acceptable format:
+
 # %%
-ds_sklearn = ds_enlarged.get_sklearn_dataset
+ds_sklearn = ds_enlarged_with_noise.get_sklearn_dataset
+
+# %% [markdown]
+# Apply ML algorithms using KNN:
 
 # %%
 with joblib.parallel_backend('ray'):
@@ -168,6 +248,7 @@ with joblib.parallel_backend('ray'):
     accuracy = np.sum(pred == y_test) / len(y_test)
     print(accuracy)
     _confusion_matrix = confusion_matrix(pred, y_test)
-    print(_confusion_matrix)
+    print(ml_helper.print_confusion_matrix(_confusion_matrix, labels=["stride", "circle", "square"]))
 
-# %%
+# %% [markdown]
+# The accuracy is 100%, which is good.

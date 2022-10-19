@@ -47,10 +47,10 @@ if __name__ == '__main__':
         ray.init()
     register_ray()
     with joblib.parallel_backend('ray'):
-        X, y = covid_dataset.get_sklearn_dataset(
+        X, y = covid_dataset.CovidDataSet.from_directory(
             "/media/yuzj/BUP/covid19-database-np",
-            size=1200
-        )
+            size=600
+        ).get_sklearn_dataset
         X_train, X_test, y_train, y_test = train_test_split(X, y, shuffle=True)
         model = train_model(X_train, y_train)
         evaluate(model.predict(X_test), y_test)
