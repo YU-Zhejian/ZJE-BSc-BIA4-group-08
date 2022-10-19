@@ -16,7 +16,6 @@ all: pdf html
 
 .PHONY: apidoc
 apidoc:
-	sphinx-apidoc $(SPHINX_APIDOC_ARGS) $(PWD)/src/BIA_COVID_CLASS
 	sphinx-apidoc $(SPHINX_APIDOC_ARGS) $(PWD)/src/BIA_G8
 
 html: apidoc

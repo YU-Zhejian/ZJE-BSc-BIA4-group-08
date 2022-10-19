@@ -53,5 +53,4 @@ Python dependencies are listed in `requirements.txt`. You may install them using
 :maxdepth: 2
 
 _apidoc/BIA_COVID_CLASS
-_apidoc/BIA_G8
 ```

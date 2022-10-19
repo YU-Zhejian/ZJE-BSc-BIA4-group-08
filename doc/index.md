@@ -8,12 +8,11 @@ This contains documentation for Users and Developers.
 :maxdepth: 2
 
 _root/Readme
-_root/Copying
 user
 develop
-_root/News
 _root/TODO
 _root/License
+_root/Copying
 ```
 
 - {ref}`genindex`

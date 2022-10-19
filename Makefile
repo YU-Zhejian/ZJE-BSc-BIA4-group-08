@@ -9,3 +9,4 @@ doc:
 .PHONY: test
 test:
 	PYTHONPATH=src pytest .
+	rm -f .coverage.*

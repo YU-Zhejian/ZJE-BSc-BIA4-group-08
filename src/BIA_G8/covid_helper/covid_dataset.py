@@ -11,6 +11,7 @@ __all__ = (
 
 import glob
 import itertools
+import operator
 import os
 import random
 import uuid
@@ -211,7 +212,7 @@ class CovidDataSet:
     ) -> CovidDataSet:
         new_ds = CovidDataSet.from_loaded_image(list(map(
             lambda image: image.apply(operation),
-            self._loaded_image
+            tqdm.tqdm(iterable=self._loaded_image, desc="Applying operations...")
         )))
         return new_ds
 
@@ -222,7 +223,7 @@ class CovidDataSet:
     ) -> CovidDataSet:
         new_ds = CovidDataSet.from_loaded_image(list(joblib_helper.parallel_map(
             lambda image: image.apply(operation),
-            self._loaded_image,
+            tqdm.tqdm(iterable=self._loaded_image, desc="Applying operations..."),
             **kwargs
         )))
         return new_ds
@@ -285,6 +286,29 @@ class CovidDataSet:
             ),
             **kwargs
         ))
+
+    @property
+    def get_sklearn_dataset(self) -> Tuple[npt.NDArray, npt.NDArray]:
+        num_images = len(self._loaded_image)
+        if num_images == 0:
+            raise ValueError("Empty dataset!")
+        _img_size = self._loaded_image[0].as_np_array.shape
+        for img in self._loaded_image:
+            if img.as_np_array.shape != _img_size:
+                raise ValueError(f"Image {img} have different size!")
+        X = np.ndarray((num_images, operator.mul(*_img_size)), dtype=float)
+        y = np.ndarray((num_images,), dtype=int)
+        for i, img in enumerate(tqdm.tqdm(
+                iterable=self._loaded_image,
+                desc="loading data..."
+        )):
+            X[i] = np.ravel(img.as_np_array)
+            y[i] = img.label
+        labels, counts = np.unique(y, return_counts=True)
+        labels = [_decoder[label] for label in labels]
+        _lh.info("Loaded labels %s with corresponding counts %s", str(labels), str(counts))
+
+        return X, y
 
 
 def get_sklearn_dataset(
