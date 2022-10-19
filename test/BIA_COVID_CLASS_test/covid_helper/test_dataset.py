@@ -48,10 +48,30 @@ def test_apply():
         assert np.array_equiv(i1.as_np_array, i2.as_np_array)
 
 
+def test_parallel_apply():
+    d1 = covid_dataset.CovidDataSet.from_loaded_image(_IMAGES)
+    d2 = d1.apply(lambda img: skimage.img_as_int(skitrans.rotate(img, 270))).parallel_apply(
+        lambda img: skimage.img_as_int(skitrans.rotate(img, 90)))
+    for i1, i2 in zip(d1, d2):
+        assert np.array_equiv(i1.as_np_array, i2.as_np_array)
+
+
 def test_load_save_dataset():
     tmp_dir = tempfile.mkdtemp()
     d1 = covid_dataset.CovidDataSet.from_loaded_image(_IMAGES)
     d1.save(tmp_dir)
+    assert d1.dataset_path == tmp_dir
+    d2 = covid_dataset.CovidDataSet.from_directory(tmp_dir)
+    assert d2.dataset_path == tmp_dir
+    for i1, i2 in zip(d1, d2):
+        assert np.array_equiv(i1.as_np_array, i2.as_np_array)
+    shutil.rmtree(tmp_dir)
+
+
+def test_parallel_load_save_dataset():
+    tmp_dir = tempfile.mkdtemp()
+    d1 = covid_dataset.CovidDataSet.from_loaded_image(_IMAGES)
+    d1.parallel_save(tmp_dir)
     assert d1.dataset_path == tmp_dir
     d2 = covid_dataset.CovidDataSet.from_directory(tmp_dir)
     assert d2.dataset_path == tmp_dir

@@ -247,25 +247,44 @@ class CovidDataSet:
         _lh.info("Finished loading data...")
         return new_ds
 
-    def save(self, dataset_path: str = None):
+    def _save_impl(self, img: CovidImage, dataset_path: str):
+        if img.image_path == IN_MEMORY_INDICATOR:
+            _image_path = str(uuid.uuid4()) + ".npy.xz"
+        else:
+            _image_path = img.image_path
+        img.save(os.path.join(dataset_path, img.label_str, os.path.basename(_image_path)))
+
+    def _presave_hook(self, dataset_path: str):
         if dataset_path is None:
             dataset_path = self._dataset_path
         if dataset_path == IN_MEMORY_INDICATOR:
             raise ValueError("Cannot save to in-memory data.")
         self._dataset_path = dataset_path
         os.makedirs(self._dataset_path, exist_ok=True)
-        for label, imgs in self._loaded_image_with_label.items():
+        for label in self._loaded_image_with_label.keys():
             label_str = decode(label)
-            new_label_dir = os.path.join(self._dataset_path, label_str)
-            os.makedirs(new_label_dir, exist_ok=True)
-            for img in tqdm.tqdm(iterable=imgs, desc=f"Saving images for {label_str}..."):
-                if img.image_path == IN_MEMORY_INDICATOR:
-                    _image_path = str(uuid.uuid4()) + ".npy.xz"
-                else:
-                    _image_path = img.image_path
-                img.save(os.path.join(new_label_dir, os.path.basename(_image_path)))
+            os.makedirs(os.path.join(self._dataset_path, label_str), exist_ok=True)
 
-        # TODO: parallel save
+    def save(self, dataset_path: str = None):
+        self._presave_hook(dataset_path)
+        _ = list(map(
+            lambda img: self._save_impl(img, dataset_path),
+            tqdm.tqdm(
+                iterable=list(itertools.chain(*self._loaded_image_with_label.values())),
+                desc="Saving images..."
+            )
+        ))
+
+    def parallel_save(self, dataset_path: str = None, **kwargs):
+        self._presave_hook(dataset_path)
+        _ = list(joblib_helper.parallel_map(
+            lambda img: self._save_impl(img, dataset_path),
+            tqdm.tqdm(
+                iterable=list(itertools.chain(*self._loaded_image_with_label.values())),
+                desc="Saving images..."
+            ),
+            **kwargs
+        ))
 
 
 def get_sklearn_dataset(
