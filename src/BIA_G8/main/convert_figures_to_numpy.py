@@ -7,7 +7,7 @@ import skimage.io as skiio
 import skimage.transform as skitrans
 import tqdm
 
-from BIA_COVID_CLASS.covid_helper import covid_dataset
+from BIA_G8.covid_helper import covid_dataset
 from BIA_G8.helper import io_helper, matplotlib_helper, joblib_helper
 
 

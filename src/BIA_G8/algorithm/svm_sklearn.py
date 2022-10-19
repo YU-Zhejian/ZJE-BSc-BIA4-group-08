@@ -5,9 +5,9 @@ import ray
 from ray.util.joblib import register_ray
 from sklearn.metrics import confusion_matrix
 from sklearn.model_selection import train_test_split
-from sklearn.neighbors import KNeighborsClassifier as KNN
+from sklearn.svm import SVC
 
-from BIA_COVID_CLASS.covid_helper import covid_dataset
+from BIA_G8.covid_helper import covid_dataset
 from BIA_G8 import get_lh
 
 _lh = get_lh(__name__)
@@ -16,16 +16,16 @@ _lh = get_lh(__name__)
 def train_model(
         np_image_1d: npt.NDArray,
         label_int: npt.NDArray
-) -> KNN:
+) -> SVC:
     _lh.info("Training started with %d cases", len(np_image_1d))
-    knn = KNN()
-    knn.fit(X=np_image_1d, y=label_int)
+    svc = SVC()
+    svc.fit(X=np_image_1d, y=label_int)
     _lh.info("Training finished")
-    return knn
+    return svc
 
 
 def predict_model(
-        model: KNN,
+        model: SVC,
         np_image_1d: npt.NDArray,
 ) -> npt.NDArray:
     _lh.info("Prediction started with %d cases", len(np_image_1d))
@@ -52,6 +52,5 @@ if __name__ == '__main__':
             size=1200
         )
         X_train, X_test, y_train, y_test = train_test_split(X, y, shuffle=True)
-        print("Train-test-Split FIN")
         model = train_model(X_train, y_train)
         evaluate(model.predict(X_test), y_test)

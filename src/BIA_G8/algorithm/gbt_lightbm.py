@@ -4,7 +4,7 @@ import ray
 from ray.air.config import ScalingConfig
 from ray.train.lightgbm import LightGBMTrainer
 
-from BIA_COVID_CLASS.covid_helper import covid_dataset
+from BIA_G8.covid_helper import covid_dataset
 from BIA_G8 import get_lh
 
 _lh = get_lh(__name__)

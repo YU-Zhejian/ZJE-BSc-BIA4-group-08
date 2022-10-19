@@ -10,7 +10,7 @@ import pytest
 import skimage
 import skimage.transform as skitrans
 
-from BIA_COVID_CLASS.covid_helper import covid_dataset
+from BIA_G8.covid_helper import covid_dataset
 
 _IMAGE = skimage.img_as_int(np.array(reduce(operator.add, map(lambda x: [[x] * 100] * 10, range(0, 100, 10)))))
 

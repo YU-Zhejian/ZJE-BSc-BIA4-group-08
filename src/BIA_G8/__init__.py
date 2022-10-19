@@ -1,8 +1,3 @@
-import logging
-import logging.handlers
-import os.path
-import sys
-
 __all__ = (
     "__version__",
     "get_lh"
@@ -10,6 +5,11 @@ __all__ = (
 
 __version__ = "0.0.1"  # NOTE: Change ROOT_DIR/VERSION while updating
 
+
+import logging
+import logging.handlers
+import os.path
+import sys
 import time
 
 try:
