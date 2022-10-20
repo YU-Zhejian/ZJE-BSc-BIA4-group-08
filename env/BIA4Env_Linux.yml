@@ -20,7 +20,7 @@ channels:
   - https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/free
   # - conda-forge
   # - bioconda
-  # - _main
+  # - main
   # - free
 
 dependencies:
@@ -28,7 +28,8 @@ dependencies:
   - python=3.8
   - matplotlib>=3.5
   - simpleitk=2.2 # For CT/MRI DICOM format
-  - pyqt=5 # Matplotlib plotting backend. If you have Tk you may safely ignore this.
+  - pyqt=5
+  - tk
   - scipy=1.9
   - numpy=1.23
   - pandas=1.5
@@ -67,6 +68,7 @@ dependencies:
   # Sphinx documentation
   - sphinx
   - sphinx-book-theme
+  - sphinx-copybutton
   - rst2pdf
   - myst-parser
 
