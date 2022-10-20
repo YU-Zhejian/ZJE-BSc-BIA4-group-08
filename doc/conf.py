@@ -1,15 +1,3 @@
-# ==============================================================================
-#  Copyright (C) 2021-2022. tetgs authors
-#
-#  This file is a part of tetgs, which is licensed under MIT,
-#  a copy of which can be obtained at <https://opensource.org/licenses/MIT>.
-#
-#  NAME: conf.py -- Configure file of Sphinx.
-#
-#  VERSION HISTORY:
-# 2021-08-20 0.1  : Purposed and added by YU Zhejian.
-#
-# ==============================================================================
 """
 Configuration file for the Sphinx documentation builder.
 """
@@ -58,6 +46,7 @@ def copy_doc_files(from_path: str, to_path: str):
 
 
 copy_doc_files(os.path.join(ROOT_DIR, '*.md'), os.path.join(THIS_DIR, "_root"))
+copy_doc_files(os.path.join(ROOT_DIR, "src", "ipynb", '*.ipynb'), os.path.join(THIS_DIR, "_ipynb"))
 
 # -- Project information -----------------------------------------------------
 
@@ -78,9 +67,11 @@ html_theme = 'sphinx_book_theme'
 extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.todo',
+    'sphinx.ext.intersphinx',
     'sphinx.ext.mathjax',
-    'rst2pdf.pdfbuilder',
     'myst_parser',
+    'nbsphinx',
+    'sphinx_copybutton',
     html_theme
 ]
 
@@ -122,10 +113,6 @@ if not os.path.exists(THIS_TEMPLATE):
 # Override built-in static files.
 # html_static_path = ['_static']
 
-# Insert both docstring of the class and constructor.
-# autodoc_default_options = {
-#     'special-members': '__init__',
-# }
 
 source_suffix = {
     '.rst': 'restructuredtext',
@@ -140,3 +127,11 @@ latex_elements = {
 autodoc_default_options = {
     'special-members': '__init__',
 }
+
+# Intersphinx settings
+intersphinx_mapping = {
+    'python': ('https://docs.python.org/3.8', None),
+    'joblib':('https://joblib.readthedocs.io/en/latest', None)
+}
+
+nbsphinx_execute = "never"

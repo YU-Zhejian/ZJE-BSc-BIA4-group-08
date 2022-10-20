@@ -20,7 +20,7 @@ channels:
   - https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/free
   # - conda-forge
   # - bioconda
-  # - main
+  # - _main
   # - free
 
 dependencies:
@@ -55,6 +55,8 @@ dependencies:
   - click # For CLI applications
   - napari # For viewing 3d applications
   - prettytable # For formatting tables
+  - tomli # For fast parsing of TOML files
+  - make # GNU Make system
 
   # Jupyter Notebook Related
   - ipython
@@ -67,7 +69,6 @@ dependencies:
   - sphinx-book-theme
   - rst2pdf
   - myst-parser
-  - tomli
 
   # Pandas acceleration libraries
   - bottleneck>=1.3.1
@@ -89,8 +90,8 @@ dependencies:
   - coverage=6.5
 
   # Gradient Boosting Trees
-  - lightgbm>=3.3
-  - py-xgboost-gpu>=1.6
+  - lightgbm>=3.2.1
+  - py-xgboost-gpu>=0.90
 
   # Ray distributed framework
   - ray-core=2.0.0
@@ -102,6 +103,8 @@ dependencies:
 
   - pip
   - setuptools
+  - wheel
   - pip:
     - lightgbm-ray
     - xgboost-ray
+    - build

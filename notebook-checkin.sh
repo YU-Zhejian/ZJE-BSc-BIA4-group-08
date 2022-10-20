@@ -3,7 +3,7 @@ set -eu
 SHDIR="$(readlink -f "$(dirname "${0}")")"
 cd "${SHDIR}" || exit 1
 
-find . | grep '\.ipynb$' | while read -r fn; do
+find . | grep '\.ipynb$' | grep -v doc | while read -r fn; do
     target_fn="${fn/.ipynb/.ipynb.py}"
     if [ -e "${target_fn}" ] && [ "${target_fn}" -nt "${fn}" ] ; then
         echo "CONVERT ${fn} -> ${target_fn}: REFUSE TO OVERWRITE NEWER FILE"

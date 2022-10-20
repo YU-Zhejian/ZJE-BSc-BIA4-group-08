@@ -1,9 +1,11 @@
 from __future__ import annotations
+from functools import reduce
 
 __all__ = (
     "encode",
     "decode",
     "IN_MEMORY_INDICATOR",
+    "VALID_IMAGE_EXTENSIONS",
     "CovidImage",
     "CovidDataSet",
     "resolve_label_from_path"
@@ -20,10 +22,7 @@ from typing import Tuple, List, Dict, Callable, Iterable, Optional, Any
 
 import numpy as np
 import numpy.typing as npt
-import pandas as pd
-import ray.data
 import skimage.io as skiio
-import skimage.transform
 import tqdm
 
 from BIA_G8 import get_lh
@@ -36,8 +35,15 @@ _encoder = {
     "NORMAL": 1,
     "Viral_Pneumonia": 2
 }
-
 _decoder = {v: k for k, v in _encoder.items()}
+VALID_IMAGE_EXTENSIONS = (
+    "npy.xz",
+    "png",
+    "jpg",
+    "jpeg",
+    "tif",
+    "tiff"
+)
 
 IN_MEMORY_INDICATOR = "IN_MEMORY"
 
@@ -160,7 +166,13 @@ class CovidDataSet:
     ) -> List[str]:
         self._dataset_path = dataset_path
         _lh.info("Requested data from %s...", self._dataset_path)
-        all_image_paths = list(glob.glob(os.path.join(self._dataset_path, "*", "*.npy.xz")))
+        all_image_paths = list(reduce(
+            operator.add,
+            map(
+                lambda ext: list(glob.glob(os.path.join(self._dataset_path, "*", f"*.{ext}"))),
+                VALID_IMAGE_EXTENSIONS
+            )
+        ))
         image_paths_with_label = defaultdict(lambda: [])
         for image_path in tqdm.tqdm(
                 iterable=all_image_paths,
@@ -297,7 +309,11 @@ class CovidDataSet:
         _lh.info("Finished loading data...")
         return new_ds
 
-    def _save_impl(self, img: CovidImage, dataset_path: str):
+    def _save_impl(
+            self,
+            img: CovidImage,
+            dataset_path: str
+    ):
         if img.image_path == IN_MEMORY_INDICATOR:
             _image_path = str(uuid.uuid4()) + ".npy.xz"
         else:
@@ -358,30 +374,3 @@ class CovidDataSet:
         _lh.info("Loaded labels %s with corresponding counts %s", str(labels), str(counts))
 
         return X, y
-
-
-def get_ray_dataset(
-        dataset_path: str,
-        desired_size=20 * 20,
-        size: int = -1
-) -> ray.data.Dataset:
-    _lh.info("Requested data from %s...", dataset_path)
-    all_image_paths = list(glob.glob(os.path.join(dataset_path, "*", "*.npy.xz")))
-    _lh.info("Requested data from %s...found %d datasets", dataset_path, len(all_image_paths))
-    if size != -1:
-        all_image_paths = random.sample(all_image_paths, size)
-    df = pd.DataFrame(columns=["img", "label"])
-    for i, image_path in enumerate(tqdm.tqdm(
-            iterable=all_image_paths,
-            desc="loading data..."
-    )):
-        df = pd.concat([
-            df,
-            pd.DataFrame(
-                {
-                    "img":skimage.transform.resize(io_helper.read_np_xz(image_path), (20, 20)).ravel(),
-                    "label":resolve_label_from_path(image_path)
-                },
-            )
-        ])
-    return ray.data.from_pandas(df)

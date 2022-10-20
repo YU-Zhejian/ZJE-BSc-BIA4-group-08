@@ -1,9 +1,11 @@
 .PHONY: dist
 dist:
-	python setup.py sdist bdist_wheel
+	python -m build
 
 .PHONY: doc
 doc:
+	bash notebook-checkout.sh --execute
+	$(MAKE) -C doc clean
 	$(MAKE) -C doc
 
 .PHONY: test

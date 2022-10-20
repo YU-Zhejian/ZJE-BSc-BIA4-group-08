@@ -53,4 +53,4 @@ def main(source_path: str, dest_path: str):
 if __name__ == '__main__':
     covid_dataset.CovidDataSet.from_directory("/media/yuzj/BUP/covid19-database-np", size=600).save(
         "/media/yuzj/BUP/covid19-database-np-s")
-    # main("/media/yuzj/BUP/covid19-database", "/media/yuzj/BUP/covid19-database-np")
+    # _main("/media/yuzj/BUP/covid19-database", "/media/yuzj/BUP/covid19-database-np")

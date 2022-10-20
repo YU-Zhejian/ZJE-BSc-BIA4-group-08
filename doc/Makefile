@@ -11,8 +11,7 @@ SPHINX_APIDOC_ARGS := --separate \
 BUILD_DIR := $(CURDIR)/_build
 
 .PHONY: all
-
-all: pdf html
+all: html
 
 .PHONY: apidoc
 apidoc:
@@ -21,10 +20,7 @@ apidoc:
 html: apidoc
 	sphinx-build -M html $(CURDIR) $(BUILD_DIR) $(SPHINX_OPTS)
 
-pdf: apidoc
-	sphinx-build -M latexpdf $(CURDIR) $(BUILD_DIR) $(SPHINX_OPTS)
-
 clean:
-	$(RM) $(BUILD_DIR)
+	rm -rf $(CURDIR)/_build $(CURDIR)/_apidoc $(CURDIR)/_root
 
 distclean: clean

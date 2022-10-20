@@ -61,8 +61,9 @@ def test_load_save_dataset():
     d1 = covid_dataset.CovidDataSet.from_loaded_image(_IMAGES)
     d1.save(tmp_dir)
     assert d1.dataset_path == tmp_dir
-    d2 = covid_dataset.CovidDataSet.from_directory(tmp_dir)
+    d2 = covid_dataset.CovidDataSet.from_directory(tmp_dir, balanced=False)
     assert d2.dataset_path == tmp_dir
+    assert len(d1) == len(d2)
     for i1, i2 in zip(d1, d2):
         assert np.array_equiv(i1.as_np_array, i2.as_np_array)
     shutil.rmtree(tmp_dir)

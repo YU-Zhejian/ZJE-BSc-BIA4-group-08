@@ -1,56 +1,34 @@
 # Developers' Guide for `proc_profiler`
 
-## Structure
+## Introduction
 
-- The main source code of this project is located in `src`, with adapters in `bin`.
-- Examples of multi-threaded or multi-process programs for benchmark purpose written in C, Python and other languages are located at `test`.
-- Sourcecode of the documentations are located in `doc`. For compiling documentations for local use, see documentations inside `doc`. This requires GPMF.
+## Get Started
 
-## Set Up the Environment
+To participate in development of this project, you need to clone this project to your local computer using [Git](https://git-scm.com) from <https://gitee.com/yuzjlab/2022-23-group-08.git> or <https://github.com/BIA4-course/2022-23-Group-08>.
 
 
-### Using GPMF `setup.sh`
+The Python Coding Standard enforced in this project would be a modified (unpublished) version of [_Google Python Style_](https://google.github.io/styleguide/pyguide.html) (A Chinese version [here](https://zh-google-styleguide.readthedocs.io/en/latest/google-python-styleguide)).
 
-All third-party libraries are automatically installed once you execute `setup.sh` except following base packages:
+The Developing environment of this project changes rapidly since new machine-learning algorithms \& Implementations are frequently tested, aded or removed. The current "all-in-one" environment is as follows:
 
-- Needed Python dependencies: [virtualenv](https://pypi.org/project/virtualenv/).
-- Needed R dependencies: [renv](https://rstudio.github.io/renv/).
+## Building the Project
 
-Please execute `bash setup.sh` to set up the environment.
+Ensure that you have set up the developmental environment using Conda or Mamba.
 
-```{note}
-There's no need to call `activate.sh` unless you're a developer.
-```
+Use `make doc` to generate the docuemntation site. the generated documentation site would be available at `doc/_build` related to project root.
 
-### Manually
+Use `make dist` to generate a distributable [binary wheel](https://packaging.python.org/en/latest/glossary/#term-Wheel) or [source distribution](https://packaging.python.org/en/latest/glossary/#term-Source-Distribution-or-sdist).
 
-On POSIX-compliant systems, R library dependencies can be searched using following command:
+Use `make test` to perform automatic tests and get test reports. The test report together with a JUnit-compatible report in XML and a coverage report would be available at `pytest` directory.
 
-```shell
-find src -name *.R | xargs cat  | grep ^library | sort | uniq | sed 's;library(\(.*\));\1;'
-```
+## Design and Implementation of Project Skeleton
 
-which gives:
+The project skeleton was mainly migrated from several unpublished projects of YU Zhejian.
 
-```text
-argparser
-ggpubr
-knitr
-rmarkdown
-scales
-tidyverse
-```
+The documentation of the project was built by [Sphinx](https://www.sphinx-doc.org/) with following extensions:
 
-You may install them using `renv`, Conda or other methods. Make sure to create `renv` folder to disable `setup.sh`. The list of version in testing machine can be found at `installed-packages-and-versions-2022-01-18.R.csv`.
+- [`myst_parser`](https://myst-parser.readthedocs.io/), which parses markdown version of documentations to reStructured Text as is supported by Sphinx.
+- [`nbsphinx`](https://nbsphinx.readthedocs.io/), which parses executed Jupyter Notebook to Sphinx documentations.
+- [`sphinx_book_theme`](https://sphinx-book-theme.readthedocs.io/), the Sphinx HTML theme.
 
-Python dependencies are listed in `requirements.txt`. You may install them using `venv`, `virtualenv`, Conda or other methods. Make sure to create `.virtualenv` folder to disable `setup.sh`. 
-
-## API Reference
-
-```{toctree}
-:caption: 'Contents:'
-:glob:
-:maxdepth: 2
-
-_apidoc/BIA_COVID_CLASS
-```
+## Design and Implementation of COVID X-Ray Data Structure

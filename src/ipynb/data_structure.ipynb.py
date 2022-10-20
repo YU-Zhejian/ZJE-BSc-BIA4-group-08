@@ -24,7 +24,7 @@ import sys
 THIS_DIR_PATH = os.path.abspath(globals()["_dh"][0])
 NEW_PYTHON_PATH = os.path.dirname(THIS_DIR_PATH)
 sys.path.insert(0, NEW_PYTHON_PATH)
-os.environ["PYTHONPATH"] = os.sep.join((NEW_PYTHON_PATH, os.environ.get("PYTHONPATH", "")))
+os.environ["PYTHONPATH"] = os.pathsep.join((NEW_PYTHON_PATH, os.environ.get("PYTHONPATH", "")))
 
 # %% [markdown]
 # # Fast In-Memory Analytics using COVID Data Infrastructure
@@ -196,7 +196,7 @@ backend = "loky"
 ds_enlarged_with_noise = ds_enlarged.parallel_apply(
     lambda img: skimage.img_as_int(
         skiutil.random_noise(
-            skimage.img_as_float(img), 
+            skimage.img_as_float(img),
             mode="pepper"
         )
     ),
@@ -204,13 +204,12 @@ ds_enlarged_with_noise = ds_enlarged.parallel_apply(
 ).parallel_apply(
     lambda img: skimage.img_as_int(
         skitrans.rotate(
-            img, 
+            img,
             random.random() * 120 - 60
         )
     ),
     backend=backend
 )
-
 
 # %% [markdown]
 # ## Machine-Learning Using SKLearn

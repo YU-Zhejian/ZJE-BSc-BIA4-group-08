@@ -1,24 +1,26 @@
 # Users' Guide for `proc_profiler`
 
-## Profiling a System Benchmark
+## Installation
 
-This profiler can be benchmarked by following commands:
+The recommended way of setting up the project is through [Conda](https://docs.conda.io/), which is a general-purposed user-level package management system.
 
-### CPU Stress
+```{hint}
+Since the environment is large, it make take tens of minutes for Conda to resolve the dependencies. You are recommended to use [mamba](https://mamba.readthedocs.io/) as a drop-in replacement of Conda, which is faster.
+```
 
-Most programs in `test` is CPU stressing.
+You may also use PIP-based virtual environment providers like [venv](https://docs.python.org/3/library/venv.html), [pipenv](https://pipenv.pypa.io/en/latest/index.html) or [virtualenv](https://virtualenv.pypa.io).
 
-You may also stress CPU using `stress`. For example, use `stress --cpu 8` to benchmark with 8 cpus.
+## Using the User Interface
 
-### Disk IO
+## Tutorials on Data Structures
 
-You may also use `stress` with `--hdd` option. More tools are listed as follows:
+Following pages contains tutorials on data structures used in this project.
 
-`fio` with 4k random read, write, read+write using 8 threads:
 
-```shell
-mkdir -p fio_data
-fio -directory="${PWD}"/fio_data/ -name=tempfile.dat -direct=1 -rw=randwrite -bs=4k -size=1M -numjobs=8 -thread -time_based -runtime=100 -group_reporting
-fio -directory="${PWD}"/fio_data/ -name=tempfile.dat -direct=1 -rw=randread -bs=4k -size=1M -numjobs=8 -thread -time_based -runtime=100 -group_reporting
-fio -directory="${PWD}"/fio_data/ -name=tempfile.dat -direct=1 -rw=randrw -bs=4k -size=1M -numjobs=8 -thread -time_based -runtime=100 -group_reporting
+```{toctree}
+:glob:
+:maxdepth: 2
+
+_ipynb/data_structure.ipynb
+_ipynb/ml_pp.ipynb
 ```

@@ -1,10 +1,9 @@
 """
-Helper function in visualization of explorization and preprocessing steps.
+Helper function in visualization of exploration and preprocessing steps.
 """
 
 __all__ = (
-    "plot_3d_rgba",
-    "plot_histogram"
+    "plot_histogram",
 )
 
 import matplotlib.pyplot as plt
@@ -28,7 +27,8 @@ def plot_histogram(
     :param img: image to be plotted
     :param num_bins: number of bins in the histogram
     :param show_img: if True, the image is plotted alongside the histograms. Require the image to be a 2d greyscale,
-    RGB or RGBA image.
+        RGB or RGBA image.
+
     :param log: if True, the histogram is plotted in log scale
     :param cumulative: if True, show cumulative histogram
     """
@@ -57,7 +57,4 @@ def plot_histogram(
 
 def is_img_rgb(img: npt.NDArray) -> bool:
     """Determine whether the image is RGB"""
-    if img.shape[-1] == 3:
-        return True
-    else:
-        return False
+    return img.shape[-1] == 3

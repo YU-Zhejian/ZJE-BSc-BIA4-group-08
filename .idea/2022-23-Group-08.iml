@@ -17,6 +17,7 @@
       <excludeFolder url="file://$MODULE_DIR$/build" />
       <excludeFolder url="file://$MODULE_DIR$/dist" />
       <excludeFolder url="file://$MODULE_DIR$/src/BIA_COVID_CLASS.egg-info" />
+      <excludeFolder url="file://$MODULE_DIR$/doc/_ipynb" />
     </content>
     <orderEntry type="jdk" jdkName="Python 3.8 (BIA4Env)" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />

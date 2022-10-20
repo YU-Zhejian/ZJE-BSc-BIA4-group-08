@@ -10,7 +10,7 @@ channels:
   - https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/free
   # - conda-forge
   # - bioconda
-  # - main
+  # - _main
   # - free
 
 dependencies:
