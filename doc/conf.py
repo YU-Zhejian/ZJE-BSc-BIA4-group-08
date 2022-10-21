@@ -133,7 +133,7 @@ intersphinx_mapping = {
     'python': ('https://docs.python.org/3.8', None),
     'joblib': ('https://joblib.readthedocs.io/en/latest', None),
     'sklearn': ('https://scikit-learn.org/stable', None),
-
+    'torch': ('https://pytorch.org/docs/stable', None),
 }
 
 nbsphinx_execute = "never"
