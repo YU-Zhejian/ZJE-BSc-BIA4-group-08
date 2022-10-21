@@ -1,79 +1,17 @@
 __all__ = (
-    "sample_along_np",
-    "merge_along_np",
     "scale_np_array",
     "scale_torch_array",
-    "sample_along_tensor",
-    "merge_along_tensor",
     "describe"
 )
 
 import doctest
-from typing import Any, Iterable, Union, Tuple, TypeVar
+from typing import Union, Tuple, TypeVar
 
 import numpy as np
 import torch
 from numpy import typing as npt
 
 _Tensor = TypeVar("_Tensor", npt.NDArray[Union[float, int]], torch.Tensor)
-
-
-def sample_along_np(
-        array: npt.NDArray[Any],
-        axis: int = 0,
-        start: int = 0,
-        end: int = -1,
-        step: int = 1
-) -> npt.NDArray:
-    """
-    Sample an image alongside an axis.
-
-    :param array: A 2D/3D greyscale/RGB/RGBA image
-    :param axis: Axis to be sampled. `0` or `1` for 2D image, `0`, `1` or `2` for 3D image.
-    :param start: Sample start.
-    :param end: Sample end. Use `-1` to make it the end of the image.
-    :param step: Sample step.
-    :return: Sampled image in `npt.NDArray`, which can be considered an array of image strips/ slices.
-    """
-    if end == -1:
-        end = array.shape[axis]
-    return np.moveaxis(array.take(indices=np.arange(start, end, step), axis=axis), axis, 0)
-
-
-def merge_along_np(
-        arrays: Iterable[npt.NDArray[Any]],
-        axis: int = 0,
-) -> npt.NDArray[Any]:
-    imgs_list = list(arrays)
-    first_img = imgs_list[0]
-    merged_array = np.ndarray(shape=(len(imgs_list), *first_img.shape), dtype=first_img.dtype)
-    for i, img in enumerate(imgs_list):
-        merged_array[i, ...] = img
-    return np.moveaxis(merged_array, 0, axis)
-
-
-def sample_along_tensor(
-        array: torch.Tensor,
-        axis: int = 0,
-        start: int = 0,
-        end: int = -1,
-        step: int = 1
-) -> torch.Tensor:
-    if end == -1:
-        end = array.shape[axis]
-    return torch.moveaxis(array.index_select(index=torch.arange(start, end, step), dim=axis), axis, 0)
-
-
-def merge_along_tensor(
-        arrays: Iterable[torch.Tensor],
-        axis: int = 0,
-) -> torch.Tensor:
-    imgs_list = list(arrays)
-    first_img = imgs_list[0]
-    merged_array = torch.zeros(size=(len(imgs_list), *first_img.shape), dtype=first_img.dtype)
-    for i, img in enumerate(imgs_list):
-        merged_array[i, ...] = img
-    return torch.moveaxis(merged_array, 0, axis)
 
 
 def _scale_impl(
@@ -91,6 +29,16 @@ def scale_np_array(
         x: npt.NDArray[Union[int, float]],
         out_range: Tuple[Union[int, float], Union[int, float]] = (0, 1)
 ) -> npt.NDArray[Union[int, float]]:
+    """
+    Scale a Numpy array to specific range.
+
+    See also: :py:func:`scale_torch_array`
+
+    Example:
+
+    >>> scale_np_array(np.array([1,2,3,4,5]), (0, 1))
+    array([0.  , 0.25, 0.5 , 0.75, 1.  ])
+    """
     domain = np.min(x), np.max(x)
     return _scale_impl(x, out_range, domain)
 
@@ -99,7 +47,17 @@ def scale_torch_array(
         x: torch.Tensor,
         out_range: Tuple[Union[int, float], Union[int, float]] = (0, 1)
 ) -> torch.Tensor:
-    domain = torch.min(x), torch.max(x)
+    """
+    Scale a Torch array to specific range.
+
+    See also: :py:func:`scale_np_array`
+
+    Example:
+
+    >>> scale_torch_array(torch.tensor(np.array([1,2,3,4,5])), (0, 1))
+    tensor([0.0000, 0.2500, 0.5000, 0.7500, 1.0000])
+    """
+    domain = torch.min(x).item(), torch.max(x).item()
     return _scale_impl(x, out_range, domain)
 
 
