@@ -17,6 +17,7 @@ channels:
   - https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/simpleitk
   - https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/main
   - https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/free
+  - https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/msys2
   # - conda-forge
   # - bioconda
   # - main
@@ -52,7 +53,12 @@ dependencies:
   - napari # For viewing 3d applications
   - prettytable # For formatting tables
   - tomli # For fast parsing of TOML files
-  - make # GNU Make system
+
+  # Msys2
+  - m2-bash
+  - m2-make
+  - m2-findutils
+  - m2-grep
 
   # Jupyter Notebook Related
   - ipython
@@ -65,6 +71,7 @@ dependencies:
   - sphinx-book-theme
   - sphinx-copybutton
   - rst2pdf
+  - nbsphinx
   - myst-parser
 
   # Pandas acceleration libraries

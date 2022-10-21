@@ -70,6 +70,7 @@ dependencies:
   - sphinx-book-theme
   - sphinx-copybutton
   - rst2pdf
+  - nbsphinx
   - myst-parser
 
   # Pandas acceleration libraries

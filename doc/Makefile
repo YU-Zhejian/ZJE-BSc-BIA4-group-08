@@ -15,7 +15,7 @@ all: html
 
 .PHONY: apidoc
 apidoc:
-	sphinx-apidoc $(SPHINX_APIDOC_ARGS) $(PWD)/src/BIA_G8
+	sphinx-apidoc $(SPHINX_APIDOC_ARGS) $(CURDIR)/../src/BIA_G8
 
 html: apidoc
 	sphinx-build -M html $(CURDIR) $(BUILD_DIR) $(SPHINX_OPTS)
