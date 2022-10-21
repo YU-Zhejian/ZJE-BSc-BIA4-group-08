@@ -7,8 +7,8 @@ from sklearn.metrics import confusion_matrix
 from sklearn.model_selection import train_test_split
 from sklearn.neighbors import KNeighborsClassifier as KNN
 
-from BIA_G8.covid_helper import covid_dataset
 from BIA_G8 import get_lh
+from BIA_G8.covid_helper import covid_dataset
 from BIA_G8.helper import ml_helper
 
 _lh = get_lh(__name__)
@@ -42,7 +42,7 @@ def evaluate(result_1: npt.NDArray, result_2: npt.NDArray) -> float:
     _lh.info(
         "Evaluation finished with accuracy=%.2f%% cmatrix=\n%s",
         accuracy * 100,
-        ml_helper.print_confusion_matrix(_confusion_matrix, ["COVID-19", "NORMAL",  "Viral_Pneumonia"])
+        ml_helper.print_confusion_matrix(_confusion_matrix, ["COVID-19", "NORMAL", "Viral_Pneumonia"])
     )
     return accuracy
 

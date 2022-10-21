@@ -5,7 +5,6 @@ __all__ = (
 
 __version__ = "0.0.1"
 
-
 import logging
 import logging.handlers
 import os.path

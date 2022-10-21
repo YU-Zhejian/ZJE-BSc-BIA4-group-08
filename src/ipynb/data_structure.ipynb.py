@@ -112,12 +112,12 @@ for i, ax in enumerate(axs.ravel()):
 
 # %%
 _IMAGES = [
-    covid_dataset.CovidImage.from_image(stride, 0),
-    covid_dataset.CovidImage.from_image(stride, 0),
-    covid_dataset.CovidImage.from_image(circle, 1),
-    covid_dataset.CovidImage.from_image(circle, 1),
-    covid_dataset.CovidImage.from_image(square, 2),
-    covid_dataset.CovidImage.from_image(square, 2),
+    covid_dataset.CovidImage.from_np_array(stride, 0),
+    covid_dataset.CovidImage.from_np_array(stride, 0),
+    covid_dataset.CovidImage.from_np_array(circle, 1),
+    covid_dataset.CovidImage.from_np_array(circle, 1),
+    covid_dataset.CovidImage.from_np_array(square, 2),
+    covid_dataset.CovidImage.from_np_array(square, 2),
 ]
 d1 = covid_dataset.CovidDataSet.from_loaded_image(_IMAGES)
 

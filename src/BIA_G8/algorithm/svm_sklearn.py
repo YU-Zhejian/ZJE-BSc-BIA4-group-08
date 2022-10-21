@@ -7,8 +7,8 @@ from sklearn.metrics import confusion_matrix
 from sklearn.model_selection import train_test_split
 from sklearn.svm import SVC
 
-from BIA_G8.covid_helper import covid_dataset
 from BIA_G8 import get_lh
+from BIA_G8.covid_helper import covid_dataset
 
 _lh = get_lh(__name__)
 

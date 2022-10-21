@@ -10,6 +10,7 @@ name = "BIA_COVID_CLASS"
 description = "A COVID Image Classifier Using Traditional- and Deep Learning Methods"
 authors = [
     { name = "Niels Zeilemaker", email = "nielszeilemaker@godatadriven.com" },
+    { name = "Niels Zeilemaker II", email = "nielszeilemaker2@godatadriven.com" },
 ]
 classifiers = [
     "Programming Language :: Python :: 3",
@@ -37,8 +38,8 @@ dependencies = { file = "requirements.txt" }
 where = ["src"]
 
 [tool.pytest.ini_options]
-addopts = "-vv --continue-on-collection-errors 	--junitxml=pytest/junit.xml --cov --cov-report=html --html=pytest/pytest_report.html --self-contained-html"
-testpaths = "test"
+addopts = " --doctest-modules -vv --continue-on-collection-errors --junitxml=pytest/junit.xml --cov --cov-report=html --html=pytest/pytest_report.html --self-contained-html --ignore-glob='*.ipynb.py'"
+testpaths = ["test", "src"]
 log_level = 8
 log_file = "log/pytest.log"
 log_file_level = 8
@@ -51,9 +52,8 @@ junit_duration_report = "call"
 source = [
     "src",
 ]
-# plugins = Cython.Coverage
 omit = [
-    "*/scripts/*",
+    "*/_main/*",
 ]
 
 [tool.coverage.report]

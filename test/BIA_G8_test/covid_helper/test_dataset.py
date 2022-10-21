@@ -1,7 +1,5 @@
-import operator
 import shutil
 import tempfile
-from functools import reduce
 
 import numpy as np
 import pytest
@@ -9,15 +7,14 @@ import skimage
 import skimage.transform as skitrans
 
 from BIA_G8.covid_helper import covid_dataset
-
-_the_image = skimage.img_as_int(np.array(reduce(operator.add, map(lambda x: [[x] * 100] * 10, range(0, 100, 10)))))
+from BIA_G8_test.covid_helper import stride
 
 _IMAGES = [
-    covid_dataset.CovidImage.from_image(_the_image, 0),
-    covid_dataset.CovidImage.from_image(_the_image, 0),
-    covid_dataset.CovidImage.from_image(_the_image, 1),
-    covid_dataset.CovidImage.from_image(_the_image, 1),
-    covid_dataset.CovidImage.from_image(_the_image, 2),
+    covid_dataset.CovidImage.from_np_array(stride, 0),
+    covid_dataset.CovidImage.from_np_array(stride, 0),
+    covid_dataset.CovidImage.from_np_array(stride, 1),
+    covid_dataset.CovidImage.from_np_array(stride, 1),
+    covid_dataset.CovidImage.from_np_array(stride, 2),
 ]
 
 
@@ -58,8 +55,17 @@ def test_parallel_apply():
 
 def test_load_save_dataset():
     tmp_dir = tempfile.mkdtemp()
+
     d1 = covid_dataset.CovidDataSet.from_loaded_image(_IMAGES)
     d1.save(tmp_dir)
+    assert d1.dataset_path == tmp_dir
+    d2 = covid_dataset.CovidDataSet.from_directory(tmp_dir, balanced=False)
+    assert d2.dataset_path == tmp_dir
+    assert len(d1) == len(d2)
+    for i1, i2 in zip(d1, d2):
+        assert np.array_equiv(i1.as_np_array, i2.as_np_array)
+
+    d1.save(tmp_dir, extension="png")
     assert d1.dataset_path == tmp_dir
     d2 = covid_dataset.CovidDataSet.from_directory(tmp_dir, balanced=False)
     assert d2.dataset_path == tmp_dir

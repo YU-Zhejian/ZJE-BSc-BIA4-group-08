@@ -36,7 +36,6 @@ os.environ["PYTHONPATH"] = os.pathsep.join((NEW_PYTHON_PATH, os.environ.get("PYT
 # %%
 import gc  # For collecting memory garbage
 
-import skimage.transform as skitrans
 import skimage.filters as skifilt
 import skimage.exposure as skiexp
 import numpy as np

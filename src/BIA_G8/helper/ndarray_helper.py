@@ -8,6 +8,7 @@ __all__ = (
     "describe"
 )
 
+import doctest
 from typing import Any, Iterable, Union, Tuple, TypeVar
 
 import numpy as np
@@ -103,6 +104,20 @@ def scale_torch_array(
 
 
 def describe(array: _Tensor) -> str:
+    """
+    Describe the array by data type, shape, quantiles or unique values.
+
+    Example:
+
+    >>> describe(np.array([0, 0, 1, 1]))
+    'ndarray[int64] with shape=(4,); uniques=[0 1]'
+
+    >>> describe(np.array(np.random.uniform(0, 21, size=12000), dtype=int))
+    "ndarray[int64] with shape=(12000,); quantiles=['0.00', '5.00', '10.00', '15.00', '20.00']"
+
+    :param array: The Numpy array or pyTorch Tensor to be described.
+    :return: Description of the array.
+    """
     q = [0, 0.25, 0.5, 0.75, 1]
     _shape = tuple(array.shape)
     if isinstance(array, torch.Tensor):
@@ -115,7 +130,7 @@ def describe(array: _Tensor) -> str:
                 array = array.float()
                 _quantiles = list(map(lambda _q: f"{array.quantile(q=_q):.2f}", q))
             else:
-                _quantiles = np.quantile(array, q=q)
+                _quantiles = list(map(lambda _q: f"{_q:.2f}", np.quantile(array, q=q)))
         except (IndexError, RuntimeError) as e:
             _quantiles = f"ERROR {e}"
         _quantiles_str = f"quantiles={_quantiles}"
@@ -137,3 +152,7 @@ class DimensionMismatchException(ValueError):
             f"\twhere {_arr1_name} is {describe(_arr1)}\n"
             f"\twhere {_arr2_name} is {describe(_arr2)}\n"
         )
+
+
+if __name__ == "__main__":
+    doctest.testmod()

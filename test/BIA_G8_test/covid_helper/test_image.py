@@ -1,9 +1,7 @@
-import operator
 import os
 import platform
 import shutil
 import tempfile
-from functools import reduce
 
 import numpy as np
 import pytest
@@ -11,12 +9,11 @@ import skimage
 import skimage.transform as skitrans
 
 from BIA_G8.covid_helper import covid_dataset
-
-_IMAGE = skimage.img_as_int(np.array(reduce(operator.add, map(lambda x: [[x] * 100] * 10, range(0, 100, 10)))))
+from BIA_G8_test.covid_helper import stride
 
 
 def test_apply():
-    c1 = covid_dataset.CovidImage.from_image(_IMAGE, 0)
+    c1 = covid_dataset.CovidImage.from_np_array(stride, 0)
     c2 = c1.apply(lambda img: skitrans.rotate(img, 90))
     assert c2.label == 0
     assert c2.label_str == covid_dataset.decode(0)
@@ -25,7 +22,7 @@ def test_apply():
 
 
 def test_save_load():
-    c1 = covid_dataset.CovidImage.from_image(_IMAGE, 100)
+    c1 = covid_dataset.CovidImage.from_np_array(stride, 100)
     assert c1.label == 100
     assert c1.label_str == "NA"
     assert c1.image_path == covid_dataset.IN_MEMORY_INDICATOR
@@ -58,6 +55,6 @@ def test_save_load():
 
 def test_resolve_label_from_path():
     if platform.system() != "Windows":
-        assert covid_dataset.resolve_label_from_path("/100/100/100.png") == "100"
+        assert covid_dataset.resolve_label_from_path("/100/200/300.png") == "200"
     else:
-        assert covid_dataset.resolve_label_from_path("D:\\100\\100\\100.png") == "100"
+        assert covid_dataset.resolve_label_from_path("D:\\100\\200\\300.png") == "200"
