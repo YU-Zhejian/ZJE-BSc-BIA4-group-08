@@ -53,7 +53,12 @@ dependencies:
   - prettytable # For formatting tables
   - tomli # For fast parsing of TOML files
 
+  - bash
   - make
+  - coreutils
+  - findutils
+  - git
+  - grep
 
   # Jupyter Notebook Related
   - ipython

@@ -87,13 +87,14 @@ exclude_patterns = [
     '.virtualenv/**'
 ]
 
+# FIXME: Error on MacOS, see appended yml
 # -- Options for HTML output -------------------------------------------------
 html_theme_options = {
-    'show_navbar_depth': 2,
+#    'show_navbar_depth': 2,
     'repository_branch': "master",
     "home_page_in_toc": True,
-    "toc_title": "Page Table of Contents",
-    "use_download_button": True,
+#    "toc_title": "Page Table of Contents",
+#    "use_download_button": True,
     "use_repository_button": True,
     "use_issues_button": True,
 }
@@ -105,7 +106,10 @@ if theme_loader is None:
 theme_path = os.path.join(os.path.dirname(theme_loader.path), "_templates")
 THIS_TEMPLATE = os.path.join(THIS_DIR, "_templates")
 if not os.path.exists(THIS_TEMPLATE):
-    shutil.copytree(theme_path, THIS_TEMPLATE)
+    try:
+        shutil.copytree(theme_path, THIS_TEMPLATE)
+    except FileNotFoundError:
+        pass
 
 # html_logo = "_static/logo.svg"  # Logo at top left of the page.
 # html_favicon = "_static/logo.svg"  # Logo at opened tabs.
