@@ -1,0 +1,106 @@
+# Reference BIA4 Development Environment in Conda.
+# YU Zhejian based on Prof. Romano's `requirements.txt`.
+# CONDA USERS: Use `conda env create -f [THIS FILE]`
+# MAMBA USERS: `mamba env create -f [THIS FILE]`
+# MICROMAMBA USERS: `micromamba create -f [THIS FILE]`
+# WARNING: This environment is optimized for Intel CPU.
+# WARNING: This environment assumes presence of NVidia GPU. See comments for details.
+# WARNING: This environment contains YU Zhejian's preference over acceleration and test libraries.
+# WARNING: This environment is HUGE. This means it may consume lots of time to resolve dependencies by Conda,
+# WARNING: and may take your IDE (pycharm, etc.) a long time to parse the environment.
+# Version 1
+name: BIA4Env
+channels:
+  - nodefaults
+  - https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/conda-forge
+  - https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/bioconda
+  - https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/simpleitk
+  - https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/main
+  - https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/free
+  # - conda-forge
+  # - bioconda
+  # - main
+  # - free
+
+dependencies:
+  # Core libraries
+  - python=3.8
+  - matplotlib>=3.5
+  - simpleitk=2.2 # For CT/MRI DICOM format
+  - pyqt=5
+  - tk
+  - scipy=1.9
+  - numpy=1.23
+  - pandas=1.5
+
+  # general-purposed Image Processing Libraries
+  - pillow=9.2
+  - scikit-image=0.19
+  - opencv>=4
+
+  # ML Libs
+  - scikit-learn=1.1
+  - scikit-learn-intelex # On Intel Platform for acceleration.
+
+  # Recommended libraries
+  - seaborn=0.11 # A high-level plotting library over matplotlib.
+  - joblib=1.1 # An easy-to-use parallel helper.
+  - tqdm=4.64 # Progress bar.
+  - line_profiler>=3.4 # Profile Python code line by line in time.
+  - memory_profiler>=0.60 # Profile Python code line by line in memory.
+  - click # For CLI applications
+  - napari # For viewing 3d applications
+  - prettytable # For formatting tables
+  - tomli # For fast parsing of TOML files
+
+  - make
+
+  # Jupyter Notebook Related
+  - ipython
+  - notebook
+  - jupyter
+  - jupytext
+
+  # Sphinx documentation
+  - sphinx
+  - sphinx-book-theme
+  - sphinx-copybutton
+  - rst2pdf
+  - nbsphinx
+  - myst-parser
+
+  # Pandas acceleration libraries
+  - bottleneck>=1.3.1
+  - numexpr>=2.8
+  - numba>=0.53 # Acceleration by JIT-compiling of Python machine code using LLVM
+  # - pyarrow>=6.0.1 # Pandas Parquet/ORC format,also contains accelerated Pandas CSV parser.
+  # Commented: Ray would require arbitrary version of pyarrow.
+  - h5py
+  - hdf5
+  - pytables
+
+  # Testing
+  - pytest=7.1
+  - pytest-cov=4.0
+  - pytest-html=3.1
+  - coverage=6.5
+
+  # Gradient Boosting Trees
+  - lightgbm>=3.2.1
+  - py-xgboost>=0.90
+
+  - pip
+  - setuptools
+  - wheel
+  - pip:
+    - build
+    - keras
+    - ray[default]==2.0.0
+    - lightgbm>=3.2.1
+    - xgboost>=0.90
+    - torch>=1.10
+    - torchvision
+    - tensorflow>=2.9
+    - pyarrow>=6.0.1
+    - lightgbm-ray
+    - xgboost-ray
