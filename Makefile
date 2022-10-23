@@ -12,6 +12,9 @@ cleandoc:
 	$(MAKE) -C doc clean
 	$(MAKE) doc
 
+.PHONY:
+serve-doc:
+	python -m http.server -d doc/_build/html
 
 .PHONY: test
 test:
