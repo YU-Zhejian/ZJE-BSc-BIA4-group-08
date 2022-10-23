@@ -66,8 +66,8 @@ dependencies:
   - jupytext
 
   # Sphinx documentation
-  - sphinx
-  - sphinx-book-theme
+  - sphinx=5.3
+  - sphinx_rtd_theme=1.0.0
   - sphinx-copybutton
   - rst2pdf
   - nbsphinx
