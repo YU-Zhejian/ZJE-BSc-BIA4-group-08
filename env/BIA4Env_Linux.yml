@@ -57,7 +57,14 @@ dependencies:
   - napari # For viewing 3d applications
   - prettytable # For formatting tables
   - tomli # For fast parsing of TOML files
-  - make # GNU Make system
+
+  # Development Utilities
+  - bash
+  - make
+  - coreutils
+  - findutils
+  - git
+  - grep
 
   # Jupyter Notebook Related
   - ipython

@@ -57,10 +57,10 @@ dependencies:
   # Development Utilities
   - m2-bash
   - m2-make
-  - m2-findutils
-  - m2-grep
   - m2-coreutils
+  - m2-findutils
   - git
+  - m2-grep
 
   # Jupyter Notebook Related
   - ipython

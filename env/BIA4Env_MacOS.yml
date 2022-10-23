@@ -53,6 +53,7 @@ dependencies:
   - prettytable # For formatting tables
   - tomli # For fast parsing of TOML files
 
+  # Development Utilities
   - bash
   - make
   - coreutils
