@@ -21,10 +21,6 @@ test:
 	PYTHONPATH=src pytest .
 	rm -f .coverage.*
 
-.PHONY: mypy
-mypy:
-	mypy --config-file pyproject.toml -p BIA_G8
-
 .PHONY: pytype
 pytype:
 	 pytype --config=pytype.cfg src/BIA_G8

@@ -40,13 +40,13 @@ def read_tensor_xz(path: str) -> Union[torch.Tensor, Mapping[str, Any]]:
         return torch.load(reader)
 
 
-def write_np_xz(array: npt.NDArray[Any], path: str):
+def write_np_xz(array: npt.NDArray[Any], path: str) -> None:
     """Writer of compressed Numpy serialization format"""
     with lzma.open(path, "wb", preset=9) as writer:
         np.save(writer, array)
 
 
-def write_tensor_xz(array: Union[torch.Tensor, Mapping[str, Any]], path: str):
+def write_tensor_xz(array: Union[torch.Tensor, Mapping[str, Any]], path: str) -> None:
     """Writer of compressed Torch serialization format"""
     with lzma.open(path, "wb", preset=9) as writer:
         torch.save(array, writer)

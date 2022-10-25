@@ -39,8 +39,9 @@ def parallel_map(
     :param backend: The backend to be used. Recommended to use ``loky``. You may also try ``threading`` if ``loky`` fails.
     :return: Generated new iterable.
     """
-    return joblib.Parallel(
+    it:Iterable[_OutType]= joblib.Parallel(
         n_jobs=n_jobs, backend=backend
     )(
         joblib.delayed(f)(i) for i in input_iterable
     )
+    return it

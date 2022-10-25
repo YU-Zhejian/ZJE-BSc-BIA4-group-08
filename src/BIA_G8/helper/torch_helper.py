@@ -23,7 +23,7 @@ class AbstractTorchDataSet(tud.Dataset):
     def __len__(self) -> int:
         return len(self._index)
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._index = {}
 
 

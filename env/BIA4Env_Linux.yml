@@ -112,9 +112,7 @@ dependencies:
   - ray-tune
 
   # Linter services
-  - mypy=0.982
   - pylint
-  - ninja
 
   - pip
   - setuptools

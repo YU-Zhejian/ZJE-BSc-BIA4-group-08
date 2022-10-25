@@ -95,7 +95,7 @@ def _get_max_size_helper(
         balanced: bool,
         full_size: int,
         image_with_label: Dict[Any, Any]
-):
+) -> int:
     if balanced:
         max_size = min(map(len, image_with_label.values())) * 3
     else:
@@ -137,7 +137,7 @@ class CovidImage:
         return self._image_path
 
     @classmethod
-    def from_file(cls, image_path: str):
+    def from_file(cls, image_path: str) -> CovidImage:
         """
         Generate a new instance from existing file.
 
@@ -155,7 +155,7 @@ class CovidImage:
         return new_img
 
     @classmethod
-    def from_np_array(cls, image: npt.NDArray, label: int):
+    def from_np_array(cls, image: npt.NDArray, label: int) -> CovidImage:
         """
         Generate a new instance based on existing Numpy array.
 
@@ -179,7 +179,7 @@ class CovidImage:
         """
         return CovidImage.from_np_array(operation(self._image), self._label)
 
-    def save(self, image_path: Optional[str] = None):
+    def save(self, image_path: Optional[str] = None) -> None:
         """
         Save the image to a file on disk.
 
@@ -247,7 +247,7 @@ class CovidDataSet:
             self._sklearn_dataset = X, y
         return self._sklearn_dataset
 
-    def __init__(self):
+    def __init__(self) -> None:
         """
         Dumb initializer which initializes a dataset for in-memory use.
         """
@@ -256,7 +256,7 @@ class CovidDataSet:
         self._dataset_path = IN_MEMORY_INDICATOR
         self._sklearn_dataset = None
 
-    def _load_impl(self, image_path: str):
+    def _load_impl(self, image_path: str) -> None:
         img = CovidImage.from_file(image_path)
         self._loaded_image.append(img)
         self._loaded_image_with_label[img.label].append(img)
@@ -303,7 +303,7 @@ class CovidDataSet:
             dataset_path: str,
             size: int = -1,
             balanced: bool = True
-    ):
+    ) -> CovidDataSet:
         """
         Generate a new instance from directory of images.
         The directory (absolute path to ``sample_covid_image``) should be like following structure:
@@ -352,7 +352,7 @@ class CovidDataSet:
             size: int = -1,
             balanced: bool = True,
             **kwargs
-    ):
+    ) -> CovidDataSet:
         """
         Parallel version of :py:func:`from_directory`.
         """
@@ -379,7 +379,7 @@ class CovidDataSet:
         return new_ds
 
     @classmethod
-    def from_loaded_image(cls, loaded_image: List[CovidImage]):
+    def from_loaded_image(cls, loaded_image: List[CovidImage]) -> CovidDataSet:
         """
         Generate a new instance from a list of py:class:`CovidImage`.
         """
@@ -451,14 +451,14 @@ class CovidDataSet:
             img: CovidImage,
             dataset_path: str,
             extension: str
-    ):
+    ) -> None:
         if img.image_path == IN_MEMORY_INDICATOR:
             _image_path = ".".join((str(uuid.uuid4()), extension))
         else:
             _image_path = img.image_path
         img.save(os.path.join(dataset_path, img.label_str, os.path.basename(_image_path)))
 
-    def _presave_hook(self, dataset_path: Optional[str]):
+    def _presave_hook(self, dataset_path: Optional[str]) -> None:
         if dataset_path is None:
             dataset_path = self._dataset_path
         if dataset_path == IN_MEMORY_INDICATOR:
@@ -471,7 +471,7 @@ class CovidDataSet:
             label_str = decode(label)
             os.makedirs(os.path.join(self._dataset_path, label_str), exist_ok=False)
 
-    def save(self, dataset_path: Optional[str] = None, extension: str = ".npy.xz"):
+    def save(self, dataset_path: Optional[str] = None, extension: str = ".npy.xz") -> None:
         """
         Save the dataset to a file on disk.
 
@@ -490,7 +490,7 @@ class CovidDataSet:
             )
         ))
 
-    def parallel_save(self, dataset_path: Optional[str] = None, extension: str = ".npy.xz", **kwargs):
+    def parallel_save(self, dataset_path: Optional[str] = None, extension: str = ".npy.xz", **kwargs) -> None:
         """
         Parallel version of :py:func:`save`.
         """
