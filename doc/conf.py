@@ -61,7 +61,7 @@ release = BIA_G8.__version__
 # -- General configuration ---------------------------------------------------
 
 # The theme to use for HTML and HTML Help pages.
-html_theme = 'sphinx_book_theme'
+html_theme = 'sphinx_rtd_theme'
 
 # Sphinx extensions
 extensions = [
@@ -69,10 +69,10 @@ extensions = [
     'sphinx.ext.todo',
     'sphinx.ext.intersphinx',
     'sphinx.ext.mathjax',
+    "sphinx.ext.viewcode",
     'myst_parser',
     'nbsphinx',
-    'sphinx_copybutton',
-    html_theme
+    'sphinx_copybutton'
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -87,34 +87,6 @@ exclude_patterns = [
     '.virtualenv/**'
 ]
 
-# FIXME: Error on MacOS, see appended yml
-# -- Options for HTML output -------------------------------------------------
-html_theme_options = {
-#    'show_navbar_depth': 2,
-    'repository_branch': "master",
-    "home_page_in_toc": True,
-#    "toc_title": "Page Table of Contents",
-#    "use_download_button": True,
-    "use_repository_button": True,
-    "use_issues_button": True,
-}
-
-# Copy theme HTMLs. A bug in sphinx_book_theme
-theme_loader = pkgutil.get_loader(html_theme)
-if theme_loader is None:
-    raise FileNotFoundError(f"Cannot load theme {html_theme}!")
-theme_path = os.path.join(os.path.dirname(theme_loader.path), "_templates")
-THIS_TEMPLATE = os.path.join(THIS_DIR, "_templates")
-if not os.path.exists(THIS_TEMPLATE):
-    try:
-        shutil.copytree(theme_path, THIS_TEMPLATE)
-    except FileNotFoundError:
-        pass
-
-# html_logo = "_static/logo.svg"  # Logo at top left of the page.
-# html_favicon = "_static/logo.svg"  # Logo at opened tabs.
-
-# Override built-in static files.
 # html_static_path = ['_static']
 
 

@@ -57,7 +57,14 @@ dependencies:
   - napari # For viewing 3d applications
   - prettytable # For formatting tables
   - tomli # For fast parsing of TOML files
-  - make # GNU Make system
+
+  # Development Utilities
+  - bash
+  - make
+  - coreutils
+  - findutils
+  - git
+  - grep
 
   # Jupyter Notebook Related
   - ipython
@@ -66,8 +73,8 @@ dependencies:
   - jupytext
 
   # Sphinx documentation
-  - sphinx
-  - sphinx-book-theme
+  - sphinx=5.3
+  - sphinx_rtd_theme=1.0.0
   - sphinx-copybutton
   - rst2pdf
   - nbsphinx

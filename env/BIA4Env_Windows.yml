@@ -54,10 +54,12 @@ dependencies:
   - prettytable # For formatting tables
   - tomli # For fast parsing of TOML files
 
-  # Msys2
+  # Development Utilities
   - m2-bash
   - m2-make
+  - m2-coreutils
   - m2-findutils
+  - git
   - m2-grep
 
   # Jupyter Notebook Related
@@ -67,8 +69,8 @@ dependencies:
   - jupytext
 
   # Sphinx documentation
-  - sphinx
-  - sphinx-book-theme
+  - sphinx=5.3
+  - sphinx_rtd_theme=1.0.0
   - sphinx-copybutton
   - rst2pdf
   - nbsphinx
