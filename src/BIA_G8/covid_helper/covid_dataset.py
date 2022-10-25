@@ -233,8 +233,8 @@ class CovidDataSet:
             for img in self._loaded_image:
                 if img.as_np_array.shape != _img_size:
                     raise ValueError(f"Image {img} have different size!")
-            X = np.ndarray((num_images, operator.mul(*_img_size)), dtype=float)
-            y = np.ndarray((num_images,), dtype=int)
+            X:npt.NDArray = np.ndarray((num_images, operator.mul(*_img_size)), dtype=float)
+            y:npt.NDArray = np.ndarray((num_images,), dtype=int)
             for i, img in enumerate(tqdm.tqdm(
                     iterable=self._loaded_image,
                     desc="Parsing to SKLearn..."
@@ -458,7 +458,7 @@ class CovidDataSet:
             _image_path = img.image_path
         img.save(os.path.join(dataset_path, img.label_str, os.path.basename(_image_path)))
 
-    def _presave_hook(self, dataset_path: str):
+    def _presave_hook(self, dataset_path: Optional[str]):
         if dataset_path is None:
             dataset_path = self._dataset_path
         if dataset_path == IN_MEMORY_INDICATOR:
@@ -471,7 +471,7 @@ class CovidDataSet:
             label_str = decode(label)
             os.makedirs(os.path.join(self._dataset_path, label_str), exist_ok=False)
 
-    def save(self, dataset_path: str = None, extension: str = ".npy.xz"):
+    def save(self, dataset_path: Optional[str] = None, extension: str = ".npy.xz"):
         """
         Save the dataset to a file on disk.
 

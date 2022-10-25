@@ -114,7 +114,6 @@ dependencies:
   # Linter services
   - mypy=0.982
   - pylint
-  - pytype
   - ninja
 
   - pip
@@ -124,3 +123,4 @@ dependencies:
     - lightgbm-ray
     - xgboost-ray
     - build
+    - pytype

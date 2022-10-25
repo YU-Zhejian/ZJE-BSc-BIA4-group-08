@@ -20,7 +20,7 @@ def plot_histogram(
         show_img: bool = True,
         log: bool = True,
         cumulative: bool = False
-):
+) -> None:
     """
     Plots a histogram of the given image
 
