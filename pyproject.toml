@@ -61,3 +61,7 @@ skip_empty = true
 
 [tool.coverage.html]
 directory = "pytest/cov_html"
+
+[tool.mypy]
+mypy_path = "$MYPY_CONFIG_FILE_DIR/src"
+

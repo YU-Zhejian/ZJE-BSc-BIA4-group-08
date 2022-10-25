@@ -104,6 +104,12 @@ dependencies:
   - ray-rllib
   - ray-tune
 
+  # Linter services
+  - mypy=0.982
+  - pylint
+  - pytype
+  - ninja
+
   - pip
   - setuptools
   - wheel

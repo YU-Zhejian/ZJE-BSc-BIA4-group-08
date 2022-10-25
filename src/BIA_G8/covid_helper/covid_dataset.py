@@ -490,7 +490,7 @@ class CovidDataSet:
             )
         ))
 
-    def parallel_save(self, dataset_path: str = None, extension: str = ".npy.xz", **kwargs):
+    def parallel_save(self, dataset_path: Optional[str] = None, extension: str = ".npy.xz", **kwargs):
         """
         Parallel version of :py:func:`save`.
         """

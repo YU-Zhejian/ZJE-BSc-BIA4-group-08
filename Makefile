@@ -17,3 +17,7 @@ cleandoc:
 test:
 	PYTHONPATH=src pytest .
 	rm -f .coverage.*
+
+.PHONY: mypy
+mypy:
+	mypy --config-file pyproject.toml -p BIA_G8
