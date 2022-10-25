@@ -137,7 +137,7 @@ fig, axs = plt.subplots(1, 3, figsize=(12, 12))
 
 ax: plt.Axes
 for i, ax in enumerate(axs.ravel()):
-    ax.imshow(d1_sampled[i].as_np_array)
+    ax.imshow(d1_sampled[i].np_array)
     ax.axis("off")
     ax.set_title(d1_sampled[i].label_str)
 
@@ -151,7 +151,7 @@ fig, axs = plt.subplots(1, len(d1_sampled), figsize=(12, 12))
 
 ax: plt.Axes
 for i, ax in enumerate(axs.ravel()):
-    ax.imshow(d1_sampled[i].as_np_array)
+    ax.imshow(d1_sampled[i].np_array)
     ax.axis("off")
     ax.set_title(d1_sampled[i].label_str)
 
@@ -183,7 +183,7 @@ d1_sampled_applied = d1.sample(3).apply(lambda x: skitrans.rotate(x, 30))
 fig, axs = plt.subplots(1, 3)
 
 for i, ax in enumerate(axs.ravel()):
-    ax.imshow(d1_sampled_applied[i].as_np_array)
+    ax.imshow(d1_sampled_applied[i].np_array)
     ax.axis("off")
     ax.set_title(d1_sampled[i].label_str)
 
@@ -224,7 +224,7 @@ ds_enlarged_sampled = ds_enlarged_with_noise.sample(9)
 fig, axs = plt.subplots(3, 3, figsize=(12, 12))
 
 for i, ax in enumerate(axs.ravel()):
-    ax.imshow(ds_enlarged_sampled[i].as_np_array)
+    ax.imshow(ds_enlarged_sampled[i].np_array)
     ax.axis("off")
     ax.set_title(ds_enlarged_sampled[i].label_str)
 

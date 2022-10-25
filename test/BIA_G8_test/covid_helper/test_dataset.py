@@ -42,7 +42,7 @@ def test_apply():
     d2 = d1.apply(lambda img: skimage.img_as_int(skitrans.rotate(img, 270))).apply(
         lambda img: skimage.img_as_int(skitrans.rotate(img, 90)))
     for i1, i2 in zip(d1, d2):
-        assert np.array_equiv(i1.as_np_array, i2.as_np_array)
+        assert np.array_equiv(i1.np_array, i2.np_array)
 
 
 def test_parallel_apply():
@@ -50,7 +50,7 @@ def test_parallel_apply():
     d2 = d1.apply(lambda img: skimage.img_as_int(skitrans.rotate(img, 270))).parallel_apply(
         lambda img: skimage.img_as_int(skitrans.rotate(img, 90)))
     for i1, i2 in zip(d1, d2):
-        assert np.array_equiv(i1.as_np_array, i2.as_np_array)
+        assert np.array_equiv(i1.np_array, i2.np_array)
 
 
 def test_load_save_dataset():
@@ -63,7 +63,7 @@ def test_load_save_dataset():
     assert d2.dataset_path == tmp_dir
     assert len(d1) == len(d2)
     for i1, i2 in zip(d1, d2):
-        assert np.array_equiv(i1.as_np_array, i2.as_np_array)
+        assert np.array_equiv(i1.np_array, i2.np_array)
 
     d1.save(tmp_dir, extension="png")
     assert d1.dataset_path == tmp_dir
@@ -71,7 +71,7 @@ def test_load_save_dataset():
     assert d2.dataset_path == tmp_dir
     assert len(d1) == len(d2)
     for i1, i2 in zip(d1, d2):
-        assert np.array_equiv(i1.as_np_array, i2.as_np_array)
+        assert np.array_equiv(i1.np_array, i2.np_array)
     shutil.rmtree(tmp_dir)
 
 
@@ -83,5 +83,5 @@ def test_parallel_load_save_dataset():
     d2 = covid_dataset.CovidDataSet.parallel_from_directory(tmp_dir)
     assert d2.dataset_path == tmp_dir
     for i1, i2 in zip(d1, d2):
-        assert np.array_equiv(i1.as_np_array, i2.as_np_array)
+        assert np.array_equiv(i1.np_array, i2.np_array)
     shutil.rmtree(tmp_dir)

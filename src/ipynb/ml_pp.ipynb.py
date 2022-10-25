@@ -102,12 +102,12 @@ sample_figures = ds.sample(9)
 
 ax: plt.Axes
 for i, ax in enumerate(axs.ravel()):
-    ax.imshow(sample_figures[i].as_np_array)
+    ax.imshow(sample_figures[i].np_array)
     ax.axis("off")
     ax.set_title(sample_figures[i].label_str)
 
 # %%
-matplotlib_helper.plot_histogram(ds[0].as_np_array, cumulative=True, log=False)
+matplotlib_helper.plot_histogram(ds[0].np_array, cumulative=True, log=False)
 
 # %%
 ds_equalize_hist = ds.parallel_apply(
@@ -116,7 +116,7 @@ ds_equalize_hist = ds.parallel_apply(
 )
 
 # %%
-matplotlib_helper.plot_histogram(ds_equalize_hist[0].as_np_array, cumulative=True, log=False)
+matplotlib_helper.plot_histogram(ds_equalize_hist[0].np_array, cumulative=True, log=False)
 
 # %%
 ds_enhanced = ds_equalize_hist.parallel_apply(
@@ -131,7 +131,7 @@ sample_figures = ds_enhanced.sample(9)
 
 ax: plt.Axes
 for i, ax in enumerate(axs.ravel()):
-    ax.imshow(sample_figures[i].as_np_array)
+    ax.imshow(sample_figures[i].np_array)
     ax.axis("off")
     ax.set_title(sample_figures[i].label_str)
 

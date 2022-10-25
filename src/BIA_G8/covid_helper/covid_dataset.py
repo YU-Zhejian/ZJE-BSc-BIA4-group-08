@@ -127,7 +127,7 @@ class CovidImage:
         return self._label_str
 
     @property
-    def as_np_array(self) -> npt.NDArray:
+    def np_array(self) -> npt.NDArray:
         """Read-only numpy aray of the image."""
         return self._image
 
@@ -229,9 +229,9 @@ class CovidDataSet:
             num_images = len(self._loaded_image)
             if num_images == 0:
                 raise ValueError("Empty dataset!")
-            _img_size = self._loaded_image[0].as_np_array.shape
+            _img_size = self._loaded_image[0].np_array.shape
             for img in self._loaded_image:
-                if img.as_np_array.shape != _img_size:
+                if img.np_array.shape != _img_size:
                     raise ValueError(f"Image {img} have different size!")
             X:npt.NDArray = np.ndarray((num_images, operator.mul(*_img_size)), dtype=float)
             y:npt.NDArray = np.ndarray((num_images,), dtype=int)
@@ -239,7 +239,7 @@ class CovidDataSet:
                     iterable=self._loaded_image,
                     desc="Parsing to SKLearn..."
             )):
-                X[i] = np.ravel(img.as_np_array)
+                X[i] = np.ravel(img.np_array)
                 y[i] = img.label
             unique_labels, counts = np.unique(y, return_counts=True)
             unique_labels = [decode(label) for label in unique_labels]
