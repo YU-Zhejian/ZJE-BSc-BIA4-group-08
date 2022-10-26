@@ -56,7 +56,7 @@ if __name__ == '__main__':
         size=600
     )
     with joblib.parallel_backend('ray'):
-        X, y = dataset.get_sklearn_dataset
+        X, y = dataset.sklearn_dataset
         X_train, X_test, y_train, y_test = train_test_split(X, y, shuffle=True)
         print("Train-test-Split FIN")
         model = train_model(X_train, y_train)

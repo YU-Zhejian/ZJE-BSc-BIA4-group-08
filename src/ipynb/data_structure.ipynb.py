@@ -232,7 +232,7 @@ for i, ax in enumerate(axs.ravel()):
 # Convert the dataset to SKLearn-acceptable format:
 
 # %%
-ds_sklearn = ds_enlarged_with_noise.get_sklearn_dataset
+ds_sklearn = ds_enlarged_with_noise.sklearn_dataset
 
 # %% [markdown]
 # Apply ML algorithms using KNN:

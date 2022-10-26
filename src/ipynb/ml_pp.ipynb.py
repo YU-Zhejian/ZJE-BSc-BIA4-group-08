@@ -79,7 +79,7 @@ _ = gc.collect()
 # Use `sklearn` on this raw dataset.
 
 # %%
-ds_sklearn = ds.get_sklearn_dataset
+ds_sklearn = ds.sklearn_dataset
 
 with joblib.parallel_backend('ray'):
     X, y = ds_sklearn
@@ -140,7 +140,7 @@ for i, ax in enumerate(axs.ravel()):
 
 # %%
 with joblib.parallel_backend('ray'):
-    X, y = ds_enhanced.get_sklearn_dataset
+    X, y = ds_enhanced.sklearn_dataset
     X_train, X_test, y_train, y_test = train_test_split(X, y, shuffle=True)
     knn = KNN()
     knn = knn.fit(X=X_train, y=y_train)
@@ -151,7 +151,7 @@ with joblib.parallel_backend('ray'):
     print(ml_helper.print_confusion_matrix(_confusion_matrix, labels=["stride", "circle", "square"]))
 
 # %%
-X, y = ds.get_sklearn_dataset
+X, y = ds.sklearn_dataset
 X_train, X_test, y_train, y_test = train_test_split(X, y, shuffle=True)
 xgbc = XGBClassifier()
 xgbc = xgbc.fit(X=X_train, y=y_train)
@@ -162,7 +162,7 @@ _confusion_matrix = confusion_matrix(pred, y_test)
 print(ml_helper.print_confusion_matrix(_confusion_matrix, labels=["stride", "circle", "square"]))
 
 # %% notebookRunGroups={"groupValue": ""}
-X, y = ds_enhanced.get_sklearn_dataset
+X, y = ds_enhanced.sklearn_dataset
 X_train, X_test, y_train, y_test = train_test_split(X, y, shuffle=True)
 xgbc = XGBClassifier()
 xgbc = xgbc.fit(X=X_train, y=y_train)
@@ -173,7 +173,7 @@ _confusion_matrix = confusion_matrix(pred, y_test)
 print(ml_helper.print_confusion_matrix(_confusion_matrix, labels=["stride", "circle", "square"]))
 
 # %%
-X, y = ds.get_sklearn_dataset
+X, y = ds.sklearn_dataset
 X_train, X_test, y_train, y_test = train_test_split(X, y, shuffle=True)
 lgbc = LGBMClassifier(n_jobs=-1)
 lgbc = lgbc.fit(X=X_train, y=y_train)
@@ -184,7 +184,7 @@ _confusion_matrix = confusion_matrix(pred, y_test)
 print(ml_helper.print_confusion_matrix(_confusion_matrix, labels=["stride", "circle", "square"]))
 
 # %%
-X, y = ds_enhanced.get_sklearn_dataset
+X, y = ds_enhanced.sklearn_dataset
 X_train, X_test, y_train, y_test = train_test_split(X, y, shuffle=True)
 lgbc = LGBMClassifier(n_jobs=-1)
 lgbc = lgbc.fit(X=X_train, y=y_train)

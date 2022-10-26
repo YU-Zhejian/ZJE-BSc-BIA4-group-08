@@ -218,7 +218,7 @@ class CovidDataSet:
         return self._dataset_path
 
     @property
-    def get_sklearn_dataset(self) -> Tuple[npt.NDArray, npt.NDArray]:
+    def sklearn_dataset(self) -> Tuple[npt.NDArray, npt.NDArray]:
         """
         Prepare and return cached dataset for ``sklearn``.
 
