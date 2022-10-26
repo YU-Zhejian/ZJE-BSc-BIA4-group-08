@@ -10,6 +10,7 @@ This contains documentation for Users and Developers.
 _root/Readme
 user
 develop
+news
 apiref
 _root/License
 _root/Copying
