@@ -35,14 +35,17 @@ os.environ["PYTHONPATH"] = os.pathsep.join((NEW_PYTHON_PATH, os.environ.get("PYT
 
 # %%
 import gc  # For collecting memory garbage
+from typing import Union, Type, List
 
 import skimage.filters as skifilt
 import skimage.exposure as skiexp
 import numpy as np
+import numpy.typing as npt
 import matplotlib.pyplot as plt
 import joblib
 import ray
 from ray.util.joblib import register_ray
+import tqdm
 
 try:
     import sklearnex
@@ -54,11 +57,14 @@ except ImportError:
 from sklearn.metrics import confusion_matrix
 from sklearn.model_selection import train_test_split
 from sklearn.neighbors import KNeighborsClassifier as KNN
+from sklearn.svm import SVC as SVM
+from sklearn.manifold import TSNE
+import seaborn as sns
 from xgboost import XGBClassifier
 from lightgbm.sklearn import LGBMClassifier
 
 from BIA_G8.covid_helper import covid_dataset
-from BIA_G8.helper import ml_helper, matplotlib_helper
+from BIA_G8.helper import matplotlib_helper, joblib_helper
 
 # %% [markdown]
 # Start local `ray` server.
@@ -73,24 +79,70 @@ register_ray()
 
 # %%
 ds = covid_dataset.CovidDataSet.parallel_from_directory(os.path.join(THIS_DIR_PATH, "sample_covid_image"))
+ds_sklearn = ds.sklearn_dataset
 _ = gc.collect()
+
+# %% [markdown]
+# Plot t-SNE of the data.
+
+# %%
+with joblib.parallel_backend('ray'):
+    ds_tsne_model = TSNE(learning_rate=200, n_iter=1000, init="random")
+    ds_tsne_transformed = ds_tsne_model.fit_transform(ds_sklearn[0])
+    sns.scatterplot(
+        x=ds_tsne_transformed[:, 0],
+        y=ds_tsne_transformed[:, 1],
+        hue=list(map(covid_dataset.decode, ds_sklearn[1]))
+    )
+
 
 # %% [markdown]
 # Use `sklearn` on this raw dataset.
 
 # %%
-ds_sklearn = ds.sklearn_dataset
-
-with joblib.parallel_backend('ray'):
+def sklearn_get_accuracy(
+    _ds:npt.NDArray,
+    ModelType:Union[
+        Type[KNN],
+        Type[SVM],
+        Type[XGBClassifier],
+        Type[LGBMClassifier]
+    ]
+):
     X, y = ds_sklearn
     X_train, X_test, y_train, y_test = train_test_split(X, y, shuffle=True)
-    knn = KNN()
-    knn = knn.fit(X=X_train, y=y_train)
-    pred = knn.predict(X_test)
+    model = ModelType()
+    model = model.fit(X=X_train, y=y_train)
+    pred = model.predict(X_test)
     accuracy = np.sum(pred == y_test) / len(y_test) * 100
-    print(f"Accuracy: {accuracy:4.2f}")
-    _confusion_matrix = confusion_matrix(pred, y_test)
-    print(ml_helper.print_confusion_matrix(_confusion_matrix, labels=["stride", "circle", "square"]))
+    return accuracy
+
+def parallel_mean_sklearn_get_accuracy(
+    _ds:npt.NDArray,
+    ModelType:Union[Type[KNN], Type[SVM], Type[XGBClassifier], Type[LGBMClassifier]]
+) -> List[float]:
+    return list(joblib_helper.parallel_map(
+        lambda _: sklearn_get_accuracy(
+            _ds=_ds,
+            ModelType=ModelType
+        ),
+        tqdm.tqdm(iterable=range(100), desc="Training...")
+    ))
+
+np.mean(parallel_mean_sklearn_get_accuracy(ds, KNN))
+
+# %%
+
+# %%
+X, y = ds.sklearn_dataset
+X_train, X_test, y_train, y_test = train_test_split(X, y, shuffle=True)
+xgbc = XGBClassifier()
+xgbc = xgbc.fit(X=X_train, y=y_train)
+pred = xgbc.predict(X_test)
+accuracy = np.sum(pred == y_test) / len(y_test) * 100
+print(f"Accuracy: {accuracy:4.2f}")
+_confusion_matrix = confusion_matrix(pred, y_test)
+print(ml_helper.print_confusion_matrix(_confusion_matrix, labels=["stride", "circle", "square"]))
 
 # %% [markdown]
 # ## Optimization using Histogram Equalization and Unsharp Masking
@@ -149,17 +201,6 @@ with joblib.parallel_backend('ray'):
     print(f"Accuracy: {accuracy:4.2f}")
     _confusion_matrix = confusion_matrix(pred, y_test)
     print(ml_helper.print_confusion_matrix(_confusion_matrix, labels=["stride", "circle", "square"]))
-
-# %%
-X, y = ds.sklearn_dataset
-X_train, X_test, y_train, y_test = train_test_split(X, y, shuffle=True)
-xgbc = XGBClassifier()
-xgbc = xgbc.fit(X=X_train, y=y_train)
-pred = xgbc.predict(X_test)
-accuracy = np.sum(pred == y_test) / len(y_test) * 100
-print(f"Accuracy: {accuracy:4.2f}")
-_confusion_matrix = confusion_matrix(pred, y_test)
-print(ml_helper.print_confusion_matrix(_confusion_matrix, labels=["stride", "circle", "square"]))
 
 # %% notebookRunGroups={"groupValue": ""}
 X, y = ds_enhanced.sklearn_dataset
