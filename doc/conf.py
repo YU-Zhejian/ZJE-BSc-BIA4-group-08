@@ -103,6 +103,6 @@ intersphinx_mapping = {
 }
 
 # myst-nb settings
-nb_execution_timeout = 600
+nb_execution_timeout = 1200
 nb_execution_mode = "cache"
 nb_merge_streams = True

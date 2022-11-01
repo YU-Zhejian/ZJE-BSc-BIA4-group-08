@@ -20,7 +20,9 @@
 
 import os
 import sys
+import warnings
 
+warnings.filterwarnings('ignore')
 try:
     THIS_DIR_PATH = os.path.abspath(globals()["_dh"][0])
 except KeyError:
@@ -41,9 +43,13 @@ import gc  # For collecting memory garbage
 
 import skimage.filters as skifilt
 import skimage.exposure as skiexp
+
 import numpy as np
+import pandas as pd
 import matplotlib.pyplot as plt
+import seaborn as sns
 import tqdm
+
 import joblib
 import ray
 from ray.util.joblib import register_ray
@@ -55,12 +61,11 @@ try:
 except ImportError:
     sklearnex = None
 
-from sklearn.metrics import confusion_matrix
 from sklearn.model_selection import train_test_split
 from sklearn.neighbors import KNeighborsClassifier as KNN
 
 from BIA_G8.covid_helper import covid_dataset
-from BIA_G8.helper import ml_helper, matplotlib_helper
+from BIA_G8.helper import matplotlib_helper
 
 # %% [markdown]
 # Start local `ray` server.
@@ -81,12 +86,10 @@ _ = gc.collect()
 # Use `sklearn` on this raw dataset.
 
 # %%
-ds_sklearn = ds.sklearn_dataset
-
 accuracy = []
 with joblib.parallel_backend('ray'):
-    for _ in tqdm.tqdm(iterable=range(400)):
-        X, y = ds_sklearn
+    for _ in tqdm.tqdm(iterable=range(200)):
+        X, y = ds.sklearn_dataset
         X_train, X_test, y_train, y_test = train_test_split(X, y, shuffle=True)
         accuracy.append(np.sum(KNN().fit(X=X_train, y=y_train).predict(X_test) == y_test) / len(y_test) * 100)
 print(f"Accuracy: {np.mean(accuracy):4.2f}")
@@ -139,10 +142,30 @@ for i, ax in enumerate(axs.ravel()):
 # ## Re-learn using SKLearn KNN
 
 # %%
-accuracy = []
+accuracy_new = []
 with joblib.parallel_backend('ray'):
-    for _ in tqdm.tqdm(iterable=range(400)):
-        X, y = ds_sklearn
+    for _ in tqdm.tqdm(iterable=range(200)):
+        X, y = ds_enhanced.sklearn_dataset
         X_train, X_test, y_train, y_test = train_test_split(X, y, shuffle=True)
-        accuracy.append(np.sum(KNN().fit(X=X_train, y=y_train).predict(X_test) == y_test) / len(y_test) * 100)
-print(f"Accuracy: {np.mean(accuracy):4.2f}")
+        accuracy_new.append(np.sum(KNN().fit(X=X_train, y=y_train).predict(X_test) == y_test) / len(y_test) * 100)
+print(f"Accuracy: {np.mean(accuracy_new):4.2f}")
+
+# %% [markdown]
+# plot them
+
+# %%
+acu_table = pd.DataFrame({
+    "KNN (Pre)": accuracy,
+    "KNN (Post)": accuracy_new,
+})
+p = sns.catplot(data=acu_table, kind="box", height=5, aspect=2, orient="h")
+p.set_axis_labels("Accuracy", "Classification Algorithm")
+p.set(xlim=(10, 100))
+plt.show()
+
+# %% [markdown]
+# finished
+
+# %%
+
+ray.shutdown()
