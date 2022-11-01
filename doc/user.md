@@ -21,6 +21,5 @@ Following pages contains tutorials on data structures used in this project.
 :glob:
 :maxdepth: 2
 
-_ipynb/data_structure.ipynb
-_ipynb/ml_pp.ipynb
+ipynb/data_structure
 ```

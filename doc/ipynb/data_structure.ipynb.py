@@ -23,8 +23,11 @@
 import os
 import sys
 
-THIS_DIR_PATH = os.path.abspath(globals()["_dh"][0])
-NEW_PYTHON_PATH = os.path.dirname(THIS_DIR_PATH)
+try:
+    THIS_DIR_PATH = os.path.abspath(globals()["_dh"][0])
+except KeyError:
+    THIS_DIR_PATH = os.path.dirname(os.path.abspath(__file__))
+NEW_PYTHON_PATH = os.path.join(os.path.dirname(os.path.dirname(THIS_DIR_PATH)), "src")
 sys.path.insert(0, NEW_PYTHON_PATH)
 os.environ["PYTHONPATH"] = os.pathsep.join((NEW_PYTHON_PATH, os.environ.get("PYTHONPATH", "")))
 

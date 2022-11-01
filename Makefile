@@ -4,7 +4,6 @@ dist:
 
 .PHONY: doc
 doc:
-	bash notebook-checkout.sh --execute
 	$(MAKE) -C doc
 
 .PHONY: cleandoc

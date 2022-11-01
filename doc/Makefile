@@ -18,6 +18,7 @@ apidoc:
 	sphinx-apidoc $(SPHINX_APIDOC_ARGS) $(CURDIR)/../src/BIA_G8
 
 html: apidoc
+	rm -rf $(CURDIR)/ipynb/*.ipynb
 	sphinx-build -M html $(CURDIR) $(BUILD_DIR) $(SPHINX_OPTS)
 
 clean:

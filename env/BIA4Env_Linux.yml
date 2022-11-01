@@ -79,6 +79,7 @@ dependencies:
   - rst2pdf
   - nbsphinx
   - myst-parser
+  - myst-nb
 
   # Pandas acceleration libraries
   - bottleneck>=1.3.1

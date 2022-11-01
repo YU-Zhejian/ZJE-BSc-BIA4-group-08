@@ -47,7 +47,6 @@ def copy_doc_files(from_path: str, to_path: str):
 
 
 copy_doc_files(os.path.join(ROOT_DIR, '*.md'), os.path.join(THIS_DIR, "_root"))
-copy_doc_files(os.path.join(ROOT_DIR, "src", "ipynb", '*.ipynb'), os.path.join(THIS_DIR, "_ipynb"))
 
 # -- Project information -----------------------------------------------------
 
@@ -61,26 +60,16 @@ release = BIA_G8.__version__
 
 # -- General configuration ---------------------------------------------------
 
-# The theme to use for HTML and HTML Help pages.
 html_theme = 'sphinx_rtd_theme'
-
-# Sphinx extensions
 extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.todo',
     'sphinx.ext.intersphinx',
     'sphinx.ext.mathjax',
     "sphinx.ext.viewcode",
-    'myst_parser',
-    'nbsphinx',
+    'myst_nb',
     'sphinx_copybutton'
 ]
-
-# Add any paths that contain templates here, relative to this directory.
-templates_path = ['_templates']
-
-# The sphinxignore.
-# This pattern also affects html_static_path and html_extra_path.
 exclude_patterns = [
     '_build',
     'Thumbs.db',
@@ -90,15 +79,15 @@ exclude_patterns = [
 
 # html_static_path = ['_static']
 
-
 source_suffix = {
     '.rst': 'restructuredtext',
-    '.md': 'markdown',
+    '.md': 'myst-nb',
 }
 
-latex_elements = {
-    'maxlistdepth': '20',
+nb_custom_formats = {
+  ".ipynb.py": ["jupytext.reads", {"fmt": "py:percent"}]
 }
+
 
 # Insert both docstring of the class and constructor.
 autodoc_default_options = {
@@ -113,4 +102,7 @@ intersphinx_mapping = {
     'torch': ('https://pytorch.org/docs/stable', None),
 }
 
-nbsphinx_execute = "never"
+# myst-nb settings
+nb_execution_timeout = 600
+nb_execution_mode = "auto"
+nb_merge_streams = True
