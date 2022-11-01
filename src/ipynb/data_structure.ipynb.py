@@ -18,6 +18,8 @@
 # %autoreload 2
 # %matplotlib inline
 
+# pylint: disable=wrong-import-position, line-too-long, missing-module-docstring
+
 import os
 import sys
 
@@ -47,16 +49,16 @@ os.environ["PYTHONPATH"] = os.pathsep.join((NEW_PYTHON_PATH, os.environ.get("PYT
 
 # %%
 import random
+import operator
+from functools import reduce
+import itertools
 
 import skimage
 import skimage.transform as skitrans
 import skimage.draw as skidraw
 import skimage.util as skiutil
 import numpy as np
-import operator
-from functools import reduce
 import matplotlib.pyplot as plt
-import itertools
 import joblib
 import ray
 from ray.util.joblib import register_ray
@@ -191,7 +193,6 @@ for i, ax in enumerate(axs.ravel()):
 # The `apply` function also have its parallel function, `parallel_apply`. The following example addes noise to enlarged dataset:
 
 # %%
-backend = "loky"
 
 ds_enlarged_with_noise = ds_enlarged.parallel_apply(
     lambda img: skimage.img_as_int(
@@ -200,7 +201,7 @@ ds_enlarged_with_noise = ds_enlarged.parallel_apply(
             mode="pepper"
         )
     ),
-    backend=backend
+    backend="threading"
 ).parallel_apply(
     lambda img: skimage.img_as_int(
         skitrans.rotate(
@@ -208,7 +209,7 @@ ds_enlarged_with_noise = ds_enlarged.parallel_apply(
             random.random() * 120 - 60
         )
     ),
-    backend=backend
+    backend="threading"
 )
 
 # %% [markdown]

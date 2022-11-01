@@ -21,7 +21,7 @@ class Describe(nn.Module):
 
         See also: py:func:`BIA_G8.helper.ndarray_helper.describe`.
         """
-        super(Describe, self).__init__()
+        super().__init__()
         self.describe = lambda x: prefix + ndarray_helper.describe(x)
 
     def forward(self, x):

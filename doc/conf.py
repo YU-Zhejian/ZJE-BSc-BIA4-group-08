@@ -2,9 +2,10 @@
 Configuration file for the Sphinx documentation builder.
 """
 
+# pylint: disable=wrong-import-position, invalid-name
+
 import glob
 import os
-import pkgutil
 import shutil
 import sys
 
