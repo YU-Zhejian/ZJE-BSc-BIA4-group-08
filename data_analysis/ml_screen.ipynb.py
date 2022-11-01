@@ -86,7 +86,7 @@ register_ray()
 # Read and downscale the dataset.
 
 # %%
-ds = covid_dataset.CovidDataSet.parallel_from_directory(os.path.join(THIS_DIR_PATH, "sample_covid_image"))
+ds = covid_dataset.CovidDataSet.parallel_from_directory(os.path.join(THIS_DIR_PATH, "covid_image"))
 ds_sklearn = ds.sklearn_dataset
 _ = gc.collect()
 
@@ -107,8 +107,6 @@ with joblib.parallel_backend('ray'):
 # Use `sklearn` on this raw dataset.
 
 # %%
-
-
 _ModelTypeType = Union[
     Type[KNeighborsClassifier],
     Type[SVC],
@@ -149,11 +147,13 @@ def mean_sklearn_get_accuracy(
         backend: str = "threading"
 ) -> List[float]:
     def dumb_train(_):
-        return sklearn_get_accuracy(
+        retv = sklearn_get_accuracy(
             _ds=_ds,
             model_type=model_type,
             model_kwds=model_kwds
         )
+        gc.collect()
+        return retv
 
     if not parallel:
         retl = list(map(
@@ -172,7 +172,7 @@ def mean_sklearn_get_accuracy(
 
 # %%
 
-# %%
+# %% pycharm={"is_executing": true}
 knn_accu = mean_sklearn_get_accuracy(ds, KNeighborsClassifier, num_iter=40)
 svm_accu = mean_sklearn_get_accuracy(ds, SVC, num_iter=40)
 dt_accu = mean_sklearn_get_accuracy(ds, DecisionTreeClassifier, num_iter=40)
@@ -181,33 +181,45 @@ adaboost_dt_accu = mean_sklearn_get_accuracy(
     ds,
     AdaBoostClassifier,
     model_kwds={"base_estimator": DecisionTreeClassifier()},
-    num_iter=40
+    num_iter=40,
+    parallel=False
 )
 gbc_accu = mean_sklearn_get_accuracy(
     ds,
     GradientBoostingClassifier,
     model_kwds={"n_iter_no_change": 5, "tol": 0.01},
-    num_iter=40
+    num_iter=40,
+    parallel=False
 )
 hgbc_accu = mean_sklearn_get_accuracy(
     ds,
     HistGradientBoostingClassifier,
-    model_kwds={"n_iter_no_change": 5, "tol": 0.01}, num_iter=40
+    model_kwds={"n_iter_no_change": 5, "tol": 0.01},
+    num_iter=40,
+    parallel=False
 )
-xgb_accu = mean_sklearn_get_accuracy(ds, XGBClassifier, num_iter=40)
-lgbm_accu = mean_sklearn_get_accuracy(ds, LGBMClassifier, num_iter=40)
+xgb_accu = mean_sklearn_get_accuracy(ds, XGBClassifier, num_iter=40, parallel=False)
+lgbm_accu = mean_sklearn_get_accuracy(ds, LGBMClassifier, num_iter=40, parallel=False)
 bag_knn_accu = mean_sklearn_get_accuracy(
     ds,
     BaggingClassifier,
     model_kwds={"base_estimator": KNeighborsClassifier()},
-    num_iter=40
+    num_iter=40,
+    parallel=False
 )
-bag_svm_accu = mean_sklearn_get_accuracy(ds, BaggingClassifier, model_kwds={"base_estimator": SVC()}, num_iter=40)
+bag_svm_accu = mean_sklearn_get_accuracy(
+    ds,
+    BaggingClassifier,
+    model_kwds={"base_estimator": SVC()},
+    num_iter=40,
+    parallel=False
+)
 bag_dt_accu = mean_sklearn_get_accuracy(
     ds,
     BaggingClassifier,
     model_kwds={"base_estimator": DecisionTreeClassifier()},
-    num_iter=40
+    num_iter=40,
+    parallel=False
 )
 vote_accu = mean_sklearn_get_accuracy(
     ds, VotingClassifier,
@@ -216,7 +228,8 @@ vote_accu = mean_sklearn_get_accuracy(
         ('svm', SVC()),
         ('dt', DecisionTreeClassifier())
     ]},
-    num_iter=40
+    num_iter=40,
+    parallel=False
 )
 
 # %%
@@ -374,3 +387,4 @@ p = sns.catplot(data=acu_table, kind="box", height=5, aspect=2, orient="h")
 p.set_axis_labels("Classification Algorithm", "Accuracy")
 p.set(xlim=(10, 100))
 plt.show()
+
