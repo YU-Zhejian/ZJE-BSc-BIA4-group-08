@@ -50,10 +50,6 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import tqdm
 
-import joblib
-import ray
-from ray.util.joblib import register_ray
-
 try:
     import sklearnex
 
@@ -68,14 +64,6 @@ from BIA_G8.covid_helper import covid_dataset
 from BIA_G8.helper import matplotlib_helper
 
 # %% [markdown]
-# Start local `ray` server.
-
-# %%
-if not ray.is_initialized():
-    ray.init()
-register_ray()
-
-# %% [markdown]
 # Read and downscale the dataset.
 
 # %%
@@ -87,13 +75,11 @@ _ = gc.collect()
 
 # %%
 accuracy = []
-with joblib.parallel_backend('ray'):
-    for _ in tqdm.tqdm(iterable=range(200)):
-        X, y = ds.sklearn_dataset
-        X_train, X_test, y_train, y_test = train_test_split(X, y, shuffle=True)
-        accuracy.append(np.sum(KNN().fit(X=X_train, y=y_train).predict(X_test) == y_test) / len(y_test) * 100)
+for _ in tqdm.tqdm(iterable=range(200)):
+    X, y = ds.sklearn_dataset
+    X_train, X_test, y_train, y_test = train_test_split(X, y, shuffle=True)
+    accuracy.append(np.sum(KNN().fit(X=X_train, y=y_train).predict(X_test) == y_test) / len(y_test) * 100)
 print(f"Accuracy: {np.mean(accuracy):4.2f}")
-
 
 # %% [markdown]
 # ## Optimization using Histogram Equalization and Unsharp Masking
@@ -143,11 +129,10 @@ for i, ax in enumerate(axs.ravel()):
 
 # %%
 accuracy_new = []
-with joblib.parallel_backend('ray'):
-    for _ in tqdm.tqdm(iterable=range(200)):
-        X, y = ds_enhanced.sklearn_dataset
-        X_train, X_test, y_train, y_test = train_test_split(X, y, shuffle=True)
-        accuracy_new.append(np.sum(KNN().fit(X=X_train, y=y_train).predict(X_test) == y_test) / len(y_test) * 100)
+for _ in tqdm.tqdm(iterable=range(200)):
+    X, y = ds_enhanced.sklearn_dataset
+    X_train, X_test, y_train, y_test = train_test_split(X, y, shuffle=True)
+    accuracy_new.append(np.sum(KNN().fit(X=X_train, y=y_train).predict(X_test) == y_test) / len(y_test) * 100)
 print(f"Accuracy: {np.mean(accuracy_new):4.2f}")
 
 # %% [markdown]
@@ -162,10 +147,3 @@ p = sns.catplot(data=acu_table, kind="box", height=5, aspect=2, orient="h")
 p.set_axis_labels("Accuracy", "Classification Algorithm")
 p.set(xlim=(10, 100))
 plt.show()
-
-# %% [markdown]
-# finished
-
-# %%
-
-ray.shutdown()

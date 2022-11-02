@@ -20,7 +20,7 @@ def parallel_map(
         f: Callable[[_InType], _OutType],
         input_iterable: Iterable[_InType],
         n_jobs: int = multiprocessing.cpu_count(),
-        backend: str = "loky",
+        backend: str = "threading",
 ) -> Iterable[_OutType]:
     """
     The parallel version of Python :external:py:func:`map` function (or, ``apply`` function in R).

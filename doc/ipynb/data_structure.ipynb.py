@@ -47,7 +47,7 @@ os.environ["PYTHONPATH"] = os.pathsep.join((NEW_PYTHON_PATH, os.environ.get("PYT
 #
 # - `skimage`, which provides image transformation functions;
 # - `operator`, `itertools` and `functools`, which provides functional programming (FP) primitives;
-# - `ray` and `joblib`, which provides parallel support;
+# - `joblib`, which provides parallel support;
 # - `sklearn`, the simpliest machine-learning package.
 
 # %%
@@ -62,23 +62,12 @@ import skimage.draw as skidraw
 import skimage.util as skiutil
 import numpy as np
 import matplotlib.pyplot as plt
-import joblib
-import ray
-from ray.util.joblib import register_ray
 from sklearn.metrics import confusion_matrix
 from sklearn.model_selection import train_test_split
 from sklearn.neighbors import KNeighborsClassifier as KNN
 
 from BIA_G8.covid_helper import covid_dataset
 from BIA_G8.helper import ml_helper
-
-# %% [markdown]
-# Start `ray` distributed scheduler on our machine and register it as `joblib` backend.
-
-# %%
-if not ray.is_initialized():
-    ray.init()
-register_ray()
 
 # %% [markdown]
 # ## Generate Stride Images
@@ -242,16 +231,15 @@ ds_sklearn = ds_enlarged_with_noise.sklearn_dataset
 # Apply ML algorithms using KNN:
 
 # %%
-with joblib.parallel_backend('ray'):
-    X, y = ds_sklearn
-    X_train, X_test, y_train, y_test = train_test_split(X, y, shuffle=True)
-    knn = KNN()
-    knn = knn.fit(X=X_train, y=y_train)
-    pred = knn.predict(X_test)
-    accuracy = np.sum(pred == y_test) / len(y_test)
-    print(accuracy)
-    _confusion_matrix = confusion_matrix(pred, y_test)
-    print(ml_helper.print_confusion_matrix(_confusion_matrix, labels=["stride", "circle", "square"]))
+X, y = ds_sklearn
+X_train, X_test, y_train, y_test = train_test_split(X, y, shuffle=True)
+knn = KNN()
+knn = knn.fit(X=X_train, y=y_train)
+pred = knn.predict(X_test)
+accuracy = np.sum(pred == y_test) / len(y_test)
+print(accuracy)
+_confusion_matrix = confusion_matrix(pred, y_test)
+print(ml_helper.print_confusion_matrix(_confusion_matrix, labels=["stride", "circle", "square"]))
 
 # %% [markdown]
 # The accuracy is 100%, which is good.

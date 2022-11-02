@@ -12,49 +12,41 @@
 name: BIA4Env
 channels:
   - nodefaults
-  - https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/conda-forge
-  - https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/bioconda
-  - https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/simpleitk
-  - https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/pytorch
-  - https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/main
-  - https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/free
-  # - conda-forge
-  # - bioconda
-  # - main
-  # - free
+#  - https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/conda-forge
+#  - https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/pytorch
+#  - https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/main
+#  - https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/free
+  - conda-forge
+  - anaconda
+  - bioconda
+  - main
+  - free
+  - pytorch
 
 dependencies:
   # Core libraries
   - python=3.8
   - matplotlib>=3.5
-  - simpleitk=2.2 # For CT/MRI DICOM format
   - pyqt=5
   - tk
-  - scipy=1.9
   - numpy=1.23
   - pandas=1.5
 
   # general-purposed Image Processing Libraries
   - pillow=9.2
   - scikit-image=0.19
-  - opencv>=4
 
   # ML Libs
   - scikit-learn=1.1
   - scikit-learn-intelex # On Intel Platform for acceleration.
   - pytorch>=1.12
   - torchvision
-  - tensorflow>=2.9
-  - keras
 
   # Recommended libraries
   - seaborn=0.11 # A high-level plotting library over matplotlib.
   - joblib=1.1 # An easy-to-use parallel helper.
   - tqdm=4.64 # Progress bar.
-  - line_profiler>=3.4 # Profile Python code line by line in time.
-  - memory_profiler>=0.60 # Profile Python code line by line in memory.
   - click # For CLI applications
-  - napari # For viewing 3d applications
   - prettytable # For formatting tables
   - tomli # For fast parsing of TOML files
 
@@ -76,19 +68,13 @@ dependencies:
   - sphinx=5.3
   - sphinx_rtd_theme=1.0.0
   - sphinx-copybutton
-  - rst2pdf
-  - nbsphinx
   - myst-parser
   - myst-nb
 
   # Pandas acceleration libraries
   - bottleneck>=1.3.1
   - numexpr>=2.8
-  - numba>=0.53 # Acceleration by JIT-compiling of Python machine code using LLVM
-  - pyarrow>=6.0.1 # Pandas Parquet/ORC format,also contains accelerated Pandas CSV parser.
-  - h5py
-  - hdf5
-  - pytables
+  - numba>=0.53
 
   # GPU Support. Comment them out if you do not need them.
   - cudatoolkit>=11.2
@@ -104,22 +90,9 @@ dependencies:
   - lightgbm>=3.2.1
   - py-xgboost-gpu>=0.90
 
-  # Ray distributed framework
-  - ray-core=2.0.0
-  - ray-dashboard
-  - ray-data
-  - ray-default
-  - ray-rllib
-  - ray-tune
-
-  # Linter services
-  - pylint
-
   - pip
   - setuptools
   - wheel
   - pip:
-    - lightgbm-ray
-    - xgboost-ray
     - build
     - pytype

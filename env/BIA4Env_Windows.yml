@@ -73,15 +73,13 @@ dependencies:
   - sphinx_rtd_theme=1.0.0
   - sphinx-copybutton
   - rst2pdf
-  - nbsphinx
+  - myst-nb
   - myst-parser
 
   # Pandas acceleration libraries
   - bottleneck>=1.3.1
   - numexpr>=2.8
-  - numba>=0.53 # Acceleration by JIT-compiling of Python machine code using LLVM
-  # - pyarrow>=6.0.1 # Pandas Parquet/ORC format,also contains accelerated Pandas CSV parser.
-  # Commented: Ray would require arbitrary version of pyarrow.
+  - numba>=0.53
   - h5py
   - hdf5
   - pytables
@@ -99,6 +97,9 @@ dependencies:
   # Gradient Boosting Trees
   - lightgbm>=3.2.1
   - py-xgboost>=0.90
+
+  - dask
+  - dask-ml
 
   - pip
   - setuptools
