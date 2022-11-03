@@ -9,13 +9,13 @@ import skimage.transform as skitrans
 from BIA_G8.covid_helper import covid_dataset
 from BIA_G8_test.covid_helper import stride
 
-_IMAGES = [
-    covid_dataset.CovidImage.from_np_array(stride, 0),
-    covid_dataset.CovidImage.from_np_array(stride, 0),
-    covid_dataset.CovidImage.from_np_array(stride, 1),
-    covid_dataset.CovidImage.from_np_array(stride, 1),
-    covid_dataset.CovidImage.from_np_array(stride, 2),
-]
+_IMAGES=[]
+for label, img in enumerate([stride] * 3):
+    _IMAGES.append(covid_dataset.CovidImage.from_np_array(img, label, covid_dataset.default_decode(label)))
+    _IMAGES.append(covid_dataset.CovidImage.from_np_array(img, label, covid_dataset.default_decode(label)))
+
+_ = _IMAGES.pop()
+d1 = covid_dataset.CovidDataSet.from_loaded_image(_IMAGES)
 
 
 def test_in_memory_dataset():

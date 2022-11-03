@@ -1,8 +1,5 @@
-import joblib
 import numpy as np
 import numpy.typing as npt
-import ray
-from ray.util.joblib import register_ray
 from sklearn.metrics import confusion_matrix
 from sklearn.model_selection import train_test_split
 from sklearn.svm import SVC
@@ -43,14 +40,10 @@ def evaluate(result_1: npt.NDArray, result_2: npt.NDArray) -> float:
 
 
 if __name__ == '__main__':
-    if not ray.is_initialized():
-        ray.init()
-    register_ray()
-    with joblib.parallel_backend('ray'):
-        X, y = covid_dataset.CovidDataSet.from_directory(
-            "/media/yuzj/BUP/covid19-database-np",
-            size=600
-        ).sklearn_dataset
-        X_train, X_test, y_train, y_test = train_test_split(X, y, shuffle=True)
-        model = train_model(X_train, y_train)
-        evaluate(model.predict(X_test), y_test)
+    X, y = covid_dataset.CovidDataSet.from_directory(
+        "/media/yuzj/BUP/covid19-database-np",
+        size=600
+    ).sklearn_dataset
+    X_train, X_test, y_train, y_test = train_test_split(X, y, shuffle=True)
+    model = train_model(X_train, y_train)
+    evaluate(model.predict(X_test), y_test)

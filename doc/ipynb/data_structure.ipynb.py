@@ -22,7 +22,9 @@
 
 import os
 import sys
+import warnings
 
+warnings.filterwarnings('ignore')
 try:
     THIS_DIR_PATH = os.path.abspath(globals()["_dh"][0])
 except KeyError:
@@ -75,6 +77,11 @@ from BIA_G8.helper import ml_helper
 # Here we would generate some image of strides, circles and squares as our initial dataset.
 
 # %%
+labels = ["stride", "circle", "square"]
+_encoder_dict = {k:v for k, v in zip(labels, range(len(labels)))}
+encoder, decoder = ml_helper.generate_encoder_decoder(_encoder_dict)
+
+# %%
 blank = np.zeros((100, 100), dtype=int)
 stride = skimage.img_as_int(np.array(reduce(operator.add, map(lambda x: [[x] * 100] * 10, range(0, 100, 10)))))
 
@@ -98,22 +105,19 @@ sample_figures = (stride, circle, square)
 
 ax: plt.Axes
 for i, ax in enumerate(axs.ravel()):
-    ax.imshow(sample_figures[i])
+    ax.imshow(sample_figures[i], cmap="bone")
     ax.axis("off")
 
 # %% [markdown]
 # Create a dataset with 2 strides, 2 circles and 2 squares.
 
 # %%
-_IMAGES = [
-    covid_dataset.CovidImage.from_np_array(stride, 0),
-    covid_dataset.CovidImage.from_np_array(stride, 0),
-    covid_dataset.CovidImage.from_np_array(circle, 1),
-    covid_dataset.CovidImage.from_np_array(circle, 1),
-    covid_dataset.CovidImage.from_np_array(square, 2),
-    covid_dataset.CovidImage.from_np_array(square, 2),
-]
-d1 = covid_dataset.CovidDataSet.from_loaded_image(_IMAGES)
+_IMAGES=[]
+for label, img in enumerate(sample_figures):
+    _IMAGES.append(covid_dataset.CovidImage.from_np_array(img, label, decoder(label)))
+    _IMAGES.append(covid_dataset.CovidImage.from_np_array(img, label, decoder(label)))
+
+d1 = covid_dataset.CovidDataSet.from_loaded_image(_IMAGES, encode=encoder, decode=decoder)
 
 # %% [markdown]
 # ## Sample and Plot
@@ -131,7 +135,7 @@ fig, axs = plt.subplots(1, 3, figsize=(12, 12))
 
 ax: plt.Axes
 for i, ax in enumerate(axs.ravel()):
-    ax.imshow(d1_sampled[i].np_array)
+    ax.imshow(d1_sampled[i].np_array, cmap="bone")
     ax.axis("off")
     ax.set_title(d1_sampled[i].label_str)
 
@@ -145,7 +149,7 @@ fig, axs = plt.subplots(1, len(d1_sampled), figsize=(12, 12))
 
 ax: plt.Axes
 for i, ax in enumerate(axs.ravel()):
-    ax.imshow(d1_sampled[i].np_array)
+    ax.imshow(d1_sampled[i].np_array, cmap="bone")
     ax.axis("off")
     ax.set_title(d1_sampled[i].label_str)
 
@@ -177,31 +181,28 @@ d1_sampled_applied = d1.sample(3).apply(lambda x: skitrans.rotate(x, 30))
 fig, axs = plt.subplots(1, 3)
 
 for i, ax in enumerate(axs.ravel()):
-    ax.imshow(d1_sampled_applied[i].np_array)
+    ax.imshow(d1_sampled_applied[i].np_array, cmap="bone")
     ax.axis("off")
-    ax.set_title(d1_sampled[i].label_str)
+    ax.set_title(d1_sampled_applied[i].label_str)
 
 # %% [markdown]
-# The `apply` function also have its parallel function, `parallel_apply`. The following example addes noise to enlarged dataset:
+# The `apply` function also have its parallel function, `parallel_apply`. The following example adds noise to enlarged dataset:
 
 # %%
-
 ds_enlarged_with_noise = ds_enlarged.parallel_apply(
     lambda img: skimage.img_as_int(
         skiutil.random_noise(
             skimage.img_as_float(img),
             mode="pepper"
         )
-    ),
-    backend="threading"
+    )
 ).parallel_apply(
     lambda img: skimage.img_as_int(
         skitrans.rotate(
             img,
             random.random() * 120 - 60
         )
-    ),
-    backend="threading"
+    )
 )
 
 # %% [markdown]
@@ -217,7 +218,7 @@ ds_enlarged_sampled = ds_enlarged_with_noise.sample(9)
 fig, axs = plt.subplots(3, 3, figsize=(12, 12))
 
 for i, ax in enumerate(axs.ravel()):
-    ax.imshow(ds_enlarged_sampled[i].np_array)
+    ax.imshow(ds_enlarged_sampled[i].np_array, cmap="bone")
     ax.axis("off")
     ax.set_title(ds_enlarged_sampled[i].label_str)
 
@@ -239,7 +240,8 @@ pred = knn.predict(X_test)
 accuracy = np.sum(pred == y_test) / len(y_test)
 print(accuracy)
 _confusion_matrix = confusion_matrix(pred, y_test)
-print(ml_helper.print_confusion_matrix(_confusion_matrix, labels=["stride", "circle", "square"]))
+print(ml_helper.print_confusion_matrix(_confusion_matrix, labels=labels))
 
 # %% [markdown]
 # The accuracy is 100%, which is good.
+#

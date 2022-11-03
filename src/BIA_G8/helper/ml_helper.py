@@ -1,9 +1,28 @@
+__all__ = (
+    "print_confusion_matrix",
+    "generate_encoder_decoder"
+)
+
 import doctest
-from typing import List
+from typing import List, Dict, Tuple, Callable
 
 import numpy as np
 import numpy.typing as npt
 import prettytable
+
+
+def generate_encoder_decoder(
+        encoder_dict: Dict[str, int]
+) -> Tuple[Callable[[str], int], Callable[[int], str]]:
+    decoder_dict = {v: k for k, v in encoder_dict.items()}
+
+    def encoder(label_str: str) -> int:
+        return encoder_dict[label_str]
+
+    def decoder(label: int) -> str:
+        return decoder_dict[label]
+
+    return encoder, decoder
 
 
 def print_confusion_matrix(

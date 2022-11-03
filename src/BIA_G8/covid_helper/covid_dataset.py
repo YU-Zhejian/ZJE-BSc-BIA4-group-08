@@ -9,8 +9,8 @@ import shutil
 from functools import reduce
 
 __all__ = (
-    "encode",
-    "decode",
+    "default_encode",
+    "default_decode",
     "IN_MEMORY_INDICATOR",
     "VALID_IMAGE_EXTENSIONS",
     "CovidImage",
@@ -25,7 +25,7 @@ import os
 import random
 import uuid
 from collections import defaultdict
-from typing import Tuple, List, Dict, Callable, Iterable, Optional, Any
+from typing import Tuple, List, Dict, Callable, Iterable, Optional, Any, Mapping, Final
 
 import numpy as np
 import numpy.typing as npt
@@ -33,16 +33,16 @@ import skimage.io as skiio
 import tqdm
 
 from BIA_G8 import get_lh
-from BIA_G8.helper import io_helper, joblib_helper
+from BIA_G8.helper import io_helper, joblib_helper, ml_helper
 
 _lh = get_lh(__name__)
-_encoder = {
+_DEFAULT_ENCODER_DICT = {
     "NA": 100,
     "COVID-19": 0,
     "NORMAL": 1,
     "Viral_Pneumonia": 2
 }
-_decoder = {v: k for k, v in _encoder.items()}
+default_encode, default_decode = ml_helper.generate_encoder_decoder(_DEFAULT_ENCODER_DICT)
 VALID_IMAGE_EXTENSIONS = (
     "npy.xz",
     "png",
@@ -55,26 +55,6 @@ VALID_IMAGE_EXTENSIONS = (
 
 IN_MEMORY_INDICATOR = "IN_MEMORY"
 """\"File name\" of the in-memory datasets or figures."""
-
-
-def encode(label_str: str) -> int:
-    """
-    Categorical encoder.
-
-    :param label_str: Label in string format.
-    :return: Label in integer format.
-    """
-    return _encoder[label_str]
-
-
-def decode(label: int) -> str:
-    """
-    Categorical decoder.
-
-    :param label: Label in integer format.
-    :return: Label in string format.
-    """
-    return _decoder[label]
 
 
 def resolve_label_from_path(abspath: str) -> str:
@@ -129,7 +109,7 @@ class CovidImage:
     @property
     def np_array(self) -> npt.NDArray:
         """Read-only numpy aray of the image."""
-        return self._image
+        return self._image.view()
 
     @property
     def image_path(self) -> str:
@@ -137,16 +117,18 @@ class CovidImage:
         return self._image_path
 
     @classmethod
-    def from_file(cls, image_path: str) -> CovidImage:
+    def from_file(cls, image_path: str, label: int, label_str: str) -> CovidImage:
         """
         Generate a new instance from existing file.
 
+        :param label: Label in integer
+        :param label_str: Label in string
         :param image_path: Absolute path to the image.
         """
         new_img = cls()
         new_img._image_path = image_path
-        new_img._label_str = resolve_label_from_path(new_img._image_path)
-        new_img._label = encode(new_img.label_str)
+        new_img._label_str = label_str
+        new_img._label = label
 
         if image_path.endswith("npy.xz"):
             new_img._image = io_helper.read_np_xz(image_path)
@@ -155,18 +137,19 @@ class CovidImage:
         return new_img
 
     @classmethod
-    def from_np_array(cls, image: npt.NDArray, label: int) -> CovidImage:
+    def from_np_array(cls, image: npt.NDArray, label: int, label_str: str) -> CovidImage:
         """
         Generate a new instance based on existing Numpy array.
 
+        :param label_str: Label in string.
         :param image: Image in numpy aray.
-        :param label: The label in integer.
+        :param label: Label in integer.
         """
         new_img = cls()
         new_img._image_path = IN_MEMORY_INDICATOR
         new_img._image = image
         new_img._label = label
-        new_img._label_str = decode(new_img._label)
+        new_img._label_str = label_str
         return new_img
 
     def apply(self, operation: Callable[[npt.NDArray], npt.NDArray]) -> CovidImage:
@@ -177,7 +160,11 @@ class CovidImage:
             should take one Numpy matrix as input and generate a Numpy matrix as output.
         :return: A new instance after the operation.
         """
-        return CovidImage.from_np_array(operation(self._image), self._label)
+        return CovidImage.from_np_array(
+            image=operation(self._image),
+            label=self._label,
+            label_str=self._label_str
+        )
 
     def save(self, image_path: Optional[str] = None) -> None:
         """
@@ -211,6 +198,8 @@ class CovidDataSet:
     _loaded_image_with_label: Dict[int, List[CovidImage]]
     _dataset_path: str
     _sklearn_dataset: Optional[Tuple[npt.NDArray, npt.NDArray]]
+    encode: Final[Callable[[str], int]]
+    decode: Final[Callable[[int], str]]
 
     @property
     def dataset_path(self) -> str:
@@ -233,39 +222,50 @@ class CovidDataSet:
             for img in self._loaded_image:
                 if img.np_array.shape != _img_size:
                     raise ValueError(f"Image {img} have different size!")
-            X:npt.NDArray = np.ndarray((num_images, operator.mul(*_img_size)), dtype=float)
-            y:npt.NDArray = np.ndarray((num_images,), dtype=int)
+            x: npt.NDArray = np.ndarray((num_images, operator.mul(*_img_size)), dtype=float)
+            y: npt.NDArray = np.ndarray((num_images,), dtype=int)
             for i, img in enumerate(tqdm.tqdm(
                     iterable=self._loaded_image,
                     desc="Parsing to SKLearn..."
             )):
-                X[i] = np.ravel(img.np_array)
+                x[i] = np.ravel(img.np_array)
                 y[i] = img.label
             unique_labels, counts = np.unique(y, return_counts=True)
-            unique_labels = [decode(label) for label in unique_labels]
-            _lh.info("Loaded labels %s with corresponding counts %s", str(unique_labels), str(counts))
-            self._sklearn_dataset = X, y
+            unique_labels_str = [self.decode(label) for label in unique_labels]
+            _lh.info("Loaded labels %s with corresponding counts %s", unique_labels_str, str(counts))
+            self._sklearn_dataset = x, y
         return self._sklearn_dataset
 
-    def __init__(self) -> None:
+    def __init__(
+            self,
+            encode: Callable[[str], int],
+            decode: Callable[[int], str],
+    ) -> None:
         """
         Dumb initializer which initializes a dataset for in-memory use.
         """
+        self.encode = encode
+        self.decode = decode
         self._loaded_image = []
         self._loaded_image_with_label = defaultdict(lambda: [])
         self._dataset_path = IN_MEMORY_INDICATOR
         self._sklearn_dataset = None
 
     def _load_impl(self, image_path: str) -> None:
-        img = CovidImage.from_file(image_path)
+        label_str = resolve_label_from_path(image_path)
+        img = CovidImage.from_file(
+            image_path,
+            label=self.encode(label_str),
+            label_str=label_str,
+        )
         self._loaded_image.append(img)
         self._loaded_image_with_label[img.label].append(img)
 
     def _preload_hook(
             self,
             dataset_path: str,
-            size: int = -1,
-            balanced: bool = True
+            size: int,
+            balanced: bool
     ) -> List[str]:
         self._dataset_path = dataset_path
         _lh.info("Requested data from %s...", self._dataset_path)
@@ -281,7 +281,7 @@ class CovidDataSet:
                 iterable=all_image_paths,
                 desc="Parsing image directory..."
         ):
-            label = encode(resolve_label_from_path(image_path))
+            label = self.encode(resolve_label_from_path(image_path))
             image_paths_with_label[label].append(image_path)
         size = _get_max_size_helper(size, balanced, len(all_image_paths), image_paths_with_label)
         _lh.info("Loading %d data from %s...", size, self._dataset_path)
@@ -302,7 +302,9 @@ class CovidDataSet:
             cls,
             dataset_path: str,
             size: int = -1,
-            balanced: bool = True
+            balanced: bool = True,
+            encode: Optional[Callable[[str], int]] = None,
+            decode: Optional[Callable[[int], str]] = None,
     ) -> CovidDataSet:
         """
         Generate a new instance from directory of images.
@@ -329,7 +331,10 @@ class CovidDataSet:
         :param size: Number of images needed to be loaded.
         :param balanced: Whether the loaded images should be "balanced" -- i.e., have same number of each category.
         """
-        new_ds = cls()
+
+        if encode is None:
+            encode, decode = default_encode, default_decode
+        new_ds = cls(encode=encode, decode=decode)
         all_image_paths = new_ds._preload_hook(
             dataset_path=dataset_path,
             size=size,
@@ -351,14 +356,18 @@ class CovidDataSet:
             dataset_path: str,
             size: int = -1,
             balanced: bool = True,
-            **kwargs
+            encode: Optional[Callable[[str], int]] = None,
+            decode: Optional[Callable[[int], str]] = None,
+            joblib_kwds: Optional[Mapping[str, Any]] = None
     ) -> CovidDataSet:
         """
         Parallel version of :py:func:`from_directory`.
         """
-        if kwargs.get("backend") is not None:
-            raise ValueError("backend should not be set!")
-        new_ds = cls()
+        if joblib_kwds is None:
+            joblib_kwds = {}
+        if encode is None:
+            encode, decode = default_encode, default_decode
+        new_ds = cls(encode=encode, decode=decode)
         all_image_paths = new_ds._preload_hook(
             dataset_path=dataset_path,
             size=size,
@@ -371,7 +380,7 @@ class CovidDataSet:
                 desc="Loading data..."
             ),
             backend="threading",
-            **kwargs
+            **joblib_kwds
         ))
         _lh.info("Shuffling loaded data...")
         random.shuffle(new_ds._loaded_image)
@@ -379,11 +388,18 @@ class CovidDataSet:
         return new_ds
 
     @classmethod
-    def from_loaded_image(cls, loaded_image: List[CovidImage]) -> CovidDataSet:
+    def from_loaded_image(
+            cls,
+            loaded_image: List[CovidImage],
+            encode: Optional[Callable[[str], int]] = None,
+            decode: Optional[Callable[[int], str]] = None,
+    ) -> CovidDataSet:
         """
         Generate a new instance from a list of py:class:`CovidImage`.
         """
-        new_ds = cls()
+        if encode is None:
+            encode, decode = default_encode, default_decode
+        new_ds = cls(encode=encode, decode=decode)
         new_ds._loaded_image = loaded_image
         for img in new_ds._loaded_image:
             new_ds._loaded_image_with_label[img.label].append(img)
@@ -399,25 +415,35 @@ class CovidDataSet:
         :param operation: Operation to be applied to each image.
         :return: New dataset with image operated.
         """
-        new_ds = CovidDataSet.from_loaded_image(list(map(
-            lambda image: image.apply(operation),
-            tqdm.tqdm(iterable=self._loaded_image, desc="Applying operations...")
-        )))
+        new_ds = CovidDataSet.from_loaded_image(
+            list(map(
+                lambda image: image.apply(operation),
+                tqdm.tqdm(iterable=self._loaded_image, desc="Applying operations...")
+            )),
+            encode=self.encode,
+            decode=self.decode
+        )
         return new_ds
 
     def parallel_apply(
             self,
             operation: Callable[[npt.NDArray], npt.NDArray],
-            **kwargs
+            joblib_kwds: Optional[Mapping[str, Any]] = None
     ) -> CovidDataSet:
         """
         Parallel version of :py:func:`apply`.
         """
-        new_ds = CovidDataSet.from_loaded_image(list(joblib_helper.parallel_map(
-            lambda image: image.apply(operation),
-            tqdm.tqdm(iterable=self._loaded_image, desc="Applying operations..."),
-            **kwargs
-        )))
+        if joblib_kwds is None:
+            joblib_kwds = {}
+        new_ds = CovidDataSet.from_loaded_image(
+            list(joblib_helper.parallel_map(
+                lambda image: image.apply(operation),
+                tqdm.tqdm(iterable=self._loaded_image, desc="Applying operations..."),
+                **joblib_kwds
+            )),
+            encode=self.encode,
+            decode=self.decode
+        )
         return new_ds
 
     def sample(self, size: int = -1, balanced: bool = True) -> CovidDataSet:
@@ -427,7 +453,7 @@ class CovidDataSet:
         :param size: Number of images needed to be loaded.
         :param balanced: Whether the loaded images should be "balanced" -- i.e., have same number of each category.
         """
-        new_ds = CovidDataSet()
+        new_ds = CovidDataSet(encode=self.encode, decode=self.decode)
         new_ds._dataset_path = self.dataset_path
         _lh.info("Sampling data...")
         size = _get_max_size_helper(size, balanced, len(self._loaded_image), self._loaded_image_with_label)
@@ -446,8 +472,8 @@ class CovidDataSet:
         _lh.info("Finished loading data...")
         return new_ds
 
+    @staticmethod
     def _save_impl(
-            self,
             img: CovidImage,
             dataset_path: str,
             extension: str
@@ -468,7 +494,7 @@ class CovidDataSet:
         os.makedirs(dataset_path, exist_ok=False)
         self._dataset_path = dataset_path
         for label in self._loaded_image_with_label.keys():
-            label_str = decode(label)
+            label_str = self.decode(label)
             os.makedirs(os.path.join(self._dataset_path, label_str), exist_ok=False)
 
     def save(self, dataset_path: Optional[str] = None, extension: str = ".npy.xz") -> None:
@@ -490,10 +516,17 @@ class CovidDataSet:
             )
         ))
 
-    def parallel_save(self, dataset_path: Optional[str] = None, extension: str = ".npy.xz", **kwargs) -> None:
+    def parallel_save(
+            self,
+            dataset_path: Optional[str] = None,
+            extension: str = ".npy.xz",
+            joblib_kwds: Optional[Mapping[str, Any]] = None
+    ) -> None:
         """
         Parallel version of :py:func:`save`.
         """
+        if joblib_kwds is None:
+            joblib_kwds = {}
         self._presave_hook(dataset_path)
         _ = list(joblib_helper.parallel_map(
             lambda img: self._save_impl(img, dataset_path, extension),
@@ -501,7 +534,7 @@ class CovidDataSet:
                 iterable=list(itertools.chain(*self._loaded_image_with_label.values())),
                 desc="Saving images..."
             ),
-            **kwargs
+            **joblib_kwds
         ))
 
     def __len__(self):
