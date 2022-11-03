@@ -25,15 +25,18 @@ import sys
 import warnings
 
 warnings.filterwarnings('ignore')
-THIS_DIR_PATH = os.path.abspath(globals()["_dh"][0])
-NEW_PYTHON_PATH = os.path.dirname(THIS_DIR_PATH)
+try:
+    THIS_DIR_PATH = os.path.abspath(globals()["_dh"][0])
+except KeyError:
+    THIS_DIR_PATH = os.path.dirname(os.path.abspath(__file__))
+NEW_PYTHON_PATH = os.path.join(os.path.dirname(THIS_DIR_PATH), "src")
 sys.path.insert(0, NEW_PYTHON_PATH)
 os.environ["PYTHONPATH"] = os.pathsep.join((NEW_PYTHON_PATH, os.environ.get("PYTHONPATH", "")))
 
 # %% [markdown]
-# # Machine-Learning Optimization: A Failed Example
+# # Screening General-Purposed Unoptimized Machine-Learning Algorithms
 #
-# Here we would provide a failed attempt to optimize machine-learning results. It would use the COVID dataset infrastructure on real pictures.
+# TODO
 #
 # Before starting, we would import necessary libraries.
 
@@ -41,67 +44,51 @@ os.environ["PYTHONPATH"] = os.pathsep.join((NEW_PYTHON_PATH, os.environ.get("PYT
 import gc  # For collecting memory garbage
 import statistics
 from typing import Union, Type, List, Optional, Any, Mapping
+import multiprocessing
 
-import skimage.filters as skifilt
-import skimage.exposure as skiexp
 import numpy as np
 import pandas as pd
+
 import matplotlib.pyplot as plt
 import seaborn as sns
-import joblib
-import ray
-from ray.util.joblib import register_ray
-import tqdm
 
-try:
-    import sklearnex
-
-    sklearnex.patch_sklearn()
-except ImportError:
-    sklearnex = None
+from tqdm.notebook import tqdm
 
 from sklearn.model_selection import train_test_split
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.tree import DecisionTreeClassifier
+from sklearn.neural_network import MLPClassifier
 from sklearn.ensemble import RandomForestClassifier, AdaBoostClassifier, GradientBoostingClassifier, \
-    HistGradientBoostingClassifier, BaggingClassifier, VotingClassifier
+    HistGradientBoostingClassifier, BaggingClassifier, VotingClassifier, ExtraTreesClassifier
 from sklearn.svm import SVC
+from sklearn.linear_model import SGDClassifier, RidgeClassifier, PassiveAggressiveClassifier
 from sklearn.manifold import TSNE
 
-from xgboost import XGBClassifier
-from lightgbm.sklearn import LGBMClassifier
+from xgboost.sklearn import XGBClassifier
 
 from BIA_G8.covid_helper import covid_dataset
-from BIA_G8.helper import matplotlib_helper, joblib_helper
-
-# %% [markdown]
-# Start local `ray` server.
-
-# %%
-if not ray.is_initialized():
-    ray.init()
-register_ray()
+from BIA_G8.helper import joblib_helper
 
 # %% [markdown]
 # Read and downscale the dataset.
 
 # %%
-ds = covid_dataset.CovidDataSet.parallel_from_directory(os.path.join(THIS_DIR_PATH, "covid_image"))
-ds_sklearn = ds.sklearn_dataset
+ds = covid_dataset.CovidDataSet.parallel_from_directory(os.path.join(THIS_DIR_PATH, "covid_image"), size=300)
 _ = gc.collect()
 
 # %% [markdown]
-# Plot t-SNE of the data.
+# Plot and t-SNE of the data.
 
 # %%
-with joblib.parallel_backend('ray'):
-    ds_tsne_model = TSNE(learning_rate=200, n_iter=1000, init="random")
-    ds_tsne_transformed = ds_tsne_model.fit_transform(ds_sklearn[0])
-    sns.scatterplot(
-        x=ds_tsne_transformed[:, 0],
-        y=ds_tsne_transformed[:, 1],
-        hue=list(map(covid_dataset.decode, ds_sklearn[1]))
-    )
+ds_tsne_transformed = TSNE(learning_rate=200, n_iter=1000, init="random").fit_transform(ds.sklearn_dataset[0])
+sns.scatterplot(
+    x=ds_tsne_transformed[:, 0],
+    y=ds_tsne_transformed[:, 1],
+    hue=list(map(covid_dataset.decode, ds.sklearn_dataset[1]))
+)
+plt.show()
+del ds_tsne_transformed
+_ = gc.collect()
 
 # %% [markdown]
 # Use `sklearn` on this raw dataset.
@@ -109,26 +96,28 @@ with joblib.parallel_backend('ray'):
 # %%
 _ModelTypeType = Union[
     Type[KNeighborsClassifier],
+    Type[MLPClassifier],
+    Type[SGDClassifier],
+    Type[RidgeClassifier],
+    Type[PassiveAggressiveClassifier],
     Type[SVC],
     Type[DecisionTreeClassifier],
     Type[RandomForestClassifier],
     Type[AdaBoostClassifier],
     Type[GradientBoostingClassifier],
     Type[HistGradientBoostingClassifier],
+    Type[ExtraTreesClassifier],
     Type[BaggingClassifier],
     Type[VotingClassifier],
-    Type[XGBClassifier],
-    Type[LGBMClassifier]
+    Type[XGBClassifier]
 ]
 
 
 def sklearn_get_accuracy(
         _ds: covid_dataset.CovidDataSet,
         model_type: _ModelTypeType,
-        model_kwds: Optional[Mapping[str, Any]] = None
+        model_kwds: Mapping[str, Any]
 ):
-    if model_kwds is None:
-        model_kwds = {}
     X, y = _ds.sklearn_dataset
     X_train, X_test, y_train, y_test = train_test_split(X, y, shuffle=True)
     model = model_type(**model_kwds)
@@ -142,9 +131,9 @@ def mean_sklearn_get_accuracy(
         _ds: covid_dataset.CovidDataSet,
         model_type: _ModelTypeType,
         model_kwds: Optional[Mapping[str, Any]] = None,
-        num_iter: int = 100,
-        parallel: bool = True,
-        backend: str = "threading"
+        num_iter: int = 10,
+        parallel: bool = False,
+        joblib_kwds: Optional[Mapping[str, Any]] = None,
 ) -> List[float]:
     def dumb_train(_):
         retv = sklearn_get_accuracy(
@@ -155,71 +144,87 @@ def mean_sklearn_get_accuracy(
         gc.collect()
         return retv
 
-    if not parallel:
-        retl = list(map(
-            dumb_train,
-            tqdm.tqdm(iterable=range(num_iter), desc=f"Training with {model_type.__name__}...")
-        ))
-    else:
+    if joblib_kwds is None:
+        joblib_kwds = {}
+    if model_kwds is None:
+        model_kwds = {}
+    model_name = model_type.__name__
+    if "base_estimator" in model_kwds:
+        model_name += f" ({model_kwds['base_estimator'].__class__.__name__})"
+    if parallel:
         retl = list(joblib_helper.parallel_map(
             dumb_train,
-            tqdm.tqdm(iterable=range(num_iter), desc=f"Training with {model_type.__name__}..."),
-            backend=backend
+            tqdm(iterable=range(num_iter), desc=f"Training with {model_name}..."),
+            **joblib_kwds
         ))
-    print(f"{model_type.__name__} accuracy {statistics.mean(retl)} stdev {statistics.stdev(retl)}")
+    else:
+        retl = list(map(
+            dumb_train,
+            tqdm(iterable=range(num_iter), desc=f"Training with {model_name}...")
+        ))
+    print(f"{model_name} accuracy {statistics.mean(retl)} stdev {statistics.stdev(retl)}")
     return retl
 
 
-# %%
-
 # %% pycharm={"is_executing": true}
-knn_accu = mean_sklearn_get_accuracy(ds, KNeighborsClassifier, num_iter=40)
-svm_accu = mean_sklearn_get_accuracy(ds, SVC, num_iter=40)
-dt_accu = mean_sklearn_get_accuracy(ds, DecisionTreeClassifier, num_iter=40)
-rdn_forest_accu = mean_sklearn_get_accuracy(ds, RandomForestClassifier, num_iter=40)
+parallel = len(ds) < 120
+sgdc_accu = mean_sklearn_get_accuracy(ds, SGDClassifier)
+rc_accu = mean_sklearn_get_accuracy(ds, RidgeClassifier)
+pac_accu = mean_sklearn_get_accuracy(ds, PassiveAggressiveClassifier)
+knn_accu = mean_sklearn_get_accuracy(ds, KNeighborsClassifier)
+svm_accu = mean_sklearn_get_accuracy(ds, SVC)
+dt_accu = mean_sklearn_get_accuracy(
+    ds,
+    DecisionTreeClassifier,
+    parallel=parallel
+)
+rdn_forest_accu = mean_sklearn_get_accuracy(
+    ds,
+    RandomForestClassifier,
+    parallel=parallel
+)
+etc_accu = mean_sklearn_get_accuracy(
+    ds,
+    ExtraTreesClassifier,
+    parallel=parallel
+)
 adaboost_dt_accu = mean_sklearn_get_accuracy(
     ds,
     AdaBoostClassifier,
     model_kwds={"base_estimator": DecisionTreeClassifier()},
-    num_iter=40,
-    parallel=False
+    parallel=parallel
 )
-gbc_accu = mean_sklearn_get_accuracy(
+# gbc_accu = mean_sklearn_get_accuracy(
+#         ds,
+#         GradientBoostingClassifier,
+#         model_kwds={"n_iter_no_change": 5, "tol": 0.01},
+#     parallel=parallel
+# )
+# hgbc_accu = mean_sklearn_get_accuracy(
+#     ds,
+#     HistGradientBoostingClassifier,
+#     model_kwds={"n_iter_no_change": 5, "tol": 0.01},
+#     parallel=parallel
+#  )
+xgb_accu = mean_sklearn_get_accuracy(
     ds,
-    GradientBoostingClassifier,
-    model_kwds={"n_iter_no_change": 5, "tol": 0.01},
-    num_iter=40,
-    parallel=False
+    XGBClassifier,
+    model_kwds={"n_jobs": multiprocessing.cpu_count()}
 )
-hgbc_accu = mean_sklearn_get_accuracy(
-    ds,
-    HistGradientBoostingClassifier,
-    model_kwds={"n_iter_no_change": 5, "tol": 0.01},
-    num_iter=40,
-    parallel=False
-)
-xgb_accu = mean_sklearn_get_accuracy(ds, XGBClassifier, num_iter=40, parallel=False)
-lgbm_accu = mean_sklearn_get_accuracy(ds, LGBMClassifier, num_iter=40, parallel=False)
 bag_knn_accu = mean_sklearn_get_accuracy(
     ds,
     BaggingClassifier,
-    model_kwds={"base_estimator": KNeighborsClassifier()},
-    num_iter=40,
-    parallel=False
+    model_kwds={"base_estimator": KNeighborsClassifier()}
 )
 bag_svm_accu = mean_sklearn_get_accuracy(
     ds,
     BaggingClassifier,
-    model_kwds={"base_estimator": SVC()},
-    num_iter=40,
-    parallel=False
+    model_kwds={"base_estimator": SVC()}
 )
 bag_dt_accu = mean_sklearn_get_accuracy(
     ds,
     BaggingClassifier,
-    model_kwds={"base_estimator": DecisionTreeClassifier()},
-    num_iter=40,
-    parallel=False
+    model_kwds={"base_estimator": DecisionTreeClassifier()}
 )
 vote_accu = mean_sklearn_get_accuracy(
     ds, VotingClassifier,
@@ -227,22 +232,24 @@ vote_accu = mean_sklearn_get_accuracy(
         ('knn', KNeighborsClassifier()),
         ('svm', SVC()),
         ('dt', DecisionTreeClassifier())
-    ]},
-    num_iter=40,
-    parallel=False
+    ]}
 )
+# mlp_accu = mean_sklearn_get_accuracy(ds, MLPClassifier)
 
-# %%
+# %% pycharm={"is_executing": true}
 acu_table = pd.DataFrame({
+    "SGD": sgdc_accu,
+    "Ridge": rc_accu,
+    "Passive-Aggressive": pac_accu,
     "KNN": knn_accu,
     "SVM": svm_accu,
     "Decision Tree": dt_accu,
     "Random Forest": rdn_forest_accu,
+    "Extra Trees": etc_accu,
     "AdaBoost (Decision Tree)": adaboost_dt_accu,
-    "GBC": gbc_accu,
-    "HGBC": hgbc_accu,
+    # "GBC": gbc_accu,
+    # "HGBC": hgbc_accu,
     "XGBoost": xgb_accu,
-    "LightGBM": lgbm_accu,
     "Bagging (KNN)": bag_knn_accu,
     "Bagging (SVM)": bag_svm_accu,
     "Bagging (Decision Tree)": bag_dt_accu,
@@ -253,138 +260,18 @@ p.set_axis_labels("Classification Algorithm", "Accuracy")
 p.set(xlim=(10, 100))
 plt.show()
 
-# %% [markdown]
-# ## Optimization using Histogram Equalization and Unsharp Masking
+# %% pycharm={"is_executing": true}
+# FIXME: Error!
+# lgbm_accu = mean_sklearn_get_accuracy(
+#     ds,
+#     LGBMClassifier,
+#     model_kwds={
+#         "n_jobs": multiprocessing.cpu_count(),
+#         "objective": "multiclass",
+#         "tree_learner": "voting",
+#         "num_class": 3,
+#         "verbosity": 3
+#     }
+# )
 
-# %%
-fig, axs = plt.subplots(3, 3, figsize=(12, 12))
-
-sample_figures = ds.sample(9)
-
-ax: plt.Axes
-for i, ax in enumerate(axs.ravel()):
-    ax.imshow(sample_figures[i].np_array)
-    ax.axis("off")
-    ax.set_title(sample_figures[i].label_str)
-
-# %%
-matplotlib_helper.plot_histogram(ds[0].np_array, cumulative=True, log=False)
-
-# %%
-ds_equalize_hist = ds.parallel_apply(
-    skiexp.equalize_hist,
-    backend="threading"
-)
-
-# %%
-matplotlib_helper.plot_histogram(ds_equalize_hist[0].np_array, cumulative=True, log=False)
-
-# %%
-ds_enhanced = ds_equalize_hist.parallel_apply(
-    lambda img: skifilt.unsharp_mask(img, radius=5, amount=3),
-    backend="threading"
-)
-
-# %%
-fig, axs = plt.subplots(3, 3, figsize=(12, 12))
-
-sample_figures = ds_enhanced.sample(9)
-
-ax: plt.Axes
-for i, ax in enumerate(axs.ravel()):
-    ax.imshow(sample_figures[i].np_array)
-    ax.axis("off")
-    ax.set_title(sample_figures[i].label_str)
-
-# %% [markdown]
-# ## Re-learn using SKLearn KNN and two GBT-Based Algorithm
-
-# %%
-enhanced_knn_accu = mean_sklearn_get_accuracy(ds_enhanced, KNeighborsClassifier, num_iter=40)
-enhanced_svm_accu = mean_sklearn_get_accuracy(ds_enhanced, SVC, num_iter=40)
-enhanced_dt_accu = mean_sklearn_get_accuracy(ds_enhanced, DecisionTreeClassifier, num_iter=40)
-enhanced_rdn_forest_accu = mean_sklearn_get_accuracy(ds_enhanced, RandomForestClassifier, num_iter=40)
-# adaboost_svm_accu = mean_sklearn_get_accuracy(ds, AdaBoostClassifier, model_kwds={"base_estimator":SVC(), "algorithm":'SAMME'}, num_iter=40)
-enhanced_adaboost_dt_accu = mean_sklearn_get_accuracy(
-    ds_enhanced,
-    AdaBoostClassifier,
-    model_kwds={"base_estimator": DecisionTreeClassifier()},
-    num_iter=40)
-enhanced_gbc_accu = mean_sklearn_get_accuracy(
-    ds_enhanced,
-    GradientBoostingClassifier,
-    model_kwds={"n_iter_no_change": 5, "tol": 0.01},
-    num_iter=40
-)
-enhanced_hgbc_accu = mean_sklearn_get_accuracy(
-    ds_enhanced,
-    HistGradientBoostingClassifier,
-    model_kwds={"n_iter_no_change": 5, "tol": 0.01},
-    num_iter=40
-)
-enhanced_xgb_accu = mean_sklearn_get_accuracy(ds_enhanced, XGBClassifier, num_iter=40)
-enhanced_lgbm_accu = mean_sklearn_get_accuracy(ds_enhanced, LGBMClassifier, num_iter=40)
-enhanced_bag_knn_accu = mean_sklearn_get_accuracy(
-    ds_enhanced,
-    BaggingClassifier,
-    model_kwds={"base_estimator": KNeighborsClassifier()},
-    num_iter=40
-)
-enhanced_bag_svm_accu = mean_sklearn_get_accuracy(
-    ds_enhanced,
-    BaggingClassifier,
-    model_kwds={"base_estimator": SVC()},
-    num_iter=40
-)
-enhanced_bag_dt_accu = mean_sklearn_get_accuracy(
-    ds_enhanced,
-    BaggingClassifier,
-    model_kwds={"base_estimator": DecisionTreeClassifier()},
-    num_iter=40
-)
-enhanced_vote_accu = mean_sklearn_get_accuracy(
-    ds_enhanced,
-    VotingClassifier,
-    model_kwds={
-        "estimators": [
-            ('knn', KNeighborsClassifier()),
-            ('svm', SVC()),
-            ('dt', DecisionTreeClassifier())
-        ]},
-    num_iter=40
-)
-
-# %%
-acu_table = pd.DataFrame({
-    "KNN": knn_accu,
-    "KNN (Post)": enhanced_knn_accu,
-    "SVM": svm_accu,
-    "SVM (Post)": enhanced_svm_accu,
-    "Decision Tree": dt_accu,
-    "Decision Tree (Post)": enhanced_dt_accu,
-    "Random Forest": rdn_forest_accu,
-    "Random Forest (Post)": enhanced_rdn_forest_accu,
-    "AdaBoost (Decision Tree)": adaboost_dt_accu,
-    "AdaBoost (Decision Tree) (Post)": enhanced_adaboost_dt_accu,
-    "GBC": gbc_accu,
-    "GBC (Post)": enhanced_gbc_accu,
-    "HGBC": hgbc_accu,
-    "HGBC (Post)": enhanced_hgbc_accu,
-    "XGBoost": xgb_accu,
-    "XGBoost (Post)": enhanced_xgb_accu,
-    "LightGBM": lgbm_accu,
-    "LightGBM (Post)": enhanced_lgbm_accu,
-    "Bagging (KNN)": bag_knn_accu,
-    "Bagging (KNN) (Post)": enhanced_bag_knn_accu,
-    "Bagging (SVM)": bag_svm_accu,
-    "Bagging (SVM) (Post)": enhanced_bag_svm_accu,
-    "Bagging (Decision Tree)": bag_dt_accu,
-    "Bagging (Decision Tree) (Post)": enhanced_bag_dt_accu,
-    "Voting (KNN, SVM, Decision Tree)": vote_accu,
-    "Voting (KNN, SVM, Decision Tree) (Post)": enhanced_vote_accu
-})
-p = sns.catplot(data=acu_table, kind="box", height=5, aspect=2, orient="h")
-p.set_axis_labels("Classification Algorithm", "Accuracy")
-p.set(xlim=(10, 100))
-plt.show()
-
+# %% pycharm={"is_executing": true}
