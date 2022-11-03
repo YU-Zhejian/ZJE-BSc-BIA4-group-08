@@ -166,7 +166,7 @@ def mean_sklearn_get_accuracy(
     return retl
 
 
-# %% pycharm={"is_executing": true}
+# %%
 parallel = len(ds) < 120
 sgdc_accu = mean_sklearn_get_accuracy(ds, SGDClassifier)
 rc_accu = mean_sklearn_get_accuracy(ds, RidgeClassifier)
@@ -236,7 +236,7 @@ vote_accu = mean_sklearn_get_accuracy(
 )
 # mlp_accu = mean_sklearn_get_accuracy(ds, MLPClassifier)
 
-# %% pycharm={"is_executing": true}
+# %%
 acu_table = pd.DataFrame({
     "SGD": sgdc_accu,
     "Ridge": rc_accu,
@@ -257,21 +257,7 @@ acu_table = pd.DataFrame({
 })
 p = sns.catplot(data=acu_table, kind="box", height=5, aspect=2, orient="h")
 p.set_axis_labels("Classification Algorithm", "Accuracy")
-p.set(xlim=(10, 100))
+p.set(xlim=(40, 100))
 plt.show()
 
-# %% pycharm={"is_executing": true}
-# FIXME: Error!
-# lgbm_accu = mean_sklearn_get_accuracy(
-#     ds,
-#     LGBMClassifier,
-#     model_kwds={
-#         "n_jobs": multiprocessing.cpu_count(),
-#         "objective": "multiclass",
-#         "tree_learner": "voting",
-#         "num_class": 3,
-#         "verbosity": 3
-#     }
-# )
-
-# %% pycharm={"is_executing": true}
+# %%
