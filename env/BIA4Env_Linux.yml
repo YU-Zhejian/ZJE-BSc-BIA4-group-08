@@ -93,5 +93,4 @@ dependencies:
   - setuptools
   - wheel
   - pip:
-    - build
     - pytype
