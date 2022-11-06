@@ -25,15 +25,16 @@ import os
 import random
 import uuid
 from collections import defaultdict
-from typing import Tuple, List, Dict, Callable, Iterable, Optional, Any, Mapping, Final
+from typing import Tuple, List, Dict, Callable, Iterable, Optional, Any, Mapping, Final, Union, overload
 
 import numpy as np
 import numpy.typing as npt
 import skimage.io as skiio
+import torch
 import tqdm
 
 from BIA_G8 import get_lh
-from BIA_G8.helper import io_helper, joblib_helper, ml_helper
+from BIA_G8.helper import io_helper, joblib_helper, ml_helper, torch_helper, ndarray_helper
 
 _lh = get_lh(__name__)
 _DEFAULT_ENCODER_DICT = {
@@ -95,6 +96,7 @@ class CovidImage:
     _label_str: str
     _image_path: str
     _image: npt.NDArray
+    _image_torch_tensor: Optional[torch.Tensor]
 
     @property
     def label(self) -> int:
@@ -112,12 +114,44 @@ class CovidImage:
         return self._image.view()
 
     @property
+    def torch_tensor(self) -> torch.Tensor:
+        if self._image_torch_tensor is None:
+            self._image_torch_tensor = torch.tensor(
+                data=np.expand_dims(
+                    ndarray_helper.scale_np_array(
+                        self._image
+                    ),
+                    axis=0
+                ),
+                dtype=torch.float
+            )
+        return self._image_torch_tensor
+
+    @property
     def image_path(self) -> str:
         """Read-only absolute path to the image."""
         return self._image_path
 
+    def __init__(
+            self,
+            image: npt.NDArray,
+            image_path: str,
+            label: int,
+            label_str: str
+    ):
+        self._image = image
+        self._image_torch_tensor = None
+        self._image_path = image_path
+        self._label_str = label_str
+        self._label = label
+
     @classmethod
-    def from_file(cls, image_path: str, label: int, label_str: str) -> CovidImage:
+    def from_file(
+            cls,
+            image_path: str,
+            label: int,
+            label_str: str
+    ) -> CovidImage:
         """
         Generate a new instance from existing file.
 
@@ -125,16 +159,16 @@ class CovidImage:
         :param label_str: Label in string
         :param image_path: Absolute path to the image.
         """
-        new_img = cls()
-        new_img._image_path = image_path
-        new_img._label_str = label_str
-        new_img._label = label
-
         if image_path.endswith("npy.xz"):
-            new_img._image = io_helper.read_np_xz(image_path)
+            image = io_helper.read_np_xz(image_path)
         else:
-            new_img._image = skiio.imread(image_path)
-        return new_img
+            image = skiio.imread(image_path)
+        return cls(
+            image=image,
+            image_path=image_path,
+            label=label,
+            label_str=label_str
+        )
 
     @classmethod
     def from_np_array(cls, image: npt.NDArray, label: int, label_str: str) -> CovidImage:
@@ -145,12 +179,12 @@ class CovidImage:
         :param image: Image in numpy aray.
         :param label: Label in integer.
         """
-        new_img = cls()
-        new_img._image_path = IN_MEMORY_INDICATOR
-        new_img._image = image
-        new_img._label = label
-        new_img._label_str = label_str
-        return new_img
+        return cls(
+            image=image,
+            image_path=IN_MEMORY_INDICATOR,
+            label=label,
+            label_str=label_str
+        )
 
     def apply(self, operation: Callable[[npt.NDArray], npt.NDArray]) -> CovidImage:
         """
@@ -200,6 +234,7 @@ class CovidDataSet:
     _sklearn_dataset: Optional[Tuple[npt.NDArray, npt.NDArray]]
     encode: Final[Callable[[str], int]]
     decode: Final[Callable[[int], str]]
+    _torch_dataset: Optional[torch_helper.AbstractTorchDataSet]
 
     @property
     def dataset_path(self) -> str:
@@ -236,6 +271,28 @@ class CovidDataSet:
             self._sklearn_dataset = x, y
         return self._sklearn_dataset
 
+    @property
+    def torch_dataset(self) -> torch_helper.AbstractTorchDataSet:
+        class _TorchCovidDataset(torch_helper.AbstractTorchDataSet):
+            def __init__(s):
+                super().__init__()
+                s._index = {
+                    k: v for k, v in enumerate(
+                        map(
+                            lambda covid_img: (
+                                covid_img.torch_tensor,
+                                torch.tensor(covid_img.label).long()
+                            ),
+                            self
+                        )
+
+                    )
+                }
+
+        if self._torch_dataset is None:
+            self._torch_dataset = _TorchCovidDataset()
+        return self._torch_dataset
+
     def __init__(
             self,
             encode: Callable[[str], int],
@@ -250,6 +307,7 @@ class CovidDataSet:
         self._loaded_image_with_label = defaultdict(lambda: [])
         self._dataset_path = IN_MEMORY_INDICATOR
         self._sklearn_dataset = None
+        self._torch_dataset = None
 
     def _load_impl(self, image_path: str) -> None:
         label_str = resolve_label_from_path(image_path)
@@ -543,7 +601,31 @@ class CovidDataSet:
     def __iter__(self) -> Iterable[CovidImage]:
         return iter(self._loaded_image)
 
+    @overload
     def __getitem__(self, i: int) -> CovidImage:
+        ...
+
+    @overload
+    def __getitem__(self, s: slice) -> CovidDataSet:
+        ...
+
+    def __getitem__(self, i: Union[int, slice]) -> Union[CovidImage, CovidDataSet]:
+        if isinstance(i, slice):
+            retl = []
+            start, stop, step = i.start, i.stop, i.step
+            if step is None:
+                step = 1
+            if stop is None or stop == -1:
+                stop = len(self)
+            if start is None:
+                start = 0
+            for _i in range(start, stop, step):
+                retl.append(self[_i])
+            return self.from_loaded_image(
+                loaded_image=retl,
+                encode=self.encode,
+                decode=self.decode
+            )
         return self._loaded_image[i]
 
     def __setitem__(self, i: int, value: CovidImage):

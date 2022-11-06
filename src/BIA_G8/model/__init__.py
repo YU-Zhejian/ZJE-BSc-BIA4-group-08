@@ -1,30 +1,30 @@
-from torch import nn
+from __future__ import annotations
 
-from BIA_G8 import get_lh
-from BIA_G8.helper import ndarray_helper
+from abc import ABC, abstractmethod
 
-_lh = get_lh(__name__)
+import numpy.typing as npt
 
 
-class Describe(nn.Module):
+class AbstractModel(ABC):
     """
-    The Describe Layer of PyTorch Module.
-
-    Prints the description of matrix generated from last layer and pass the matrix without modification.
+    Abstract Model for extension
     """
 
-    def __init__(self, prefix: str = ""):
-        """
-        The initializer
+    _name: str
 
-        :param prefix: Prefix of the printed message. Recommended to be the name of previous layer.
+    @abstractmethod
+    def save(self, model_abspath: str) -> None:
+        pass
 
-        See also: py:func:`BIA_G8.helper.ndarray_helper.describe`.
-        """
-        super().__init__()
-        self.describe = lambda x: prefix + ndarray_helper.describe(x)
+    @classmethod
+    @abstractmethod
+    def load(cls, model_abspath: str) -> AbstractModel:
+        pass
 
-    def forward(self, x):
-        """"""
-        _lh.debug(self.describe(x))
-        return x
+    @abstractmethod
+    def fit(self, data: npt.NDArray, label: npt.NDArray) -> AbstractModel:
+        pass
+
+    @abstractmethod
+    def predict(self, data: npt.NDArray) -> npt.NDArray:
+        pass
