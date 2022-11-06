@@ -20,6 +20,7 @@
       <excludeFolder url="file://$MODULE_DIR$/doc/_ipynb" />
       <excludeFolder url="file://$MODULE_DIR$/.mypy_cache" />
       <excludeFolder url="file://$MODULE_DIR$/.pytype" />
+      <excludeFolder url="file://$MODULE_DIR$/data_analysis/covid_image" />
     </content>
     <orderEntry type="jdk" jdkName="Python 3.8 (BIA4Env)" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
