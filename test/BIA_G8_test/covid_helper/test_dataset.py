@@ -9,7 +9,7 @@ import skimage.transform as skitrans
 from BIA_G8.covid_helper import covid_dataset
 from BIA_G8_test.covid_helper import stride
 
-_IMAGES=[]
+_IMAGES = []
 for label, img in enumerate([stride] * 3):
     _IMAGES.append(covid_dataset.CovidImage.from_np_array(img, label, covid_dataset.default_decode(label)))
     _IMAGES.append(covid_dataset.CovidImage.from_np_array(img, label, covid_dataset.default_decode(label)))

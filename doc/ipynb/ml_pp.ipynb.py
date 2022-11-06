@@ -100,8 +100,7 @@ matplotlib_helper.plot_histogram(ds[0].np_array, cumulative=True, log=False)
 
 # %%
 ds_equalize_hist = ds.parallel_apply(
-    skiexp.equalize_hist,
-    backend="threading"
+    skiexp.equalize_hist
 )
 
 # %%
@@ -109,8 +108,7 @@ matplotlib_helper.plot_histogram(ds_equalize_hist[0].np_array, cumulative=True, 
 
 # %%
 ds_enhanced = ds_equalize_hist.parallel_apply(
-    lambda img: skifilt.unsharp_mask(img, radius=5, amount=3),
-    backend="threading"
+    lambda img: skifilt.unsharp_mask(img, radius=5, amount=3)
 )
 
 # %%

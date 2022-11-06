@@ -45,7 +45,6 @@ def evaluate(result_1: npt.NDArray, result_2: npt.NDArray) -> float:
 
 
 if __name__ == '__main__':
-
     dataset = covid_dataset.CovidDataSet.parallel_from_directory(
         "/media/yuzj/BUP/covid19-database-np",
         size=600

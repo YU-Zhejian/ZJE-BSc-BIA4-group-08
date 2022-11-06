@@ -21,7 +21,7 @@ class MyModule(nn.Module):
     ):
         super(MyModule, self).__init__()
         ksp = {
-            "kernel_size":3,
+            "kernel_size": 3,
             "stride": 2,
             "padding": 1
         }

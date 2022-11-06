@@ -78,7 +78,7 @@ from BIA_G8.helper import ml_helper
 
 # %%
 labels = ["stride", "circle", "square"]
-_encoder_dict = {k:v for k, v in zip(labels, range(len(labels)))}
+_encoder_dict = {k: v for k, v in zip(labels, range(len(labels)))}
 encoder, decoder = ml_helper.generate_encoder_decoder(_encoder_dict)
 
 # %%
@@ -112,7 +112,7 @@ for i, ax in enumerate(axs.ravel()):
 # Create a dataset with 2 strides, 2 circles and 2 squares.
 
 # %%
-_IMAGES=[]
+_IMAGES = []
 for label, img in enumerate(sample_figures):
     _IMAGES.append(covid_dataset.CovidImage.from_np_array(img, label, decoder(label)))
     _IMAGES.append(covid_dataset.CovidImage.from_np_array(img, label, decoder(label)))

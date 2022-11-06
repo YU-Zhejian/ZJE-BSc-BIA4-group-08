@@ -85,9 +85,8 @@ source_suffix = {
 }
 
 nb_custom_formats = {
-  ".ipynb.py": ["jupytext.reads", {"fmt": "py:percent"}]
+    ".ipynb.py": ["jupytext.reads", {"fmt": "py:percent"}]
 }
-
 
 # Insert both docstring of the class and constructor.
 autodoc_default_options = {

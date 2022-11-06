@@ -48,6 +48,7 @@ import multiprocessing
 
 import numpy as np
 import pandas as pd
+import skimage.transform as skitrans
 
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -73,7 +74,15 @@ from BIA_G8.helper import joblib_helper
 # Read and downscale the dataset.
 
 # %%
-ds = covid_dataset.CovidDataSet.parallel_from_directory(os.path.join(THIS_DIR_PATH, "covid_image"), size=300)
+ds = covid_dataset.CovidDataSet.parallel_from_directory(
+    os.path.join(THIS_DIR_PATH, "covid_image"),
+    size=300
+).parallel_apply(
+    lambda img: skitrans.resize(
+        img,
+        (128, 128)
+    )
+)
 _ = gc.collect()
 
 # %% [markdown]
@@ -84,7 +93,7 @@ ds_tsne_transformed = TSNE(learning_rate=200, n_iter=1000, init="random").fit_tr
 sns.scatterplot(
     x=ds_tsne_transformed[:, 0],
     y=ds_tsne_transformed[:, 1],
-    hue=list(map(covid_dataset.decode, ds.sklearn_dataset[1]))
+    hue=list(map(ds.decode, ds.sklearn_dataset[1]))
 )
 plt.show()
 del ds_tsne_transformed

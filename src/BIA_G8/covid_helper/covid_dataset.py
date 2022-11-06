@@ -285,7 +285,6 @@ class CovidDataSet:
                             ),
                             self
                         )
-
                     )
                 }
 
