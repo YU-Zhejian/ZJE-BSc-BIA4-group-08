@@ -1,11 +1,11 @@
 from __future__ import annotations
 
-from abc import ABC, abstractmethod
+from abc import abstractmethod
 
 import numpy.typing as npt
 
 
-class AbstractModel(ABC):
+class AbstractClassifier:
     """
     Abstract Model for extension
     """
@@ -18,13 +18,17 @@ class AbstractModel(ABC):
 
     @classmethod
     @abstractmethod
-    def load(cls, model_abspath: str) -> AbstractModel:
+    def load(cls, model_abspath: str) -> AbstractClassifier:
         pass
 
     @abstractmethod
-    def fit(self, data: npt.NDArray, label: npt.NDArray) -> AbstractModel:
+    def fit(self, data: npt.NDArray, label: npt.NDArray) -> AbstractClassifier:
         pass
 
     @abstractmethod
     def predict(self, data: npt.NDArray) -> npt.NDArray:
+        pass
+
+    @abstractmethod
+    def __init__(self, **hyper_params) -> None:
         pass

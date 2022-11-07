@@ -49,6 +49,7 @@ dependencies:
   - click # For CLI applications
   - prettytable # For formatting tables
   - tomli # For fast parsing of TOML files
+  - tomli-w
 
   # Development Utilities
   - m2-bash

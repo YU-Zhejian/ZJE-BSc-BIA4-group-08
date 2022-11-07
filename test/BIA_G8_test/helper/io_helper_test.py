@@ -37,3 +37,14 @@ def test_tensor_xz(kwargs):
     io_helper.write_tensor_xz(kwargs, "tmp.xz")
     assert torch.equal(io_helper.read_tensor_xz("tmp.xz"), kwargs)
     os.remove("tmp.xz")
+
+
+@pytest.mark.parametrize(
+    argnames="kwargs",
+    argvalues=_test_cases.values(),
+    ids=_test_cases.keys()
+)
+def test_pickle_xz(kwargs):
+    io_helper.write_pickle_xz(kwargs, "tmp.xz")
+    assert np.array_equiv(io_helper.read_pickle_xz("tmp.xz"), kwargs)
+    os.remove("tmp.xz")

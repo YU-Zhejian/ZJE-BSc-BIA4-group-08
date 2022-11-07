@@ -17,15 +17,12 @@ __all__ = (
 )
 
 import lzma
+import pickle
 from typing import Any, Union, Mapping
 
 import numpy as np
 import numpy.typing as npt
 import torch
-
-from BIA_G8 import get_lh
-
-_lh = get_lh(__name__)
 
 
 def read_np_xz(path: str) -> npt.NDArray[Any]:
@@ -40,6 +37,11 @@ def read_tensor_xz(path: str) -> Union[torch.Tensor, Mapping[str, Any]]:
         return torch.load(reader)
 
 
+def read_pickle_xz(path: str) -> Any:
+    with lzma.open(path, "rb") as reader:
+        return pickle.load(reader)
+
+
 def write_np_xz(array: npt.NDArray[Any], path: str) -> None:
     """Writer of compressed Numpy serialization format"""
     with lzma.open(path, "wb", preset=9) as writer:
@@ -50,3 +52,8 @@ def write_tensor_xz(array: Union[torch.Tensor, Mapping[str, Any]], path: str) ->
     """Writer of compressed Torch serialization format"""
     with lzma.open(path, "wb", preset=9) as writer:
         torch.save(array, writer)
+
+
+def write_pickle_xz(obj: Any, path: str) -> None:
+    with lzma.open(path, "wb", preset=9) as writer:
+        pickle.dump(obj, writer)
