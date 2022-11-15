@@ -7,7 +7,6 @@ from typing import Any, Mapping, Type, TypeVar
 import joblib
 import numpy.typing as npt
 import tomli
-import tomli_w
 from sklearn.neighbors import KNeighborsClassifier
 
 from BIA_G8.helper import io_helper
