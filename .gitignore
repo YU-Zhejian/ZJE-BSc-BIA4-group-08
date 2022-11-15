@@ -309,3 +309,11 @@ cython_debug/
 *.t[lxbg]z
 *.tar.*
 *.brotli
+
+# Figures
+*.pdf
+*.png
+*.tif
+*.tiff
+*.npy
+*.npz
