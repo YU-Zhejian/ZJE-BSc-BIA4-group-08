@@ -12,10 +12,24 @@ lh = get_lh(__name__)
 
 def convert(_image_path:str, _mask_path:str, _out_dir:str) -> None:
     lh.debug("Converting %s", _image_path)
-    image, mask = skiio.imread(_image_path), skitrans.resize(skiio.imread(_mask_path)[:,:,0],(299,299))
+    final_image_size = (256, 256)
+    image, mask = skiio.imread(_image_path), skiio.imread(_mask_path)
+
+    if len(image.shape) == 3:
+        image = image[:,:,0]
+    
+    if len(mask.shape) == 3:
+        mask = mask[:,:,0]
+    
+    if image.shape !=final_image_size:
+        image = skitrans.resize(image, final_image_size)
+    
+    if mask.shape !=final_image_size:
+        mask = skitrans.resize(image, final_image_size)
+    
     out_image = image * mask
     paths = _image_path.split(os.path.sep)
-    _, label_name, image_name = os.path.join(*paths[0:-3]), paths[-2], paths[-1]
+    label_name, image_name = paths[-2], paths[-1]
     os.makedirs(os.path.join(out_dir, label_name), exist_ok=True)
     write_np_xz(out_image, os.path.join(_out_dir, label_name, image_name.replace(".png", ".npy.xz")))
 
