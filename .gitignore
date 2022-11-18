@@ -317,3 +317,7 @@ cython_debug/
 *.tiff
 *.npy
 *.npz
+
+# Tables
+*.xls
+*.xlsx
