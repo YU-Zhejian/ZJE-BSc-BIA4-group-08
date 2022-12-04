@@ -69,7 +69,7 @@ class MachinelearningDatasetInterface:
 
     @abstractmethod
     def __len__(self) -> int:
-        pass
+        raise NotImplementedError
 
     @property
     @abstractmethod
@@ -80,16 +80,16 @@ class MachinelearningDatasetInterface:
         :return: A tuple of ``X`` and ``y`` for :py:func:`fit`-like functions.
             For example, as is used in :external+sklearn:py:class:`sklearn.neighbors.KNeighborsClassifier`.
         """
-        pass
+        raise NotImplementedError
 
     @property
     @abstractmethod
     def torch_dataset(self) -> torch_helper.DictBackedTorchDataSet:
-        pass
+        raise NotImplementedError
 
     @abstractmethod
     def train_test_split(self, ratio: float = 0.7) -> Tuple[
         MachinelearningDatasetInterface,
         MachinelearningDatasetInterface
     ]:
-        pass
+        raise NotImplementedError

@@ -2,7 +2,6 @@
 General-purposed helpers for Numpy NDArray and Torch Tensor.
 """
 
-
 __all__ = (
     "scale_np_array",
     "scale_torch_array",

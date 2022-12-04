@@ -44,9 +44,7 @@ class AnalysisConfiguration(AbstractTOMLSerializable):
             encode=encode, decode=decode
         )
         self._preprocessor_pipeline_configuration = preprocessor_pipeline_configuration_path
-        self._preprocessing_pipeline = PreprocessorPipeline.load(
-            preprocessor_pipeline_configuration_path
-        )
+        self._preprocessing_pipeline = PreprocessorPipeline.load(preprocessor_pipeline_configuration_path)
         self._classifier = AbstractClassifier.new()
 
     def to_dict(self) -> Dict[str, Any]:

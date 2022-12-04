@@ -9,7 +9,8 @@ __all__ = (
     "VALID_IMAGE_EXTENSIONS",
     "CovidImage",
     "CovidDataSet",
-    "resolve_label_str_from_path"
+    "resolve_label_str_from_path",
+    "generate_fake_classification_dataset"
 )
 
 import glob
@@ -17,19 +18,19 @@ import itertools
 import operator
 import os
 import random
+import shutil
 import uuid
 from collections import defaultdict
-from typing import Tuple, List, Dict, Callable, Iterable, Optional, Any, Mapping, Union, overload
-import shutil
 from functools import reduce
+from typing import Tuple, List, Dict, Callable, Iterable, Optional, Any, Mapping, Union, overload
 
 import numpy as np
 import numpy.typing as npt
 import skimage
-import skimage.io as skiio
 import skimage.draw as skidraw
-import skimage.util as skiutil
+import skimage.io as skiio
 import skimage.transform as skitrans
+import skimage.util as skiutil
 import torch
 import tqdm
 
@@ -288,7 +289,10 @@ class CovidDataSet(MachinelearningDatasetInterface):
                 index: image
                 for index, image in enumerate(
                     (covid_img.torch_tensor, torch.tensor(covid_img.label).long())
-                    for covid_img in self._loaded_images
+                    for covid_img in tqdm.tqdm(
+                        iterable=self._loaded_images,
+                        desc="Parsing to Torch..."
+                    )
                 )
             })
         return self._torch_dataset

@@ -5,13 +5,13 @@ from typing import List, Dict, Union, Any, Iterable
 import numpy.typing as npt
 
 from BIA_G8 import get_lh
-from BIA_G8.helper.io_helper import AbstractTOMLSerializable
+from BIA_G8.helper.io_helper import SerializableInterface
 from BIA_G8.model.preprocessor import AbstractPreprocessor, get_preprocessor
 
 _lh = get_lh(__name__)
 
 
-class PreprocessorPipeline(AbstractTOMLSerializable):
+class PreprocessorPipeline(SerializableInterface):
     _steps: List[AbstractPreprocessor]
 
     def __init__(self):

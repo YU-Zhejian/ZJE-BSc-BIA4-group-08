@@ -2,7 +2,6 @@
 Helper functions that generates metadata for compatibility and debug purposes.
 """
 
-
 from __future__ import annotations
 
 __all__ = (
@@ -17,7 +16,6 @@ import time
 from typing import Dict
 
 import BIA_G8
-
 
 _lh = BIA_G8.get_lh(__name__)
 

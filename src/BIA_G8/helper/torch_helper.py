@@ -4,10 +4,11 @@ Utility functions and tools for pytorch.
 __all__ = (
     "DictBackedTorchDataSet",
     "Describe",
-    "get_torch_device"
+    "get_torch_device",
+    "AbstractTorchModule"
 )
 
-from typing import Dict, Tuple, Optional
+from typing import Dict, Tuple, Optional, Callable
 
 import torch
 import torch.utils.data as tud
@@ -28,13 +29,22 @@ class DictBackedTorchDataSet(tud.Dataset):
     def __len__(self) -> int:
         return len(self._index)
 
-    def __init__(self, index: Optional[Dict[int, Tuple[torch.Tensor, torch.Tensor]]]=None) -> None:
+    def __init__(self, index: Optional[Dict[int, Tuple[torch.Tensor, torch.Tensor]]] = None) -> None:
         if index is None:
             index = {}
         self._index = dict(index)
 
 
-class Describe(nn.Module):
+class AbstractTorchModule(nn.Module):
+    """``nn.Module`` with better type hints"""
+
+    def __init__(self, **params) -> None:
+        super().__init__()
+
+    __call__: Callable[[torch.Tensor], torch.Tensor]
+
+
+class Describe(AbstractTorchModule):
     """
     The Describe Layer of PyTorch Module.
 
@@ -50,11 +60,11 @@ class Describe(nn.Module):
         See also: py:func:`BIA_G8.helper.ndarray_helper.describe`.
         """
         super().__init__()
-        self.describe = lambda x: prefix + ndarray_helper.describe(x)
+        self._prefix = prefix
 
-    def forward(self, x):
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
         """"""
-        _lh.debug(self.describe(x))
+        _lh.debug(self._prefix + ndarray_helper.describe(x))
         return x
 
 

@@ -65,7 +65,7 @@ class AbstractPreprocessor(AbstractTOMLSerializable):
 
     @abstractmethod
     def _function(self, img: npt.NDArray, **kwargs) -> npt.NDArray:
-        pass
+        raise NotImplementedError
 
     @property
     def description(self) -> str:
