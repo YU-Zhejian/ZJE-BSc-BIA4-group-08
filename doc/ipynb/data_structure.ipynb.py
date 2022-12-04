@@ -117,7 +117,7 @@ for label, img in enumerate(sample_figures):
     _IMAGES.append(covid_dataset.CovidImage.from_np_array(img, label, decoder(label)))
     _IMAGES.append(covid_dataset.CovidImage.from_np_array(img, label, decoder(label)))
 
-d1 = covid_dataset.CovidDataSet.from_loaded_image(_IMAGES, encode=encoder, decode=decoder)
+d1 = covid_dataset.CovidDataSet.from_loaded_images(_IMAGES, encode=encoder, decode=decoder)
 
 # %% [markdown]
 # ## Sample and Plot
@@ -157,11 +157,8 @@ for i, ax in enumerate(axs.ravel()):
 # To make the task more complicate, we will now enlarge the dataset to 1200 cases. The variable `ds_enlarged` would contain 1200 cases and how it was generated does not need to be understood.
 
 # %%
-ds_enlarged = covid_dataset.CovidDataSet.from_loaded_image(
-    list(itertools.chain(*itertools.repeat(list(d1), 200))),
-    encode=d1.encode,
-    decode=d1.decode
-)
+ds_enlarged = covid_dataset.CovidDataSet.from_loaded_images(list(itertools.chain(*itertools.repeat(list(d1), 200))),
+                                                            encode=d1.encode, decode=d1.decode)
 
 # %%
 print(len(ds_enlarged))

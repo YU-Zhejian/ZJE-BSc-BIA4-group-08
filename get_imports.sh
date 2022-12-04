@@ -11,8 +11,7 @@ while read -r fn; do
     sed 's;$;'" # ${fn}"';'
 done | \
 grep 'import ' | \
-grep -v ^\# | \
-grep -v typing | \
-grep -v BIA_G8 | \
+grep -v '^\#' | \
+grep -v 'typing' | \
 sort | uniq
 

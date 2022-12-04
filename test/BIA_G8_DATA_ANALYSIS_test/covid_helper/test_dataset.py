@@ -30,11 +30,7 @@ def create_in_memory_images():
 
 
 def test_in_memory_dataset():
-    d1 = covid_dataset.CovidDataSet.from_loaded_image(
-        create_in_memory_images(),
-        encode=encode,
-        decode=decode
-    )
+    d1 = covid_dataset.CovidDataSet.from_loaded_images(create_in_memory_images(), encode=encode, decode=decode)
     assert d1.dataset_path == covid_dataset.IN_MEMORY_INDICATOR
     d2 = d1.sample(balanced=True)
     assert len(d2) == 3
@@ -53,11 +49,7 @@ def test_in_memory_dataset():
 
 
 def test_apply():
-    d1 = covid_dataset.CovidDataSet.from_loaded_image(
-        create_in_memory_images(),
-        encode=encode,
-        decode=decode
-    )
+    d1 = covid_dataset.CovidDataSet.from_loaded_images(create_in_memory_images(), encode=encode, decode=decode)
     d2 = d1.apply(lambda img: skimage.img_as_int(skitrans.rotate(img, 270))).apply(
         lambda img: skimage.img_as_int(skitrans.rotate(img, 90)))
     for i1, i2 in zip(d1, d2):
@@ -65,11 +57,7 @@ def test_apply():
 
 
 def test_parallel_apply():
-    d1 = covid_dataset.CovidDataSet.from_loaded_image(
-        create_in_memory_images(),
-        encode=encode,
-        decode=decode
-    )
+    d1 = covid_dataset.CovidDataSet.from_loaded_images(create_in_memory_images(), encode=encode, decode=decode)
     d2 = d1.apply(lambda img: skimage.img_as_int(skitrans.rotate(img, 270))).parallel_apply(
         lambda img: skimage.img_as_int(skitrans.rotate(img, 90)))
     for i1, i2 in zip(d1, d2):
@@ -79,11 +67,7 @@ def test_parallel_apply():
 def test_load_save_dataset():
     tmp_dir = tempfile.mkdtemp()
 
-    d1 = covid_dataset.CovidDataSet.from_loaded_image(
-        create_in_memory_images(),
-        encode=encode,
-        decode=decode
-    )
+    d1 = covid_dataset.CovidDataSet.from_loaded_images(create_in_memory_images(), encode=encode, decode=decode)
     d1.save(tmp_dir)
     assert d1.dataset_path == tmp_dir
     d2 = covid_dataset.CovidDataSet.from_directory(
@@ -114,11 +98,7 @@ def test_load_save_dataset():
 
 def test_parallel_load_save_dataset():
     tmp_dir = tempfile.mkdtemp()
-    d1 = covid_dataset.CovidDataSet.from_loaded_image(
-        create_in_memory_images(),
-        encode=encode,
-        decode=decode
-    )
+    d1 = covid_dataset.CovidDataSet.from_loaded_images(create_in_memory_images(), encode=encode, decode=decode)
     d1.parallel_save(tmp_dir)
     assert d1.dataset_path == tmp_dir
     d2 = covid_dataset.CovidDataSet.parallel_from_directory(

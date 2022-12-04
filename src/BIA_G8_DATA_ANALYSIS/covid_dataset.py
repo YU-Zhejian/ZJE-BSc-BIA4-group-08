@@ -96,8 +96,8 @@ class CovidImage:
     _label: int
     _label_str: str
     _image_path: str
-    _image: npt.NDArray
-    _image_torch_tensor: Optional[torch.Tensor]
+    _np_array: npt.NDArray
+    _torch_tensor: Optional[torch.Tensor]
 
     @property
     def label(self) -> int:
@@ -111,22 +111,22 @@ class CovidImage:
 
     @property
     def np_array(self) -> npt.NDArray:
-        """Read-only numpy aray of the image."""
-        return self._image.view()
+        """Copied numpy aray of the image."""
+        return self._np_array.copy()
 
     @property
     def torch_tensor(self) -> torch.Tensor:
-        if self._image_torch_tensor is None:
-            self._image_torch_tensor = torch.tensor(
+        if self._torch_tensor is None:
+            self._torch_tensor = torch.tensor(
                 data=np.expand_dims(
                     ndarray_helper.scale_np_array(
-                        self._image
+                        self._np_array
                     ),
                     axis=0
                 ),
                 dtype=torch.float
             )
-        return self._image_torch_tensor
+        return self._torch_tensor
 
     @property
     def image_path(self) -> str:
@@ -140,8 +140,9 @@ class CovidImage:
             label: int,
             label_str: str
     ):
-        self._image = image
-        self._image_torch_tensor = None
+        self._np_array = image.copy()
+        self._np_array.setflags(write=False)
+        self._torch_tensor = None
         self._image_path = image_path
         self._label_str = label_str
         self._label = label
@@ -196,7 +197,7 @@ class CovidImage:
         :return: A new instance after the operation.
         """
         return CovidImage.from_np_array(
-            image=operation(self._image),
+            image=operation(self.np_array),
             label=self._label,
             label_str=self._label_str
         )
@@ -216,9 +217,9 @@ class CovidImage:
             raise ValueError("Cannot save to in-memory data.")
         self._image_path = image_path
         if image_path.endswith(".npy.xz"):
-            io_helper.write_np_xz(self._image, image_path)
+            io_helper.write_np_xz(self._np_array, image_path)
         else:
-            skiio.imsave(image_path, self._image)
+            skiio.imsave(image_path, self._np_array)
 
 
 class CovidDataSet:
@@ -229,13 +230,13 @@ class CovidDataSet:
     - Supports parallel operation on images;
     - Interfaces to other machine-learning/deep-learning libraries like ``sklearn``;
     """
-    _loaded_image: List[CovidImage]
-    _loaded_image_with_label: Dict[int, List[CovidImage]]
+    _loaded_images: List[CovidImage]
+    _loaded_images_with_labels: Dict[int, List[CovidImage]]
     _dataset_path: str
-    _sklearn_dataset: Optional[Tuple[npt.NDArray, npt.NDArray]]
     _encode: Callable[[str], int]
     _decode: Callable[[int], str]
-    _torch_dataset: Optional[torch_helper.AbstractTorchDataSet]
+    _torch_dataset: Optional[torch_helper.DictBackedTorchDataSet]
+    _sklearn_dataset: Optional[Tuple[npt.NDArray, npt.NDArray]]
 
     @property
     def dataset_path(self) -> str:
@@ -261,17 +262,17 @@ class CovidDataSet:
             For example, as is used in :external+sklearn:py:class:`sklearn.neighbors.KNeighborsClassifier`.
         """
         if self._sklearn_dataset is None:
-            num_images = len(self._loaded_image)
+            num_images = len(self._loaded_images)
             if num_images == 0:
                 raise ValueError("Empty dataset!")
-            _img_size = self._loaded_image[0].np_array.shape
-            for img in self._loaded_image:
+            _img_size = self._loaded_images[0].np_array.shape
+            for img in self._loaded_images:
                 if img.np_array.shape != _img_size:
                     raise ValueError(f"Image {img} have different size!")
             x: npt.NDArray = np.ndarray((num_images, operator.mul(*_img_size)), dtype=float)
             y: npt.NDArray = np.ndarray((num_images,), dtype=int)
             for i, img in enumerate(tqdm.tqdm(
-                    iterable=self._loaded_image,
+                    iterable=self._loaded_images,
                     desc="Parsing to SKLearn..."
             )):
                 x[i] = np.ravel(img.np_array)
@@ -283,24 +284,15 @@ class CovidDataSet:
         return self._sklearn_dataset
 
     @property
-    def torch_dataset(self) -> torch_helper.AbstractTorchDataSet:
-        class _TorchCovidDataset(torch_helper.AbstractTorchDataSet):
-            def __init__(s):
-                super().__init__()
-                s._index = {
-                    k: v for k, v in enumerate(
-                        map(
-                            lambda covid_img: (
-                                covid_img.torch_tensor,
-                                torch.tensor(covid_img.label).long()
-                            ),
-                            self
-                        )
-                    )
-                }
-
+    def torch_dataset(self) -> torch_helper.DictBackedTorchDataSet:
         if self._torch_dataset is None:
-            self._torch_dataset = _TorchCovidDataset()
+            self._torch_dataset = torch_helper.DictBackedTorchDataSet({
+                index: image
+                for index, image in enumerate(
+                    (covid_img.torch_tensor, torch.tensor(covid_img.label).long())
+                    for covid_img in self._loaded_images
+                )
+            })
         return self._torch_dataset
 
     def __init__(
@@ -313,8 +305,8 @@ class CovidDataSet:
         """
         self._encode = encode
         self._decode = decode
-        self._loaded_image = []
-        self._loaded_image_with_label = defaultdict(lambda: [])
+        self._loaded_images = []
+        self._loaded_images_with_labels = defaultdict(lambda: [])
         self._dataset_path = IN_MEMORY_INDICATOR
         self._sklearn_dataset = None
         self._torch_dataset = None
@@ -326,8 +318,8 @@ class CovidDataSet:
             label=self.encode(label_str),
             label_str=label_str,
         )
-        self._loaded_image.append(img)
-        self._loaded_image_with_label[img.label].append(img)
+        self._loaded_images.append(img)
+        self._loaded_images_with_labels[img.label].append(img)
 
     def _preload_hook(
             self,
@@ -414,7 +406,7 @@ class CovidDataSet:
         ):
             new_ds._load_impl(image_path)
         _lh.info("Shuffling loaded data...")
-        random.shuffle(new_ds._loaded_image)
+        random.shuffle(new_ds._loaded_images)
         _lh.info("Finished loading data...")
         return new_ds
 
@@ -433,6 +425,7 @@ class CovidDataSet:
         """
         if joblib_kwds is None:
             joblib_kwds = {}
+        joblib_kwds = dict(joblib_kwds)
         if encode is None:
             encode, decode = infer_encode_decode_from_filesystem(dataset_path)
         new_ds = cls(encode=encode, decode=decode)
@@ -451,14 +444,14 @@ class CovidDataSet:
             **joblib_kwds
         ))
         _lh.info("Shuffling loaded data...")
-        random.shuffle(new_ds._loaded_image)
-        _lh.info("Finished loading data with %d images loaded", len(new_ds._loaded_image))
+        random.shuffle(new_ds._loaded_images)
+        _lh.info("Finished loading data with %d images loaded", len(new_ds._loaded_images))
         return new_ds
 
     @classmethod
-    def from_loaded_image(
+    def from_loaded_images(
             cls,
-            loaded_image: List[CovidImage],
+            loaded_images: List[CovidImage],
             encode: Callable[[str], int],
             decode: Callable[[int], str],
     ) -> CovidDataSet:
@@ -466,9 +459,9 @@ class CovidDataSet:
         Generate a new instance from a list of py:class:`CovidImage`.
         """
         new_ds = cls(encode=encode, decode=decode)
-        new_ds._loaded_image = loaded_image
-        for img in new_ds._loaded_image:
-            new_ds._loaded_image_with_label[img.label].append(img)
+        new_ds._loaded_images = list(loaded_images)
+        for img in new_ds._loaded_images:
+            new_ds._loaded_images_with_labels[img.label].append(img)
         return new_ds
 
     def apply(
@@ -481,14 +474,10 @@ class CovidDataSet:
         :param operation: Operation to be applied to each image.
         :return: New dataset with image operated.
         """
-        new_ds = CovidDataSet.from_loaded_image(
-            list(map(
-                lambda image: image.apply(operation),
-                tqdm.tqdm(iterable=self._loaded_image, desc="Applying operations...")
-            )),
-            encode=self.encode,
-            decode=self.decode
-        )
+        new_ds = CovidDataSet.from_loaded_images(list(map(
+            lambda image: image.apply(operation),
+            tqdm.tqdm(iterable=self._loaded_images, desc="Applying operations...")
+        )), encode=self.encode, decode=self.decode)
         return new_ds
 
     def parallel_apply(
@@ -501,15 +490,11 @@ class CovidDataSet:
         """
         if joblib_kwds is None:
             joblib_kwds = {}
-        new_ds = CovidDataSet.from_loaded_image(
-            list(joblib_helper.parallel_map(
-                lambda image: image.apply(operation),
-                tqdm.tqdm(iterable=self._loaded_image, desc="Applying operations..."),
-                **joblib_kwds
-            )),
-            encode=self.encode,
-            decode=self.decode
-        )
+        new_ds = CovidDataSet.from_loaded_images(list(joblib_helper.parallel_map(
+            lambda image: image.apply(operation),
+            tqdm.tqdm(iterable=self._loaded_images, desc="Applying operations..."),
+            **joblib_kwds
+        )), encode=self.encode, decode=self.decode)
         return new_ds
 
     def sample(self, size: int = -1, balanced: bool = True) -> CovidDataSet:
@@ -519,23 +504,22 @@ class CovidDataSet:
         :param size: Number of images needed to be loaded.
         :param balanced: Whether the loaded images should be "balanced" -- i.e., have same number of each category.
         """
-        new_ds = CovidDataSet(encode=self.encode, decode=self.decode)
-        new_ds._dataset_path = self.dataset_path
+
         _lh.info("Sampling data...")
-        size = _get_max_size_helper(size, balanced, len(self._loaded_image), self._loaded_image_with_label)
-        _lh.info("Loading %d data from %s...", size, new_ds._dataset_path)
+        size = _get_max_size_helper(size, balanced, len(self._loaded_images), self._loaded_images_with_labels)
+        _lh.info("Loading %d data from %s...", size, self._dataset_path)
+        sampled_images = []
         if balanced:
-            for image_catagory in self._loaded_image_with_label.values():
+            for image_catagory in self._loaded_images_with_labels.values():
                 for img in random.sample(image_catagory, size // 3):
-                    new_ds._loaded_image.append(img)
-                    new_ds._loaded_image_with_label[img.label].append(img)
+                    sampled_images.append(img)
         else:
-            for img in random.sample(self._loaded_image, size):
-                new_ds._loaded_image.append(img)
-                new_ds._loaded_image_with_label[img.label].append(img)
+            for img in random.sample(self._loaded_images, size):
+                sampled_images.append(img)
         _lh.info("Shuffling loaded data...")
-        random.shuffle(new_ds._loaded_image)
+        random.shuffle(sampled_images)
         _lh.info("Finished loading data...")
+        new_ds = CovidDataSet.from_loaded_images(loaded_images=sampled_images, encode=self.encode, decode=self.decode)
         return new_ds
 
     @staticmethod
@@ -559,7 +543,7 @@ class CovidDataSet:
             shutil.rmtree(dataset_path)
         os.makedirs(dataset_path, exist_ok=False)
         self._dataset_path = dataset_path
-        for label in self._loaded_image_with_label.keys():
+        for label in self._loaded_images_with_labels.keys():
             label_str = self.decode(label)
             os.makedirs(os.path.join(self._dataset_path, label_str), exist_ok=False)
 
@@ -577,7 +561,7 @@ class CovidDataSet:
         _ = list(map(
             lambda img: self._save_impl(img, dataset_path, extension),
             tqdm.tqdm(
-                iterable=list(itertools.chain(*self._loaded_image_with_label.values())),
+                iterable=list(itertools.chain(*self._loaded_images_with_labels.values())),
                 desc="Saving images..."
             )
         ))
@@ -597,17 +581,17 @@ class CovidDataSet:
         _ = list(joblib_helper.parallel_map(
             lambda img: self._save_impl(img, dataset_path, extension),
             tqdm.tqdm(
-                iterable=list(itertools.chain(*self._loaded_image_with_label.values())),
+                iterable=list(itertools.chain(*self._loaded_images_with_labels.values())),
                 desc="Saving images..."
             ),
             **joblib_kwds
         ))
 
     def __len__(self):
-        return len(self._loaded_image)
+        return len(self._loaded_images)
 
     def __iter__(self) -> Iterable[CovidImage]:
-        return iter(self._loaded_image)
+        return iter(self._loaded_images)
 
     @overload
     def __getitem__(self, i: int) -> CovidImage:
@@ -629,12 +613,8 @@ class CovidDataSet:
                 start = 0
             for _i in range(start, stop, step):
                 retl.append(self[_i])
-            return self.from_loaded_image(
-                loaded_image=retl,
-                encode=self.encode,
-                decode=self.decode
-            )
-        return self._loaded_image[i]
+            return self.from_loaded_images(loaded_images=retl, encode=self.encode, decode=self.decode)
+        return self._loaded_images[i]
 
     def __setitem__(self, i: int, value: CovidImage):
-        self._loaded_image[i] = value
+        self._loaded_images[i] = value

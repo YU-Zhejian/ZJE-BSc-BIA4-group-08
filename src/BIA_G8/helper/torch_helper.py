@@ -2,12 +2,12 @@
 Utility functions and tools for pytorch.
 """
 __all__ = (
-    "AbstractTorchDataSet",
+    "DictBackedTorchDataSet",
     "Describe",
     "get_torch_device"
 )
 
-from typing import Dict, Tuple
+from typing import Dict, Tuple, Optional
 
 import torch
 import torch.utils.data as tud
@@ -19,7 +19,7 @@ from BIA_G8.helper import ndarray_helper
 _lh = get_lh(__name__)
 
 
-class AbstractTorchDataSet(tud.Dataset):
+class DictBackedTorchDataSet(tud.Dataset):
     _index: Dict[int, Tuple[torch.Tensor, torch.Tensor]]
 
     def __getitem__(self, index: int) -> Tuple[torch.Tensor, torch.Tensor]:
@@ -28,8 +28,10 @@ class AbstractTorchDataSet(tud.Dataset):
     def __len__(self) -> int:
         return len(self._index)
 
-    def __init__(self) -> None:
-        self._index = {}
+    def __init__(self, index: Optional[Dict[int, Tuple[torch.Tensor, torch.Tensor]]]=None) -> None:
+        if index is None:
+            index = {}
+        self._index = dict(index)
 
 
 class Describe(nn.Module):
