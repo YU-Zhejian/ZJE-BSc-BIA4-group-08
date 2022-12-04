@@ -17,7 +17,8 @@ __all__ = (
     "read_np_xz",
     "read_tensor_xz",
     "write_np_xz",
-    "write_tensor_xz"
+    "write_tensor_xz",
+    "AbstractTOMLSerializable"
 )
 
 import lzma

@@ -4,9 +4,6 @@ Helper classes and functions to general-purposed machine-learning/deep-learning 
 
 from __future__ import annotations
 
-import shutil
-from functools import reduce
-
 __all__ = (
     "IN_MEMORY_INDICATOR",
     "VALID_IMAGE_EXTENSIONS",
@@ -23,15 +20,22 @@ import random
 import uuid
 from collections import defaultdict
 from typing import Tuple, List, Dict, Callable, Iterable, Optional, Any, Mapping, Union, overload
+import shutil
+from functools import reduce
 
 import numpy as np
 import numpy.typing as npt
+import skimage
 import skimage.io as skiio
+import skimage.draw as skidraw
+import skimage.util as skiutil
+import skimage.transform as skitrans
 import torch
 import tqdm
 
 from BIA_G8 import get_lh
 from BIA_G8.helper import io_helper, joblib_helper, torch_helper, ndarray_helper, ml_helper
+from BIA_G8.helper.ml_helper import MachinelearningDatasetInterface
 
 _lh = get_lh(__name__)
 
@@ -222,7 +226,7 @@ class CovidImage:
             skiio.imsave(image_path, self._np_array)
 
 
-class CovidDataSet:
+class CovidDataSet(MachinelearningDatasetInterface):
     """
     The COVID dataset abstraction is a dataset with following features:
 
@@ -255,12 +259,6 @@ class CovidDataSet:
 
     @property
     def sklearn_dataset(self) -> Tuple[npt.NDArray, npt.NDArray]:
-        """
-        Prepare and return cached dataset for ``sklearn``.
-
-        :return: A tuple of ``X`` and ``y`` for :py:func:`fit`-like functions.
-            For example, as is used in :external+sklearn:py:class:`sklearn.neighbors.KNeighborsClassifier`.
-        """
         if self._sklearn_dataset is None:
             num_images = len(self._loaded_images)
             if num_images == 0:
@@ -294,6 +292,22 @@ class CovidDataSet:
                 )
             })
         return self._torch_dataset
+
+    def train_test_split(self, ratio: float = 0.7) -> Tuple[CovidDataSet, CovidDataSet]:
+        result = np.random.binomial(1, ratio, len(self))
+
+        train_images = [self._loaded_images[index] for index in np.where(result == 1)[0]]
+        test_images = [self._loaded_images[index] for index in np.where(result == 0)[0]]
+        return (
+            CovidDataSet.from_loaded_images(
+                loaded_images=train_images,
+                encode=self.encode, decode=self.decode
+            ),
+            CovidDataSet.from_loaded_images(
+                loaded_images=test_images,
+                encode=self.encode, decode=self.decode
+            )
+        )
 
     def __init__(
             self,
@@ -451,7 +465,7 @@ class CovidDataSet:
     @classmethod
     def from_loaded_images(
             cls,
-            loaded_images: List[CovidImage],
+            loaded_images: Iterable[CovidImage],
             encode: Callable[[str], int],
             decode: Callable[[int], str],
     ) -> CovidDataSet:
@@ -618,3 +632,45 @@ class CovidDataSet:
 
     def __setitem__(self, i: int, value: CovidImage):
         self._loaded_images[i] = value
+
+
+def generate_fake_classification_dataset(size: int = 120) -> CovidDataSet:
+    labels = ["stride", "circle", "square"]
+    _encoder_dict = {k: v for k, v in zip(labels, range(len(labels)))}
+    encode, decode = ml_helper.generate_encoder_decoder(_encoder_dict)
+
+    blank = np.zeros((100, 100), dtype=int)
+    stride = skimage.img_as_int(np.array(reduce(operator.add, map(lambda x: [[x] * 100] * 10, range(0, 100, 10)))))
+
+    circle = blank.copy()
+    rr, cc = skidraw.circle_perimeter(r=50, c=50, radius=30)
+    circle[rr, cc] = 100
+    circle = skimage.img_as_int(circle)
+
+    square = blank.copy()
+    rr, cc = skidraw.rectangle(start=(20, 20), extent=(60, 60))
+    square[rr, cc] = 100
+    square = skimage.img_as_int(square)
+    images = [
+        CovidImage.from_np_array(img, label, decode(label))
+        for label, img in enumerate((stride, circle, square))
+    ]
+    return CovidDataSet.from_loaded_images(
+        itertools.chain(*itertools.repeat(images, size // 3)),
+        encode=encode,
+        decode=decode
+    ).parallel_apply(
+        lambda img: skimage.img_as_int(
+            skiutil.random_noise(
+                skimage.img_as_float(img),
+                mode="pepper"
+            )
+        )
+    ).parallel_apply(
+        lambda img: skimage.img_as_int(
+            skitrans.rotate(
+                img,
+                random.random() * 120 - 60
+            )
+        )
+    )

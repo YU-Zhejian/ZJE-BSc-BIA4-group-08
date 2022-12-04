@@ -20,5 +20,3 @@ class LackingOptionalRequirementError(ValueError):
             f"Install it using: `pip install {pypi_name}`\n"
             f"See project URL: {url}"
         )
-
-
