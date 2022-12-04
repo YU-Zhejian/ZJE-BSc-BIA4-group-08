@@ -9,6 +9,22 @@ _lh = BIA_G8.get_lh(__name__)
 _unknown_version = "UNKNOWN"
 
 
+class LackingOptionalRequirementError(ValueError):
+    def __init__(
+            self,
+            name:str,
+            conda_channel:str,
+            conda_name:str,
+            pypi_name:str,
+            url:str
+    ):
+        super().__init__(
+            f"Dependency {name} not found!\n"
+            f"Install it using: `conda install -c {conda_channel} {conda_name}`\n"
+            f"Install it using: `pip install {pypi_name}`\n"
+            f"See project URL: {url}"
+        )
+
 class DumbVersionable:
     __version__ = _unknown_version
 
