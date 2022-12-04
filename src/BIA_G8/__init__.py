@@ -7,7 +7,7 @@ __version__ = "0.0.1"
 
 import logging
 import logging.handlers
-import os.path
+import os
 import sys
 import time
 

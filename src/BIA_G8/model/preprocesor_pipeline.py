@@ -7,6 +7,7 @@ import tomli
 import tomli_w
 
 from BIA_G8 import get_lh
+from BIA_G8.model import dump_versions, validate_versions, dump_metadata
 from BIA_G8.model.preprocessor import AbstractPreprocessor, get_preprocessor
 
 _lh = get_lh(__name__)
@@ -23,14 +24,20 @@ class PreprocessorPipeline:
         return self
 
     def to_dict(self) -> Dict[str, Dict[str, Union[str, Dict[str, Any]]]]:
-        return {
+        retd = {
             str(i): {"name": step_name_args.name, "args": step_name_args.to_dict()}
             for i, step_name_args in enumerate(self._steps)
         }
+        retd["version_info"] = dump_versions()
+        retd["metadata"] = dump_metadata()
+        return retd
 
     @classmethod
     def from_dict(cls, in_dict: Dict[str, Dict[str, Union[str, Dict[str, Any]]]]) -> PreprocessorPipeline:
         pp = cls()
+        in_dict = dict(in_dict)
+        validate_versions(in_dict.pop("version_info"))
+        _ = in_dict.pop("metadata")
         for _, step_name_args in in_dict.items():
             step = get_preprocessor(step_name_args["name"]).from_dict(step_name_args["args"])
             pp = pp.add_step(step)

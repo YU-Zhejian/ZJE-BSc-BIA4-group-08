@@ -1,67 +1,114 @@
-from __future__ import annotations
+import platform
+import sys
+import time
+from typing import Dict
 
-from abc import abstractmethod
-from typing import Type, TypeVar
+import BIA_G8
 
-import joblib
-import numpy.typing as npt
-
-
-class AbstractClassifier:
-    """
-    Abstract Model for extension
-    """
-
-    _name: str
-
-    @abstractmethod
-    def save(self, model_abspath: str) -> None:
-        pass
-
-    @classmethod
-    @abstractmethod
-    def load(cls, model_abspath: str) -> AbstractClassifier:
-        pass
-
-    @abstractmethod
-    def fit(self, data: npt.NDArray, label: npt.NDArray) -> AbstractClassifier:
-        pass
-
-    @abstractmethod
-    def predict(self, data: npt.NDArray) -> npt.NDArray:
-        pass
-
-    @classmethod
-    @abstractmethod
-    def new(self, **hyper_params) -> None:
-        pass
+_lh = BIA_G8.get_lh(__name__)
+_unknown_version = "UNKNOWN"
 
 
-_SKLearnModelType = TypeVar("_SKLearnModelType")
+class DumbVersionable:
+    __version__ = _unknown_version
 
 
-class BaseSklearnClassifier(AbstractClassifier):
-    _model: _SKLearnModelType
-    _model_type: Type[_SKLearnModelType]
+try:
+    import joblib
+except ImportError:
+    joblib = DumbVersionable()
 
-    @classmethod
-    def new(cls, **hyper_params) -> BaseSklearnClassifier:
-        new_instance = cls()
-        new_instance._model = new_instance._model_type(**hyper_params)
-        return new_instance
+try:
+    import numpy as np
+except ImportError:
+    np = DumbVersionable()
 
-    def fit(self, data: npt.NDArray, label: npt.NDArray) -> BaseSklearnClassifier:
-        self._model.fit(X=data, y=label)
-        return self
+try:
+    import skimage
+except ImportError:
+    skimage = DumbVersionable()
 
-    def predict(self, data: npt.NDArray) -> npt.NDArray:
-        return self._model.predict(data)
+try:
+    import sklearn
+except ImportError:
+    sklearn = DumbVersionable()
 
-    @classmethod
-    def load(cls, model_abspath: str) -> BaseSklearnClassifier:
-        new_instance = cls()
-        new_instance._model = joblib.load(model_abspath)
-        return new_instance
+try:
+    import tomli
+except ImportError:
+    tomli = DumbVersionable()
 
-    def save(self, model_abspath: str) -> None:
-        joblib.dump(self._model, model_abspath)
+try:
+    import tomli_w
+except ImportError:
+    tomli_w = DumbVersionable()
+
+try:
+    import xgboost
+except ImportError:
+    xgboost = DumbVersionable()
+
+try:
+    import matplotlib
+except ImportError:
+    matplotlib = DumbVersionable()
+
+try:
+    import torch
+except ImportError:
+    torch = DumbVersionable()
+
+try:
+    import keras
+except ImportError:
+    keras = DumbVersionable()
+
+
+def dump_versions() -> Dict[str, str]:
+    return {
+        "BIA_G8": BIA_G8.__version__,
+        "numpy": np.__version__,
+        "sklearn": sklearn.__version__,
+        "joblib": joblib.__version__,
+        "xgboost": xgboost.__version__,
+        "matplotlib": matplotlib.__version__,
+        "skimage": skimage.__version__,
+        "tomli": tomli.__version__,
+        "tomli-w": tomli_w.__version__,
+        "torch": torch.__version__,
+        "keras": keras.__version__,
+        "python": ".".join(map(str, sys.version_info[0:3]))
+    }
+
+
+def validate_versions(compile_time_version_dict: Dict[str, str]) -> None:
+    compile_time_version_dict = dict(compile_time_version_dict)
+    run_time_version_dict = dump_versions()
+    for version_key, run_time_version_value in run_time_version_dict.items():
+        try:
+            compile_time_version_value = compile_time_version_dict.pop(version_key)
+        except KeyError:
+            compile_time_version_value = _unknown_version
+        if compile_time_version_value != run_time_version_value:
+            _lh.warning(
+                "Package %s have different version information: Compile (%s) != Run (%s)",
+                version_key, compile_time_version_value, run_time_version_value
+            )
+    for remaining_compile_time_version_key, remaining_compile_time_version_value in compile_time_version_dict.items():
+        _lh.warning(
+            "Package %s have different version information: Compile (%s) != RUn (%s)",
+            remaining_compile_time_version_key, remaining_compile_time_version_value, _unknown_version
+        )
+
+
+def dump_metadata() -> Dict[str, str]:
+    return {
+        "time_gmt": time.asctime(time.gmtime()),
+        "time_local": time.asctime(time.localtime()),
+        "platform_uname": platform.uname()._asdict()
+    }
+
+
+if __name__ == '__main__':
+    print(dump_versions())
+    print(dump_metadata())
