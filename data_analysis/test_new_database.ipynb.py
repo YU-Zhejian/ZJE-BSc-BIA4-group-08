@@ -48,7 +48,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.manifold import TSNE
 
-from BIA_G8.covid_helper import covid_dataset
+from BIA_G8_DATA_ANALYSIS import covid_dataset
 from BIA_G8.helper import ml_helper
 
 # %%

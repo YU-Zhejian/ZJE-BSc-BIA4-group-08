@@ -6,20 +6,35 @@ import pytest
 import skimage
 import skimage.transform as skitrans
 
-from BIA_G8.covid_helper import covid_dataset
-from BIA_G8_test.covid_helper import stride
+from BIA_G8.helper import ml_helper
+from BIA_G8_DATA_ANALYSIS import covid_dataset
+from BIA_G8_DATA_ANALYSIS_test.covid_helper import stride
 
-_IMAGES = []
-for label, img in enumerate([stride] * 3):
-    _IMAGES.append(covid_dataset.CovidImage.from_np_array(img, label, covid_dataset.default_decode(label)))
-    _IMAGES.append(covid_dataset.CovidImage.from_np_array(img, label, covid_dataset.default_decode(label)))
+_DEFAULT_ENCODER_DICT = {
+    "NA": 100,
+    "COVID-19": 0,
+    "NORMAL": 1,
+    "Viral_Pneumonia": 2
+}
+encode, decode = ml_helper.generate_encoder_decoder(_DEFAULT_ENCODER_DICT)
 
-_ = _IMAGES.pop()
-d1 = covid_dataset.CovidDataSet.from_loaded_image(_IMAGES)
+
+def create_in_memory_images():
+    imgs = []
+    for label, img in enumerate([stride] * 3):
+        imgs.append(covid_dataset.CovidImage.from_np_array(img, label, decode(label)))
+        imgs.append(covid_dataset.CovidImage.from_np_array(img, label, decode(label)))
+
+    _ = imgs.pop()
+    return imgs
 
 
 def test_in_memory_dataset():
-    d1 = covid_dataset.CovidDataSet.from_loaded_image(_IMAGES)
+    d1 = covid_dataset.CovidDataSet.from_loaded_image(
+        create_in_memory_images(),
+        encode=encode,
+        decode=decode
+    )
     assert d1.dataset_path == covid_dataset.IN_MEMORY_INDICATOR
     d2 = d1.sample(balanced=True)
     assert len(d2) == 3
@@ -38,7 +53,11 @@ def test_in_memory_dataset():
 
 
 def test_apply():
-    d1 = covid_dataset.CovidDataSet.from_loaded_image(_IMAGES)
+    d1 = covid_dataset.CovidDataSet.from_loaded_image(
+        create_in_memory_images(),
+        encode=encode,
+        decode=decode
+    )
     d2 = d1.apply(lambda img: skimage.img_as_int(skitrans.rotate(img, 270))).apply(
         lambda img: skimage.img_as_int(skitrans.rotate(img, 90)))
     for i1, i2 in zip(d1, d2):
@@ -46,7 +65,11 @@ def test_apply():
 
 
 def test_parallel_apply():
-    d1 = covid_dataset.CovidDataSet.from_loaded_image(_IMAGES)
+    d1 = covid_dataset.CovidDataSet.from_loaded_image(
+        create_in_memory_images(),
+        encode=encode,
+        decode=decode
+    )
     d2 = d1.apply(lambda img: skimage.img_as_int(skitrans.rotate(img, 270))).parallel_apply(
         lambda img: skimage.img_as_int(skitrans.rotate(img, 90)))
     for i1, i2 in zip(d1, d2):
@@ -56,10 +79,19 @@ def test_parallel_apply():
 def test_load_save_dataset():
     tmp_dir = tempfile.mkdtemp()
 
-    d1 = covid_dataset.CovidDataSet.from_loaded_image(_IMAGES)
+    d1 = covid_dataset.CovidDataSet.from_loaded_image(
+        create_in_memory_images(),
+        encode=encode,
+        decode=decode
+    )
     d1.save(tmp_dir)
     assert d1.dataset_path == tmp_dir
-    d2 = covid_dataset.CovidDataSet.from_directory(tmp_dir, balanced=False)
+    d2 = covid_dataset.CovidDataSet.from_directory(
+        tmp_dir,
+        balanced=False,
+        encode=encode,
+        decode=decode
+    )
     assert d2.dataset_path == tmp_dir
     assert len(d1) == len(d2)
     for i1, i2 in zip(d1, d2):
@@ -67,7 +99,12 @@ def test_load_save_dataset():
 
     d1.save(tmp_dir, extension="png")
     assert d1.dataset_path == tmp_dir
-    d2 = covid_dataset.CovidDataSet.from_directory(tmp_dir, balanced=False)
+    d2 = covid_dataset.CovidDataSet.from_directory(
+        tmp_dir,
+        balanced=False,
+        encode=encode,
+        decode=decode
+    )
     assert d2.dataset_path == tmp_dir
     assert len(d1) == len(d2)
     for i1, i2 in zip(d1, d2):
@@ -77,10 +114,18 @@ def test_load_save_dataset():
 
 def test_parallel_load_save_dataset():
     tmp_dir = tempfile.mkdtemp()
-    d1 = covid_dataset.CovidDataSet.from_loaded_image(_IMAGES)
+    d1 = covid_dataset.CovidDataSet.from_loaded_image(
+        create_in_memory_images(),
+        encode=encode,
+        decode=decode
+    )
     d1.parallel_save(tmp_dir)
     assert d1.dataset_path == tmp_dir
-    d2 = covid_dataset.CovidDataSet.parallel_from_directory(tmp_dir)
+    d2 = covid_dataset.CovidDataSet.parallel_from_directory(
+        tmp_dir,
+        encode=encode,
+        decode=decode
+    )
     assert d2.dataset_path == tmp_dir
     for i1, i2 in zip(d1, d2):
         assert np.array_equiv(i1.np_array, i2.np_array)

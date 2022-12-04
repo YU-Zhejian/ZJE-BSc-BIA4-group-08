@@ -57,4 +57,7 @@ class Describe(nn.Module):
 
 
 def get_torch_device() -> torch.device:
+    """
+    Get suitable torch device. Will use NVidia GPU if possible.
+    """
     return torch.device('cuda' if torch.cuda.is_available() else 'cpu')

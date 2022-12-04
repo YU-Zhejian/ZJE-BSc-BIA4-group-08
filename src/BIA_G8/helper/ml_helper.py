@@ -1,9 +1,12 @@
+"""
+General-purposed machine learning helpers.
+"""
+
 __all__ = (
     "print_confusion_matrix",
     "generate_encoder_decoder"
 )
 
-import doctest
 from typing import List, Dict, Tuple, Callable
 
 import numpy as np
@@ -53,7 +56,3 @@ def print_confusion_matrix(
     for i in range(table_length):
         pt.add_row((labels[i], *matrix[i]))
     return str(pt)
-
-
-if __name__ == '__main__':
-    doctest.testmod()

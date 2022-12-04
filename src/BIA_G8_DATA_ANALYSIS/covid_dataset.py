@@ -4,18 +4,15 @@ Helper classes and functions to general-purposed machine-learning/deep-learning 
 
 from __future__ import annotations
 
-import doctest
 import shutil
 from functools import reduce
 
 __all__ = (
-    "default_encode",
-    "default_decode",
     "IN_MEMORY_INDICATOR",
     "VALID_IMAGE_EXTENSIONS",
     "CovidImage",
     "CovidDataSet",
-    "resolve_label_from_path"
+    "resolve_label_str_from_path"
 )
 
 import glob
@@ -25,7 +22,7 @@ import os
 import random
 import uuid
 from collections import defaultdict
-from typing import Tuple, List, Dict, Callable, Iterable, Optional, Any, Mapping, Final, Union, overload
+from typing import Tuple, List, Dict, Callable, Iterable, Optional, Any, Mapping, Union, overload
 
 import numpy as np
 import numpy.typing as npt
@@ -34,16 +31,10 @@ import torch
 import tqdm
 
 from BIA_G8 import get_lh
-from BIA_G8.helper import io_helper, joblib_helper, ml_helper, torch_helper, ndarray_helper
+from BIA_G8.helper import io_helper, joblib_helper, torch_helper, ndarray_helper, ml_helper
 
 _lh = get_lh(__name__)
-_DEFAULT_ENCODER_DICT = {
-    "NA": 100,
-    "COVID-19": 0,
-    "NORMAL": 1,
-    "Viral_Pneumonia": 2
-}
-default_encode, default_decode = ml_helper.generate_encoder_decoder(_DEFAULT_ENCODER_DICT)
+
 VALID_IMAGE_EXTENSIONS = (
     "npy.xz",
     "png",
@@ -58,17 +49,27 @@ IN_MEMORY_INDICATOR = "IN_MEMORY"
 """\"File name\" of the in-memory datasets or figures."""
 
 
-def resolve_label_from_path(abspath: str) -> str:
+def resolve_label_str_from_path(abspath: str) -> str:
     """
     Get image paths from label name.
 
-    >>> resolve_label_from_path("/100/200/300.png")
+    >>> resolve_label_str_from_path("/100/200/300.png")
     '200'
 
     :param abspath: Absolute path to the image.
     :return: Resolved label in string format.
     """
     return os.path.split(os.path.split(abspath)[0])[1]
+
+
+def infer_encode_decode_from_filesystem(dataset_path: str) -> Tuple[Callable[[str], int], Callable[[int], str]]:
+    _lh.info("Inferring encoder decoder from directory...")
+    encoder_dict = {
+        os.path.basename(image_dirname.rstrip(os.path.sep)): index
+        for index, image_dirname in enumerate(glob.glob(os.path.join(dataset_path, "*", "")))
+    }
+    _lh.info("Encoder Dict: %s", repr(encoder_dict))
+    return ml_helper.generate_encoder_decoder(encoder_dict)
 
 
 def _get_max_size_helper(
@@ -232,14 +233,24 @@ class CovidDataSet:
     _loaded_image_with_label: Dict[int, List[CovidImage]]
     _dataset_path: str
     _sklearn_dataset: Optional[Tuple[npt.NDArray, npt.NDArray]]
-    encode: Final[Callable[[str], int]]
-    decode: Final[Callable[[int], str]]
+    _encode: Callable[[str], int]
+    _decode: Callable[[int], str]
     _torch_dataset: Optional[torch_helper.AbstractTorchDataSet]
 
     @property
     def dataset_path(self) -> str:
         """Read-only absolute path of datasets"""
         return self._dataset_path
+
+    @property
+    def encode(self) -> Callable[[str], int]:
+        """Read-only encoder function"""
+        return self._encode
+
+    @property
+    def decode(self) -> Callable[[int], str]:
+        """Read-only decoder function"""
+        return self._decode
 
     @property
     def sklearn_dataset(self) -> Tuple[npt.NDArray, npt.NDArray]:
@@ -300,8 +311,8 @@ class CovidDataSet:
         """
         Dumb initializer which initializes a dataset for in-memory use.
         """
-        self.encode = encode
-        self.decode = decode
+        self._encode = encode
+        self._decode = decode
         self._loaded_image = []
         self._loaded_image_with_label = defaultdict(lambda: [])
         self._dataset_path = IN_MEMORY_INDICATOR
@@ -309,7 +320,7 @@ class CovidDataSet:
         self._torch_dataset = None
 
     def _load_impl(self, image_path: str) -> None:
-        label_str = resolve_label_from_path(image_path)
+        label_str = resolve_label_str_from_path(image_path)
         img = CovidImage.from_file(
             image_path,
             label=self.encode(label_str),
@@ -338,7 +349,7 @@ class CovidDataSet:
                 iterable=all_image_paths,
                 desc="Parsing image directory..."
         ):
-            label = self.encode(resolve_label_from_path(image_path))
+            label = self.encode(resolve_label_str_from_path(image_path))
             image_paths_with_label[label].append(image_path)
         size = _get_max_size_helper(size, balanced, len(all_image_paths), image_paths_with_label)
         _lh.info("Loading %d data from %s...", size, self._dataset_path)
@@ -390,7 +401,7 @@ class CovidDataSet:
         """
 
         if encode is None:
-            encode, decode = default_encode, default_decode
+            encode, decode = infer_encode_decode_from_filesystem(dataset_path)
         new_ds = cls(encode=encode, decode=decode)
         all_image_paths = new_ds._preload_hook(
             dataset_path=dataset_path,
@@ -423,7 +434,7 @@ class CovidDataSet:
         if joblib_kwds is None:
             joblib_kwds = {}
         if encode is None:
-            encode, decode = default_encode, default_decode
+            encode, decode = infer_encode_decode_from_filesystem(dataset_path)
         new_ds = cls(encode=encode, decode=decode)
         all_image_paths = new_ds._preload_hook(
             dataset_path=dataset_path,
@@ -448,14 +459,12 @@ class CovidDataSet:
     def from_loaded_image(
             cls,
             loaded_image: List[CovidImage],
-            encode: Optional[Callable[[str], int]] = None,
-            decode: Optional[Callable[[int], str]] = None,
+            encode: Callable[[str], int],
+            decode: Callable[[int], str],
     ) -> CovidDataSet:
         """
         Generate a new instance from a list of py:class:`CovidImage`.
         """
-        if encode is None:
-            encode, decode = default_encode, default_decode
         new_ds = cls(encode=encode, decode=decode)
         new_ds._loaded_image = loaded_image
         for img in new_ds._loaded_image:
@@ -629,7 +638,3 @@ class CovidDataSet:
 
     def __setitem__(self, i: int, value: CovidImage):
         self._loaded_image[i] = value
-
-
-if __name__ == "__main__":
-    doctest.testmod()

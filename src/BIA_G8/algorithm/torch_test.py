@@ -4,7 +4,7 @@ import torch.utils.data as tud
 from torch import nn
 
 from BIA_G8 import get_lh
-from BIA_G8.covid_helper import covid_dataset
+from BIA_G8_DATA_ANALYSIS import covid_dataset
 
 _lh = get_lh(__name__)
 

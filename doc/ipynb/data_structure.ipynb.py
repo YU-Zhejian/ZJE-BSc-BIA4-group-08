@@ -68,7 +68,7 @@ from sklearn.metrics import confusion_matrix
 from sklearn.model_selection import train_test_split
 from sklearn.neighbors import KNeighborsClassifier as KNN
 
-from BIA_G8.covid_helper import covid_dataset
+from BIA_G8_DATA_ANALYSIS import covid_dataset
 from BIA_G8.helper import ml_helper
 
 # %% [markdown]
@@ -158,7 +158,9 @@ for i, ax in enumerate(axs.ravel()):
 
 # %%
 ds_enlarged = covid_dataset.CovidDataSet.from_loaded_image(
-    list(itertools.chain(*itertools.repeat(list(d1), 200)))
+    list(itertools.chain(*itertools.repeat(list(d1), 200))),
+    encode=d1.encode,
+    decode=d1.decode
 )
 
 # %%

@@ -13,6 +13,7 @@ import skimage.transform as skitrans
 from numpy import typing as npt
 
 from BIA_G8 import get_lh
+from BIA_G8.helper.io_helper import AbstractTOMLSerializable
 
 _lh = get_lh(__name__)
 
@@ -52,7 +53,7 @@ def _documentation_decorator(cls: Type[AbstractPreprocessor]) -> Type[AbstractPr
     return cls
 
 
-class AbstractPreprocessor:
+class AbstractPreprocessor(AbstractTOMLSerializable):
     """
     The abstraction of a general purposed preprocessing step.
     """
@@ -119,12 +120,10 @@ class AbstractPreprocessor:
         return self._function(img, **self._parsed_kwargs)
 
     def to_dict(self) -> Dict[str, Any]:
-        """Dump the preprocessor to a dictionary"""
         return dict(self._parsed_kwargs)
 
     @classmethod
     def from_dict(cls, exported_dict: Dict[str, Any]) -> AbstractPreprocessor:
-        """Load the preprocessor from a dictionary"""
         return cls().set_params(**exported_dict)
 
 

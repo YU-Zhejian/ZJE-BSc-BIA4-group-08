@@ -1,10 +1,14 @@
+"""
+General-purposed helpers for Numpy NDArray and Torch Tensor.
+"""
+
+
 __all__ = (
     "scale_np_array",
     "scale_torch_array",
     "describe"
 )
 
-import doctest
 from typing import Union, Tuple, TypeVar
 
 import numpy as np
@@ -67,7 +71,7 @@ def describe(array: _Tensor) -> str:
 
     Example:
 
-    # FIXME: int32 on Windows.
+    # FIXME: fails since int32 on Windows.
 
     >>> describe(np.array([0, 0, 1, 1]))
     'ndarray[int64] with shape=(4,); uniques=[0 1]'
@@ -112,7 +116,3 @@ class DimensionMismatchException(ValueError):
             f"\twhere {_arr1_name} is {describe(_arr1)}\n"
             f"\twhere {_arr2_name} is {describe(_arr2)}\n"
         )
-
-
-if __name__ == "__main__":
-    doctest.testmod()

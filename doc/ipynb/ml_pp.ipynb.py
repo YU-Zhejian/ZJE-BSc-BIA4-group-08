@@ -39,8 +39,6 @@ os.environ["PYTHONPATH"] = os.pathsep.join((NEW_PYTHON_PATH, os.environ.get("PYT
 # Before starting, we would import necessary libraries.
 
 # %%
-import gc  # For collecting memory garbage
-
 import skimage.filters as skifilt
 import skimage.exposure as skiexp
 
@@ -60,7 +58,7 @@ except ImportError:
 from sklearn.model_selection import train_test_split
 from sklearn.neighbors import KNeighborsClassifier as KNN
 
-from BIA_G8.covid_helper import covid_dataset
+from BIA_G8_DATA_ANALYSIS import covid_dataset
 from BIA_G8.helper import matplotlib_helper
 
 # %% [markdown]
@@ -68,7 +66,6 @@ from BIA_G8.helper import matplotlib_helper
 
 # %%
 ds = covid_dataset.CovidDataSet.parallel_from_directory(os.path.join(THIS_DIR_PATH, "sample_covid_image"))
-_ = gc.collect()
 
 # %% [markdown]
 # Use `sklearn` on this raw dataset.
