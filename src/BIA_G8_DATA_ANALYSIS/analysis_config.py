@@ -3,7 +3,7 @@ from typing import Dict, Any
 from BIA_G8 import get_lh
 from BIA_G8.helper import ml_helper
 from BIA_G8.helper.io_helper import AbstractTOMLSerializable
-from BIA_G8.model.classifier import AbstractClassifier
+from BIA_G8.model.classifier import AbstractClassifier, load_classifier
 from BIA_G8.model.preprocesor_pipeline import PreprocessorPipeline
 from BIA_G8_DATA_ANALYSIS.covid_dataset import CovidDataSet
 
@@ -17,6 +17,7 @@ class AnalysisConfiguration(AbstractTOMLSerializable):
     _preprocessing_pipeline: PreprocessorPipeline
     _preprocessing_pipeline_configuration_path: str
     _classifier: AbstractClassifier
+    _classifier_configuration_path: str
 
     @property
     def dataset_path(self) -> str:
@@ -34,7 +35,8 @@ class AnalysisConfiguration(AbstractTOMLSerializable):
             self,
             dataset_path: str,
             encoder_dict: Dict[str, int],
-            preprocessor_pipeline_configuration_path: str
+            preprocessor_pipeline_configuration_path: str,
+            classifier_pipeline_configuration_path:str
     ):
         self._dataset_path = dataset_path
         self._encoder_dict = dict(encoder_dict)
@@ -45,13 +47,15 @@ class AnalysisConfiguration(AbstractTOMLSerializable):
         )
         self._preprocessor_pipeline_configuration = preprocessor_pipeline_configuration_path
         self._preprocessing_pipeline = PreprocessorPipeline.load(preprocessor_pipeline_configuration_path)
-        self._classifier = AbstractClassifier.new()
+        self._classifier_configuration_path = classifier_pipeline_configuration_path
+        self._classifier = load_classifier(self._classifier_configuration_path)
 
     def to_dict(self) -> Dict[str, Any]:
         return {
             "dataset_path": self._dataset_path,
             "encoder_dict": self._encoder_dict,
-            "preprocessor_pipeline_configuration_path": self._preprocessing_pipeline_configuration_path
+            "preprocessor_pipeline_configuration_path": self._preprocessing_pipeline_configuration_path,
+            "classifier_configuration_path": self._classifier_configuration_path
         }
 
     @classmethod
@@ -68,6 +72,7 @@ class AnalysisConfiguration(AbstractTOMLSerializable):
         ds_train, ds_test = self._dataset.train_test_split()
         _lh.info("Training...")
         self._classifier = self._classifier.fit(ds_train)
+        self._classifier.save(self._classifier_configuration_path)
         _lh.info("Evaluating...")
         accuracy = self._classifier.evaluate(ds_test)
         _lh.info(
