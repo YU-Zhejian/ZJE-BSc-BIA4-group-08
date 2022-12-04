@@ -1,9 +1,10 @@
-from glob import glob
 import os
+from glob import glob
+
+import click
 import skimage.io as skiio
 import skimage.transform as skitrans
 import tqdm
-import click
 
 from BIA_G8 import get_lh
 from BIA_G8.helper.io_helper import write_np_xz

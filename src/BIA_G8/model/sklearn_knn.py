@@ -10,7 +10,7 @@ from BIA_G8.model import BaseSklearnClassifier
 
 class SklearnKNearestNeighborsClassifier(BaseSklearnClassifier):
     _name = "SklearnKNearestNeighborsClassifier"
-    _model_type= KNeighborsClassifier
+    _model_type = KNeighborsClassifier
 
 
 if __name__ == '__main__':
@@ -27,5 +27,4 @@ if __name__ == '__main__':
     m.save("tmp.pkl.xz")
     del m
     m2 = SklearnKNearestNeighborsClassifier.load("tmp.pkl.xz")
-    print(np.sum(m2.predict(x_test) == y_test)*100/len(y_test))
-
+    print(np.sum(m2.predict(x_test) == y_test) * 100 / len(y_test))

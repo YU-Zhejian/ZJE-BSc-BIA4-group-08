@@ -1,6 +1,6 @@
-from matplotlib import pyplot as plt
-import skimage.io as skiio
 import numpy.typing as npt
+import skimage.io as skiio
+from matplotlib import pyplot as plt
 
 from BIA_G8.model.preprocesor_pipeline import PreprocessorPipeline
 from BIA_G8.model.preprocessor import get_preprocessor_name_descriptions, get_preprocessor, LackRequiredArgumentError
@@ -8,7 +8,7 @@ from BIA_G8.model.preprocessor import get_preprocessor_name_descriptions, get_pr
 
 def setup_pp(
         orig_img: npt.NDArray,
-        pp_output_path:str
+        pp_output_path: str
 ) -> PreprocessorPipeline:
     pp = PreprocessorPipeline()
     cached_preprocessor_name_description = {

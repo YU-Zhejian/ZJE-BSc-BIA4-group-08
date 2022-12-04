@@ -24,22 +24,38 @@ class _Unset:
 _unset = _Unset()
 
 
-def argument_string_to_int(instr: str) -> Union[_Unset, int]:
+def _argument_string_to_int(instr: str) -> Union[_Unset, int]:
     return _unset if instr == "" else int(instr)
 
 
-def argument_string_to_float(instr: str) -> Union[_Unset, float]:
+def _argument_string_to_float(instr: str) -> Union[_Unset, float]:
     return _unset if instr == "" else float(instr)
 
 
 class LackRequiredArgumentError(ValueError):
+    """Argument Parser Exception for lack of required argument"""
+
     def __init__(self, argument_names: str):
         super().__init__(
             f"Lack required arguments: {argument_names}"
         )
 
 
+def _documentation_decorator(cls: Type[AbstractPreprocessor]) -> Type[AbstractPreprocessor]:
+    """This class decorator generates documentations for arguments"""
+    cls.__doc__ = f"{cls.__name__} ({cls._name}) -- {cls._description}\n\n"
+    if not cls._arguments:
+        cls.__doc__ += "No arguments available\n"
+    else:
+        for argument in cls._arguments:
+            cls.__doc__ += f"* Argument ``{argument}`` \n"
+    return cls
+
+
 class AbstractPreprocessor:
+    """
+    The abstraction of a general purposed preprocessing step.
+    """
     _arguments: Dict[str, Callable[[str], Any]]
     _required_argument_names: List[str]
     _parsed_kwargs: Dict[str, Any]
@@ -52,10 +68,12 @@ class AbstractPreprocessor:
 
     @property
     def description(self) -> str:
+        """Description of this preprocessor"""
         return self._description
 
     @property
     def name(self) -> str:
+        """Name of this preprocessor"""
         return self._name
 
     @property
@@ -70,7 +88,15 @@ class AbstractPreprocessor:
     def __repr__(self):
         return f"Initialized filter '{self._name}' with arguments {json.dumps(self._parsed_kwargs)}"
 
+    def __eq__(self, other: AbstractPreprocessor) -> bool:
+        if not isinstance(other, self.__class__):
+            return False
+        return self.to_dict() == other.to_dict()
+
     def set_params(self, **kwargs) -> AbstractPreprocessor:
+        """
+        Set arguments to the preprocessor. See the documentation of corresponding subclasses for more details.
+        """
         for argument_name, argument_value in kwargs.items():
             if argument_name not in self._arguments:
                 continue
@@ -84,16 +110,25 @@ class AbstractPreprocessor:
         return self
 
     def execute(self, img: npt.NDArray) -> npt.NDArray:
+        """
+        Execute the preprocessor, which converts an image to another.
+
+        :param img: Image to be preprocessed
+        :return: Processed image
+        """
         return self._function(img, **self._parsed_kwargs)
 
     def to_dict(self) -> Dict[str, Any]:
+        """Dump the preprocessor to a dictionary"""
         return dict(self._parsed_kwargs)
 
     @classmethod
     def from_dict(cls, exported_dict: Dict[str, Any]) -> AbstractPreprocessor:
+        """Load the preprocessor from a dictionary"""
         return cls().set_params(**exported_dict)
 
 
+@_documentation_decorator
 class DumbPreprocessor(AbstractPreprocessor):
     _arguments: Final[Dict[str, Callable[[str], Any]]] = {}
     _required_argument_names: Final[List[str]] = []
@@ -104,6 +139,7 @@ class DumbPreprocessor(AbstractPreprocessor):
         return img
 
 
+@_documentation_decorator
 class DimensionReductionPreprocessor(AbstractPreprocessor):
     _arguments: Final[Dict[str, Callable[[str], Any]]] = {}
     _required_argument_names: Final[List[str]] = []
@@ -115,6 +151,7 @@ class DimensionReductionPreprocessor(AbstractPreprocessor):
         return skitrans.resize(img, (256, 256))
 
 
+@_documentation_decorator
 class AdjustExposurePreprocessor(AbstractPreprocessor):
     _arguments: Final[Dict[str, Callable[[str], Any]]] = {}
     _required_argument_names: Final[List[str]] = []
@@ -127,9 +164,10 @@ class AdjustExposurePreprocessor(AbstractPreprocessor):
         return img
 
 
+@_documentation_decorator
 class DenoiseMedianPreprocessor(AbstractPreprocessor):
     _arguments: Final[Dict[str, Callable[[str], Any]]] = {
-        "footprint_length_width": argument_string_to_int
+        "footprint_length_width": _argument_string_to_int
     }
     _required_argument_names: Final[List[str]] = []
     _name: Final[str] = "denoise (median)"
@@ -143,9 +181,10 @@ class DenoiseMedianPreprocessor(AbstractPreprocessor):
             return skifiltrank.median(img)
 
 
+@_documentation_decorator
 class DenoiseMeanPreprocessor(AbstractPreprocessor):
     _arguments: Final[Dict[str, Callable[[str], Any]]] = {
-        "footprint_length_width": argument_string_to_int
+        "footprint_length_width": _argument_string_to_int
     }
     _required_argument_names: Final[List[str]] = ["footprint_length_width"]
     _name: Final[str] = "denoise (mean)"
@@ -156,9 +195,10 @@ class DenoiseMeanPreprocessor(AbstractPreprocessor):
         return skifiltrank.mean(img, footprint=footprint)
 
 
+@_documentation_decorator
 class DenoiseGaussianPreprocessor(AbstractPreprocessor):
     _arguments: Final[Dict[str, Callable[[str], Any]]] = {
-        "sigma": argument_string_to_int
+        "sigma": _argument_string_to_int
     }
     _required_argument_names: Final[List[str]] = []
     _name: Final[str] = "denoise (gaussian)"
@@ -167,10 +207,11 @@ class DenoiseGaussianPreprocessor(AbstractPreprocessor):
         return skifilt.gaussian(img, **kwargs)
 
 
+@_documentation_decorator
 class UnsharpMaskPreprocessor(AbstractPreprocessor):
     _arguments: Final[Dict[str, Callable[[str], Any]]] = {
-        "radius": argument_string_to_float,
-        "amount": argument_string_to_float,
+        "radius": _argument_string_to_float,
+        "amount": _argument_string_to_float,
     }
     _required_argument_names: Final[List[str]] = []
     _name: Final[str] = "unsharp mask"
@@ -179,10 +220,11 @@ class UnsharpMaskPreprocessor(AbstractPreprocessor):
         return skifilt.unsharp_mask(img, **kwargs)
 
 
+@_documentation_decorator
 class WienerDeblurPreprocessor(AbstractPreprocessor):
     _arguments: Final[Dict[str, Callable[[str], Any]]] = {
-        "kernel_size": argument_string_to_int,
-        "balance": argument_string_to_float,
+        "kernel_size": _argument_string_to_int,
+        "balance": _argument_string_to_float,
     }
     _required_argument_names: Final[List[str]] = ["kernel_size", "balance"]
     _name: Final[str] = "wiener deblur"
@@ -208,25 +250,20 @@ _preprocessors: Dict[str, Type[AbstractPreprocessor]] = {
 
 
 def get_preprocessor(preprocessor_name: str) -> Type[AbstractPreprocessor]:
+    """Get :py:class:`AbstractPreprocessor` subclass using its name"""
     return _preprocessors[preprocessor_name]
 
 
 def get_preprocessor_names() -> Iterable[str]:
+    """Get a list of names of available :py:class:`AbstractPreprocessor` subclass"""
     return iter(_preprocessors.keys())
 
 
 def get_preprocessor_name_descriptions() -> Iterable[Tuple[str, str]]:
+    """
+    Get a list of names and descriptions of available :py:class:`AbstractPreprocessor` subclass
+    """
     return (
         (preprocessor_type().name, preprocessor_type().description)
         for preprocessor_type in _preprocessors.values()
     )
-
-
-if __name__ == "__main__":
-    print(list(get_preprocessor_names()))
-    assert get_preprocessor("dimension reduction")().execute(np.zeros(shape=(1024, 1024))).shape == (256, 256)
-    dnm = get_preprocessor("denoise (mean)")()
-    print(list(dnm.argument_names))
-    dnm = dnm.set_params(footprint_length_width=5, aaa=6)
-    assert dnm._parsed_kwargs == {'footprint_length_width': 5}
-    assert dnm.execute(np.zeros(shape=(256, 256))).shape == (256, 256)

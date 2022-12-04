@@ -1,14 +1,13 @@
 from __future__ import annotations
 
-from typing import List, Dict, Union, Any
+from typing import List, Dict, Union, Any, Iterable
 
+import numpy.typing as npt
 import tomli
 import tomli_w
-import numpy.typing as npt
 
 from BIA_G8 import get_lh
 from BIA_G8.model.preprocessor import AbstractPreprocessor, get_preprocessor
-
 
 _lh = get_lh(__name__)
 
@@ -51,17 +50,17 @@ class PreprocessorPipeline:
             img = step.execute(img)
         return img
 
+    @property
+    def steps(self) -> Iterable[AbstractPreprocessor]:
+        return iter(self._steps)
 
-if __name__ == '__main__':
-    pp = (
-        PreprocessorPipeline().
-        add_step(
-            get_preprocessor("dimension reduction")().set_params()
-        ).
-        add_step(
-            get_preprocessor("denoise (mean)")().set_params(footprint_length_width=5)
+    def __eq__(self, other: PreprocessorPipeline) -> bool:
+        if not isinstance(other, self.__class__):
+            return False
+        return all(
+            self_step == other_step
+            for self_step, other_step in zip(
+                self.steps,
+                other.steps
+            )
         )
-    )
-    pp.save("1.toml")
-    pp2 = PreprocessorPipeline.load("1.toml")
-    print(pp2._steps)
