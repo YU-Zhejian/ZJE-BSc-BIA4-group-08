@@ -24,7 +24,7 @@ __all__ = (
 
 import lzma
 import pickle
-from abc import abstractmethod
+from abc import abstractmethod, ABC
 from typing import Any, Union, Mapping, Dict
 
 import numpy as np
@@ -44,7 +44,7 @@ def read_np_xz(path: str) -> npt.NDArray[Any]:
         return npy_format.read_array(reader)
 
 
-def read_tensor_xz(path: str) -> Union[torch.Tensor, Mapping[str, Any]]:
+def read_tensor_xz(path: str) -> Union[torch.Tensor, Mapping[str, Any], nn.Module]:
     """Reader of compressed Torch serialization format"""
     with lzma.open(path, "rb") as reader:
         return torch.load(reader)
@@ -92,6 +92,25 @@ class SerializableInterface:
         pass
 
 
+class TOMLSerializableInterface:
+    """
+    Abstract Base Class of something that can be represented as TOML.
+
+    Should be used as configuration class.
+    """
+
+    @abstractmethod
+    def to_dict(self) -> Dict[str, Any]:
+        """Dump the item to a dictionary"""
+        raise NotImplementedError
+
+    @classmethod
+    @abstractmethod
+    def from_dict(cls, in_dict: Dict[str, Any]) -> TOMLSerializableInterface:
+        """Load the item from a dictionary"""
+        raise NotImplementedError
+
+
 def read_toml_with_metadata(path: str) -> Dict[str, Any]:
     with open(path, "rb") as reader:
         in_dict = tomli.load(reader)
@@ -110,23 +129,16 @@ def write_toml_with_metadata(obj: Dict[str, Any], path: str) -> None:
         tomli_w.dump(retd, writer)
 
 
-class AbstractTOMLSerializable(SerializableInterface):
+class AbstractTOMLSerializable(
+    SerializableInterface,
+    TOMLSerializableInterface,
+    ABC
+):
     """
     Abstract Base Class of something that can be represented as TOML.
 
     Should be used as configuration class.
     """
-
-    @abstractmethod
-    def to_dict(self) -> Dict[str, Any]:
-        """Dump the item to a dictionary"""
-        raise NotImplementedError
-
-    @classmethod
-    @abstractmethod
-    def from_dict(cls, in_dict: Dict[str, Any]) -> AbstractTOMLSerializable:
-        """Load the item from a dictionary"""
-        raise NotImplementedError
 
     @classmethod
     def load(cls, path: str) -> AbstractTOMLSerializable:

@@ -67,24 +67,26 @@ def resolve_label_str_from_path(abspath: str) -> str:
     return os.path.split(os.path.split(abspath)[0])[1]
 
 
-def infer_encode_decode_from_filesystem(dataset_path: str) -> Tuple[Callable[[str], int], Callable[[int], str]]:
+def infer_encode_decode_from_filesystem(dataset_path: str) -> Tuple[
+    int, Tuple[Callable[[str], int], Callable[[int], str]]]:
     _lh.info("Inferring encoder decoder from directory...")
     encoder_dict = {
         os.path.basename(image_dirname.rstrip(os.path.sep)): index
         for index, image_dirname in enumerate(glob.glob(os.path.join(dataset_path, "*", "")))
     }
     _lh.info("Encoder Dict: %s", repr(encoder_dict))
-    return ml_helper.generate_encoder_decoder(encoder_dict)
+    return len(encoder_dict), ml_helper.generate_encoder_decoder(encoder_dict)
 
 
 def _get_max_size_helper(
         size: int,
+        n_classes: int,
         balanced: bool,
         full_size: int,
         image_with_label: Dict[Any, Any]
 ) -> int:
     if balanced:
-        max_size = min(map(len, image_with_label.values())) * 4
+        max_size = min(map(len, image_with_label.values())) * n_classes
     else:
         max_size = full_size
     if size == -1:
@@ -240,6 +242,7 @@ class CovidDataSet(MachinelearningDatasetInterface):
     _dataset_path: str
     _encode: Callable[[str], int]
     _decode: Callable[[int], str]
+    _n_classes: int
     _torch_dataset: Optional[torch_helper.DictBackedTorchDataSet]
     _sklearn_dataset: Optional[Tuple[npt.NDArray, npt.NDArray]]
 
@@ -257,6 +260,10 @@ class CovidDataSet(MachinelearningDatasetInterface):
     def decode(self) -> Callable[[int], str]:
         """Read-only decoder function"""
         return self._decode
+
+    @property
+    def n_classes(self) -> int:
+        return self._n_classes
 
     @property
     def sklearn_dataset(self) -> Tuple[npt.NDArray, npt.NDArray]:
@@ -305,11 +312,15 @@ class CovidDataSet(MachinelearningDatasetInterface):
         return (
             CovidDataSet.from_loaded_images(
                 loaded_images=train_images,
-                encode=self.encode, decode=self.decode
+                encode=self.encode,
+                decode=self.decode,
+                n_classes=self.n_classes
             ),
             CovidDataSet.from_loaded_images(
                 loaded_images=test_images,
-                encode=self.encode, decode=self.decode
+                encode=self.encode,
+                decode=self.decode,
+                n_classes=self.n_classes
             )
         )
 
@@ -317,10 +328,12 @@ class CovidDataSet(MachinelearningDatasetInterface):
             self,
             encode: Callable[[str], int],
             decode: Callable[[int], str],
+            n_classes: int
     ) -> None:
         """
         Dumb initializer which initializes a dataset for in-memory use.
         """
+        self._n_classes = n_classes
         self._encode = encode
         self._decode = decode
         self._loaded_images = []
@@ -361,13 +374,19 @@ class CovidDataSet(MachinelearningDatasetInterface):
         ):
             label = self.encode(resolve_label_str_from_path(image_path))
             image_paths_with_label[label].append(image_path)
-        size = _get_max_size_helper(size, balanced, len(all_image_paths), image_paths_with_label)
+        size = _get_max_size_helper(
+            size,
+            self.n_classes,
+            balanced,
+            len(all_image_paths),
+            image_paths_with_label
+        )
         _lh.info("Loading %d data from %s...", size, self._dataset_path)
 
         if balanced:
             all_image_paths = list(itertools.chain(
                 *list(map(
-                    lambda image_paths: random.sample(image_paths, size // 3),
+                    lambda image_paths: random.sample(image_paths, size // self.n_classes),
                     image_paths_with_label.values()
                 ))
             ))
@@ -383,6 +402,7 @@ class CovidDataSet(MachinelearningDatasetInterface):
             balanced: bool = True,
             encode: Optional[Callable[[str], int]] = None,
             decode: Optional[Callable[[int], str]] = None,
+            n_classes: Optional[int] = None
     ) -> CovidDataSet:
         """
         Generate a new instance from directory of images.
@@ -411,8 +431,8 @@ class CovidDataSet(MachinelearningDatasetInterface):
         """
 
         if encode is None:
-            encode, decode = infer_encode_decode_from_filesystem(dataset_path)
-        new_ds = cls(encode=encode, decode=decode)
+            n_classes, (encode, decode) = infer_encode_decode_from_filesystem(dataset_path)
+        new_ds = cls(encode=encode, decode=decode, n_classes=n_classes)
         all_image_paths = new_ds._preload_hook(
             dataset_path=dataset_path,
             size=size,
@@ -436,6 +456,7 @@ class CovidDataSet(MachinelearningDatasetInterface):
             balanced: bool = True,
             encode: Optional[Callable[[str], int]] = None,
             decode: Optional[Callable[[int], str]] = None,
+            n_classes: Optional[int] = None,
             joblib_kwds: Optional[Mapping[str, Any]] = None
     ) -> CovidDataSet:
         """
@@ -445,8 +466,8 @@ class CovidDataSet(MachinelearningDatasetInterface):
             joblib_kwds = {}
         joblib_kwds = dict(joblib_kwds)
         if encode is None:
-            encode, decode = infer_encode_decode_from_filesystem(dataset_path)
-        new_ds = cls(encode=encode, decode=decode)
+            n_classes, (encode, decode) = infer_encode_decode_from_filesystem(dataset_path)
+        new_ds = cls(encode=encode, decode=decode, n_classes=n_classes)
         all_image_paths = new_ds._preload_hook(
             dataset_path=dataset_path,
             size=size,
@@ -472,11 +493,12 @@ class CovidDataSet(MachinelearningDatasetInterface):
             loaded_images: Iterable[CovidImage],
             encode: Callable[[str], int],
             decode: Callable[[int], str],
+            n_classes: int
     ) -> CovidDataSet:
         """
         Generate a new instance from a list of py:class:`CovidImage`.
         """
-        new_ds = cls(encode=encode, decode=decode)
+        new_ds = cls(encode=encode, decode=decode, n_classes=n_classes)
         new_ds._loaded_images = list(loaded_images)
         for img in new_ds._loaded_images:
             new_ds._loaded_images_with_labels[img.label].append(img)
@@ -492,27 +514,38 @@ class CovidDataSet(MachinelearningDatasetInterface):
         :param operation: Operation to be applied to each image.
         :return: New dataset with image operated.
         """
-        new_ds = CovidDataSet.from_loaded_images(list(map(
-            lambda image: image.apply(operation),
-            tqdm.tqdm(iterable=self._loaded_images, desc="Applying operations...")
-        )), encode=self.encode, decode=self.decode)
+        new_ds = CovidDataSet.from_loaded_images(
+            list(map(
+                lambda image: image.apply(operation),
+                tqdm.tqdm(iterable=self._loaded_images, desc="Applying operations...")
+            )),
+            encode=self.encode,
+            decode=self.decode,
+            n_classes=self.n_classes
+        )
         return new_ds
 
     def parallel_apply(
             self,
             operation: Callable[[npt.NDArray], npt.NDArray],
-            joblib_kwds: Optional[Mapping[str, Any]] = None
+            joblib_kwds: Optional[Mapping[str, Any]] = None,
+            desc: str = "Applying operations..."
     ) -> CovidDataSet:
         """
         Parallel version of :py:func:`apply`.
         """
         if joblib_kwds is None:
             joblib_kwds = {}
-        new_ds = CovidDataSet.from_loaded_images(list(joblib_helper.parallel_map(
-            lambda image: image.apply(operation),
-            tqdm.tqdm(iterable=self._loaded_images, desc="Applying operations..."),
-            **joblib_kwds
-        )), encode=self.encode, decode=self.decode)
+        new_ds = CovidDataSet.from_loaded_images(
+            joblib_helper.parallel_map(
+                lambda image: image.apply(operation),
+                tqdm.tqdm(iterable=self._loaded_images, desc=desc),
+                **joblib_kwds
+            ),
+            encode=self.encode,
+            decode=self.decode,
+            n_classes=self.n_classes
+        )
         return new_ds
 
     def sample(self, size: int = -1, balanced: bool = True) -> CovidDataSet:
@@ -524,12 +557,18 @@ class CovidDataSet(MachinelearningDatasetInterface):
         """
 
         _lh.info("Sampling data...")
-        size = _get_max_size_helper(size, balanced, len(self._loaded_images), self._loaded_images_with_labels)
+        size = _get_max_size_helper(
+            size,
+            self.n_classes,
+            balanced,
+            len(self._loaded_images),
+            self._loaded_images_with_labels
+        )
         _lh.info("Loading %d data from %s...", size, self._dataset_path)
         sampled_images = []
         if balanced:
             for image_catagory in self._loaded_images_with_labels.values():
-                for img in random.sample(image_catagory, size // 3):
+                for img in random.sample(image_catagory, size // self.n_classes):
                     sampled_images.append(img)
         else:
             for img in random.sample(self._loaded_images, size):
@@ -537,7 +576,12 @@ class CovidDataSet(MachinelearningDatasetInterface):
         _lh.info("Shuffling loaded data...")
         random.shuffle(sampled_images)
         _lh.info("Finished loading data...")
-        new_ds = CovidDataSet.from_loaded_images(loaded_images=sampled_images, encode=self.encode, decode=self.decode)
+        new_ds = CovidDataSet.from_loaded_images(
+            loaded_images=sampled_images,
+            encode=self.encode,
+            decode=self.decode,
+            n_classes=self.n_classes
+        )
         return new_ds
 
     @staticmethod
@@ -631,7 +675,12 @@ class CovidDataSet(MachinelearningDatasetInterface):
                 start = 0
             for _i in range(start, stop, step):
                 retl.append(self[_i])
-            return self.from_loaded_images(loaded_images=retl, encode=self.encode, decode=self.decode)
+            return self.from_loaded_images(
+                loaded_images=retl,
+                encode=self.encode,
+                decode=self.decode,
+                n_classes=self.n_classes
+            )
         return self._loaded_images[i]
 
     def __setitem__(self, i: int, value: CovidImage):
@@ -640,9 +689,11 @@ class CovidDataSet(MachinelearningDatasetInterface):
 
 def generate_fake_classification_dataset(
         size: int = 120,
-        n_class: int = 4
+        n_classes: int = 4,
+        width: int = 256,
+        height: int = 256
 ) -> CovidDataSet:
-    labels = ["stride", "circle", "square", "blank"][0:n_class]
+    labels = ["stride", "circle", "square", "blank"][0:n_classes]
     _encoder_dict = {k: v for k, v in zip(labels, range(len(labels)))}
     encode, decode = ml_helper.generate_encoder_decoder(_encoder_dict)
 
@@ -663,21 +714,30 @@ def generate_fake_classification_dataset(
         for label, img in enumerate((stride, circle, square, blank))
     ]
     return CovidDataSet.from_loaded_images(
-        itertools.chain(*itertools.repeat(images, size // 3)),
+        itertools.chain(*itertools.repeat(images, size // n_classes)),
         encode=encode,
-        decode=decode
+        decode=decode,
+        n_classes=len(labels)
     ).parallel_apply(
         lambda img: skimage.img_as_int(
             skiutil.random_noise(
                 skimage.img_as_float(img),
                 mode="pepper"
             )
-        )
+        ),
+        desc="Adding pepper noise..."
     ).parallel_apply(
         lambda img: skimage.img_as_int(
             skitrans.rotate(
                 img,
                 random.random() * 120 - 60
             )
-        )
+        ),
+        desc="Rotating random degree..."
+    ).parallel_apply(
+        lambda img: skitrans.resize(
+            img,
+            (width, height)
+        ),
+        desc="Scaling to wanted size..."
     )

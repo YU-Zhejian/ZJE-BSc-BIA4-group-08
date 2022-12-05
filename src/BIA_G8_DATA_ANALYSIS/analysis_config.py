@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from typing import Dict, Any
 
 from BIA_G8 import get_lh
@@ -18,6 +20,7 @@ class AnalysisConfiguration(AbstractTOMLSerializable):
     _preprocessing_pipeline_configuration_path: str
     _classifier: AbstractClassifier
     _classifier_configuration_path: str
+    _n_classes: int
 
     @property
     def dataset_path(self) -> str:
@@ -37,18 +40,22 @@ class AnalysisConfiguration(AbstractTOMLSerializable):
             encoder_dict: Dict[str, int],
             preprocessor_pipeline_configuration_path: str,
             classifier_configuration_path: str,
-            n_data_to_load:int
+            n_data_to_load: int,
+            n_classes: int
     ):
         self._n_data_to_load = n_data_to_load
         self._dataset_path = dataset_path
         self._encoder_dict = dict(encoder_dict)
+        self._n_classes = n_classes
         encode, decode = ml_helper.generate_encoder_decoder(self._encoder_dict)
         self._dataset = CovidDataSet.parallel_from_directory(
             dataset_path=self._dataset_path,
-            encode=encode, decode=decode,
+            encode=encode,
+            decode=decode,
+            n_classes=self._n_classes,
             size=self._n_data_to_load
         )
-        self._preprocessor_pipeline_configuration = preprocessor_pipeline_configuration_path
+        self._preprocessing_pipeline_configuration_path = preprocessor_pipeline_configuration_path
         self._preprocessing_pipeline = PreprocessorPipeline.load(preprocessor_pipeline_configuration_path)
         self._classifier_configuration_path = classifier_configuration_path
         self._classifier = load_classifier(self._classifier_configuration_path)
@@ -59,17 +66,22 @@ class AnalysisConfiguration(AbstractTOMLSerializable):
             "encoder_dict": self._encoder_dict,
             "preprocessor_pipeline_configuration_path": self._preprocessing_pipeline_configuration_path,
             "classifier_configuration_path": self._classifier_configuration_path,
-            "n_data_to_load": self._n_data_to_load
+            "n_data_to_load": self._n_data_to_load,
+            "n_classes": self._n_classes
         }
 
     @classmethod
     def from_dict(cls, in_dict: Dict[str, Any]) -> AbstractTOMLSerializable:
         return cls(**in_dict)
 
-    def pre_process(self):
+    def pre_process(self) -> AnalysisConfiguration:
+        _lh.info("Preprocessing...")
         self._dataset = self._dataset.parallel_apply(
-            self._preprocessing_pipeline.execute
+            self._preprocessing_pipeline.execute,
+            desc="Applying preprocessing steps..."
         )
+        _lh.info("Preprocessing Done")
+        return self
 
     def ml(self) -> float:
         _lh.info("Splitting dataset...")
@@ -95,9 +107,14 @@ if __name__ == "__main__":
             "Normal": 2,
             "Viral Pneumonia": 3
         },
-        preprocessor_pipeline_configuration_path="/home/yuzj/Documents/2022-23-Group-08/src/BIA_G8/_main/1.toml",
-        classifier_configuration_path="/home/yuzj/Documents/2022-23-Group-08/src/BIA_G8/_main/cnn.toml",
-        n_data_to_load=300
+        preprocessor_pipeline_configuration_path="/home/yuzj/Documents/2022-23-Group-08/src/BIA_G8_DATA_ANALYSIS/pp_adapt_hist.toml",
+        classifier_configuration_path="/home/yuzj/Documents/2022-23-Group-08/src/BIA_G8_DATA_ANALYSIS/cnn.toml",
+        n_data_to_load=600,
+        n_classes=4
     )
     ac.pre_process()
     print(ac.ml())
+    ac.save("ac.toml")
+
+    ac2 = ac.load("ac.toml")
+    ac2.pre_process().ml()

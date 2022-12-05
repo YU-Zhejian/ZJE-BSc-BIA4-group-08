@@ -120,6 +120,7 @@ class DumbPreprocessor(AbstractPreprocessor):
 class DimensionReductionPreprocessor(AbstractPreprocessor):
     _arguments: Final[Dict[str, Argument]] = {}
     _name: Final[str] = "dimension reduction"
+    _description: Final[str] = "This preprocessor normalize the image for analysis"
 
     def _function(self, img: npt.NDArray, **kwargs) -> npt.NDArray:
         if len(img.shape) == 3:
@@ -131,6 +132,7 @@ class DimensionReductionPreprocessor(AbstractPreprocessor):
 class AdjustExposurePreprocessor(AbstractPreprocessor):
     _arguments: Final[Dict[str, Argument]] = {}
     _name: Final[str] = "adjust exposure"
+    _description: Final[str] = "This preprocessor can correct the image if it is underexposed or overexposed"
 
     def _function(self, img: npt.NDArray, **kwargs) -> npt.NDArray:
         q2, q98 = np.percentile(img, (2, 98))
@@ -142,16 +144,17 @@ class AdjustExposurePreprocessor(AbstractPreprocessor):
 @_documentation_decorator
 class DenoiseMedianPreprocessor(AbstractPreprocessor):
     _arguments: Final[Dict[str, Argument]] = {
-        argument.name:argument for argument in (
+        argument.name: argument for argument in (
             Argument(
                 name="footprint_length_width",
-                description="",
+                description="degree of the filter",  # TODO
                 is_required=False,
                 parse_str=argument_string_to_int
             ),
         )
     }
     _name: Final[str] = "denoise (median)"
+    _description: Final[str] = "This preprocessor can remove noise"
 
     def _function(self, img: npt.NDArray, **kwargs) -> npt.NDArray:
         if "footprint_length_width" in kwargs:
@@ -165,36 +168,41 @@ class DenoiseMedianPreprocessor(AbstractPreprocessor):
 @_documentation_decorator
 class DenoiseMeanPreprocessor(AbstractPreprocessor):
     _arguments: Final[Dict[str, Argument]] = {
-        argument.name:argument for argument in (
+        argument.name: argument for argument in (
             Argument(
                 name="footprint_length_width",
-                description="",
+                description="",  # TODO
                 is_required=True,
                 parse_str=argument_string_to_int
             ),
         )
     }
     _name: Final[str] = "denoise (mean)"
+    _description: Final[str] = "This preprocessor can remove noise"
 
     def _function(self, img: npt.NDArray, **kwargs) -> npt.NDArray:
         footprint_length_width = kwargs["footprint_length_width"]
-        footprint = np.ones(shape=(footprint_length_width, footprint_length_width))
+        footprint = np.ones(
+            shape=(footprint_length_width, footprint_length_width),
+            dtype=int
+        )
         return skifiltrank.mean(img, footprint=footprint)
 
 
 @_documentation_decorator
 class DenoiseGaussianPreprocessor(AbstractPreprocessor):
     _arguments: Final[Dict[str, Argument]] = {
-        argument.name:argument for argument in (
+        argument.name: argument for argument in (
             Argument(
                 name="sigma",
-                description="",
+                description="the degree of the blur effect of this filter",
                 is_required=False,
                 parse_str=argument_string_to_int
             ),
         )
     }
     _name: Final[str] = "denoise (gaussian)"
+    _description: Final[str] = "This preprocessor can remove noise"
 
     def _function(self, img: npt.NDArray, **kwargs) -> npt.NDArray:
         return skifilt.gaussian(img, **kwargs)
@@ -203,22 +211,23 @@ class DenoiseGaussianPreprocessor(AbstractPreprocessor):
 @_documentation_decorator
 class UnsharpMaskPreprocessor(AbstractPreprocessor):
     _arguments: Final[Dict[str, Argument]] = {
-        argument.name:argument for argument in (
+        argument.name: argument for argument in (
             Argument(
                 name="radius",
-                description="",
+                description="the larger it is, the more detail the image will loss",
                 is_required=False,
                 parse_str=argument_string_to_float
             ),
             Argument(
                 name="amount",
-                description="",
+                description="the extent that the image is enhanced",
                 is_required=False,
                 parse_str=argument_string_to_float
             ),
         )
     }
     _name: Final[str] = "unsharp mask"
+    _description: Final[str] = "This preprocessor can sharp the images"
 
     def _function(self, img: npt.NDArray, **kwargs) -> npt.NDArray:
         return skifilt.unsharp_mask(img, **kwargs)
@@ -227,16 +236,16 @@ class UnsharpMaskPreprocessor(AbstractPreprocessor):
 @_documentation_decorator
 class WienerDeblurPreprocessor(AbstractPreprocessor):
     _arguments: Final[Dict[str, Argument]] = {
-        argument.name:argument for argument in (
+        argument.name: argument for argument in (
             Argument(
                 name="kernel_size",
-                description="",
+                description="the extent that the image is deblurred",  # TODO:
                 is_required=True,
                 parse_str=argument_string_to_float
             ),
             Argument(
                 name="balance",
-                description="",
+                description="",  # TODO:
                 is_required=True,
                 parse_str=argument_string_to_float
             ),
@@ -244,6 +253,7 @@ class WienerDeblurPreprocessor(AbstractPreprocessor):
     }
     _required_argument_names: Final[List[str]] = ["kernel_size", "balance"]
     _name: Final[str] = "wiener deblur"
+    _description: Final[str] = "This preprocessor can deblur the images"
 
     def _function(self, img: npt.NDArray, **kwargs) -> npt.NDArray:
         kernel = np.ones(kwargs["kernel_size"])

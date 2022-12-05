@@ -1,7 +1,5 @@
 from typing import Type
 
-import skimage.transform as skitrans
-
 from BIA_G8.model.classifier import load_classifier, ToyCNNClassifier, \
     AbstractClassifier, XGBoostClassifier, SklearnVotingClassifier
 from BIA_G8_DATA_ANALYSIS.covid_dataset import generate_fake_classification_dataset, CovidDataSet
@@ -20,11 +18,11 @@ def run(
 
 
 if __name__ == '__main__':
-    ds = generate_fake_classification_dataset(120).parallel_apply(
-        lambda img: skitrans.resize(
-            img,
-            (256, 256)
-        )
+    width, height = 256, 256
+    ds = generate_fake_classification_dataset(
+        size=120,
+        width=width,
+        height=height
     )
     ds_train, ds_test = ds.train_test_split()
     run(ds_train, ds_test, "xgb.toml", XGBoostClassifier)
@@ -37,8 +35,8 @@ if __name__ == '__main__':
             "lr": 0.0001
         },
         model_params={
-            "n_features": 256 * 256,
-            "n_classes": 4,
+            "n_features": width * height,
+            "n_classes": ds.n_classes,
             "kernel_size": 3,
             "stride": 2,
             "padding": 1
