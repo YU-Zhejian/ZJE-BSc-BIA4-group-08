@@ -41,7 +41,8 @@ class AnalysisConfiguration(AbstractTOMLSerializable):
             preprocessor_pipeline_configuration_path: str,
             classifier_configuration_path: str,
             n_data_to_load: int,
-            n_classes: int
+            n_classes: int,
+            load_pretrained_model: bool = False
     ):
         self._n_data_to_load = n_data_to_load
         self._dataset_path = dataset_path
@@ -58,7 +59,7 @@ class AnalysisConfiguration(AbstractTOMLSerializable):
         self._preprocessing_pipeline_configuration_path = preprocessor_pipeline_configuration_path
         self._preprocessing_pipeline = PreprocessorPipeline.load(preprocessor_pipeline_configuration_path)
         self._classifier_configuration_path = classifier_configuration_path
-        self._classifier = load_classifier(self._classifier_configuration_path)
+        self._classifier = load_classifier(self._classifier_configuration_path, load_model=load_pretrained_model)
 
     def to_dict(self) -> Dict[str, Any]:
         return {
@@ -88,7 +89,6 @@ class AnalysisConfiguration(AbstractTOMLSerializable):
         ds_train, ds_test = self._dataset.train_test_split()
         _lh.info("Training...")
         self._classifier = self._classifier.fit(ds_train)
-        self._classifier.save(self._classifier_configuration_path)
         _lh.info("Evaluating...")
         accuracy = self._classifier.evaluate(ds_test)
         _lh.info(
@@ -96,6 +96,10 @@ class AnalysisConfiguration(AbstractTOMLSerializable):
             accuracy * 100
         )
         return accuracy
+
+    def save_classifier_as(self, path: str, with_model: bool = True):
+        self._classifier_configuration_path = path
+        self._classifier.save(self._classifier_configuration_path, with_model)
 
 
 if __name__ == "__main__":

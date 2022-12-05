@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import enum
 import json
 from abc import abstractmethod
 from typing import Final, Dict, Any, Iterable, Type, Tuple, List
@@ -14,6 +15,7 @@ from numpy import typing as npt
 
 from BIA_G8 import get_lh
 from BIA_G8.helper.io_helper import AbstractTOMLSerializable
+from BIA_G8.helper.ndarray_helper import describe
 from BIA_G8.model import unset, Argument, argument_string_to_int, argument_string_to_float, \
     LackRequiredArgumentError
 
@@ -26,9 +28,16 @@ def _documentation_decorator(cls: Type[AbstractPreprocessor]) -> Type[AbstractPr
     if not cls._arguments:
         cls.__doc__ += "No arguments available\n"
     else:
-        for argument in cls._arguments:
-            cls.__doc__ += f"* Argument ``{argument}`` \n"
+        for argument in cls._arguments.values():
+            cls.__doc__ += f"* {repr(argument)} \n"
     return cls
+
+
+class ImageInputFormat(enum.IntEnum):
+    ANY = 0
+    UINT8 = 1
+    FLOAT64_N1_1 = 2
+    FLOAT64_0_1 = 3
 
 
 class AbstractPreprocessor(AbstractTOMLSerializable):
@@ -75,7 +84,6 @@ class AbstractPreprocessor(AbstractTOMLSerializable):
         """
         Set arguments to the preprocessor. See the documentation of corresponding subclasses for more details.
         """
-
         for argument in self._arguments.values():
             if argument.name not in kwargs:
                 if argument.is_required:
@@ -93,8 +101,8 @@ class AbstractPreprocessor(AbstractTOMLSerializable):
         """
         Execute the preprocessor, which converts an image to another.
 
-        :param img: Image to be preprocessed
-        :return: Processed image
+        :param img: Image to be preprocessed. Should be float64 in range [0, 1]
+        :return: Processed image. Should be float64 in range [0, 1]
         """
         return self._function(img, **self._parsed_kwargs)
 
@@ -117,15 +125,27 @@ class DumbPreprocessor(AbstractPreprocessor):
 
 
 @_documentation_decorator
-class DimensionReductionPreprocessor(AbstractPreprocessor):
+class DescribePreprocessor(AbstractPreprocessor):
     _arguments: Final[Dict[str, Argument]] = {}
-    _name: Final[str] = "dimension reduction"
+    _name: Final[str] = "describe"
+    _description: Final[str] = "This preprocessor describes status of current image"
+
+    def _function(self, img: npt.NDArray, **kwargs) -> npt.NDArray:
+        _lh.info(describe(img))
+        return img
+
+
+@_documentation_decorator
+class NormalizationPreprocessor(AbstractPreprocessor):
+    _arguments: Final[Dict[str, Argument]] = {}
+    _name: Final[str] = "normalize"
     _description: Final[str] = "This preprocessor normalize the image for analysis"
 
     def _function(self, img: npt.NDArray, **kwargs) -> npt.NDArray:
         if len(img.shape) == 3:
             img = img[:, :, 0]
-        return skitrans.resize(img, (256, 256))
+        img = skitrans.resize(img, (256, 256))
+        return img
 
 
 @_documentation_decorator
@@ -159,7 +179,10 @@ class DenoiseMedianPreprocessor(AbstractPreprocessor):
     def _function(self, img: npt.NDArray, **kwargs) -> npt.NDArray:
         if "footprint_length_width" in kwargs:
             footprint_length_width = kwargs["footprint_length_width"]
-            footprint = np.ones(footprint_length_width, footprint_length_width)
+            footprint = np.ones(
+                shape=(footprint_length_width, footprint_length_width),
+                dtype=int
+            )
             return skifiltrank.median(img, footprint=footprint)
         else:
             return skifiltrank.median(img)
@@ -241,13 +264,13 @@ class WienerDeblurPreprocessor(AbstractPreprocessor):
                 name="kernel_size",
                 description="the extent that the image is deblurred",  # TODO:
                 is_required=True,
-                parse_str=argument_string_to_float
+                parse_str=argument_string_to_int
             ),
             Argument(
                 name="balance",
                 description="",  # TODO:
                 is_required=True,
-                parse_str=argument_string_to_float
+                parse_str=argument_string_to_int
             ),
         )
     }
@@ -264,9 +287,10 @@ class WienerDeblurPreprocessor(AbstractPreprocessor):
 _preprocessors: Dict[str, Type[AbstractPreprocessor]] = {
     cls._name: cls for cls in (
         DumbPreprocessor,
-        DimensionReductionPreprocessor,
+        DescribePreprocessor,
+        NormalizationPreprocessor,
         AdjustExposurePreprocessor,
-        DenoiseMeanPreprocessor,
+        DenoiseMedianPreprocessor,
         DenoiseMeanPreprocessor,
         DenoiseGaussianPreprocessor,
         UnsharpMaskPreprocessor,

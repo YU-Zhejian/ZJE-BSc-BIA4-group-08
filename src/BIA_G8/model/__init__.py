@@ -77,7 +77,7 @@ class Argument:
         return self._parse_str(in_str)
 
     def __repr__(self) -> str:
-        return f"Argument {self._name} (required: {self._is_required}) -- {self._description}"
+        return f"Argument ``{self._name}`` (required: {self._is_required}) -- {self._description}"
 
 
 class LackRequiredArgumentError(ValueError):

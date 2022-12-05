@@ -318,6 +318,8 @@ cython_debug/
 
 # Configurations
 *.toml
+!/pyproject.toml
+*.csv
 
 # Tables
 *.xls

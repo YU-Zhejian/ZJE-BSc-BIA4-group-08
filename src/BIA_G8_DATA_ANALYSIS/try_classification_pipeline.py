@@ -1,7 +1,8 @@
 from typing import Type
 
 from BIA_G8.model.classifier import load_classifier, ToyCNNClassifier, \
-    AbstractClassifier, XGBoostClassifier, SklearnVotingClassifier
+    AbstractClassifier, XGBoostClassifier, SklearnVotingClassifier, SklearnSupportingVectorMachineClassifier, \
+    SklearnExtraTreesClassifier, SklearnRandomForestClassifier, SklearnKNearestNeighborsClassifier
 from BIA_G8_DATA_ANALYSIS.covid_dataset import generate_fake_classification_dataset, CovidDataSet
 
 
@@ -25,14 +26,51 @@ if __name__ == '__main__':
         height=height
     )
     ds_train, ds_test = ds.train_test_split()
-    run(ds_train, ds_test, "xgb.toml", XGBoostClassifier)
-    run(ds_train, ds_test, "vote.toml", SklearnVotingClassifier)
+    run(
+        ds_train,
+        ds_test,
+        "xgb.toml",
+        XGBoostClassifier,
+        tree_method="gpu_hist"
+    )
+    exit()
+    run(
+        ds_train,
+        ds_test,
+        "svc.toml",
+        SklearnSupportingVectorMachineClassifier
+    )
+    run(
+        ds_train,
+        ds_test,
+        "extra_trees.toml",
+        SklearnExtraTreesClassifier
+    )
+    run(
+        ds_train,
+        ds_test,
+        "rf.toml",
+        SklearnRandomForestClassifier
+    )
+    run(
+        ds_train,
+        ds_test,
+        "knn.toml",
+        SklearnKNearestNeighborsClassifier
+    )
+    run(
+        ds_train,
+        ds_test,
+        "vote.toml",
+        SklearnVotingClassifier
+    )
     run(
         ds_train, ds_test, "cnn.toml", ToyCNNClassifier,
         hyper_params={
             "batch_size": 17,
-            "num_epochs": 5,
-            "lr": 0.0001
+            "num_epochs": 20,
+            "lr": 0.0001,
+            "device": "cuda"
         },
         model_params={
             "n_features": width * height,

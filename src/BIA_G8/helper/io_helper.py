@@ -74,7 +74,7 @@ def write_pickle_xz(obj: Any, path: str) -> None:
 
 class SerializableInterface:
     @classmethod
-    def load(cls, path: str) -> SerializableInterface:
+    def load(cls, path: str, **kwargs) -> SerializableInterface:
         """
         Load configuration from a file.
 
@@ -83,7 +83,7 @@ class SerializableInterface:
         """
         pass
 
-    def save(self, path: str) -> None:
+    def save(self, path: str, **kwargs) -> None:
         """
         Save the class contents with metadata.
 
@@ -141,8 +141,8 @@ class AbstractTOMLSerializable(
     """
 
     @classmethod
-    def load(cls, path: str) -> AbstractTOMLSerializable:
+    def load(cls, path: str, **kwargs) -> AbstractTOMLSerializable:
         return cls.from_dict(read_toml_with_metadata(path))
 
-    def save(self, path: str) -> None:
+    def save(self, path: str, **kwargs) -> None:
         write_toml_with_metadata(self.to_dict(), path)
