@@ -3,7 +3,8 @@ import skimage.io as skiio
 from matplotlib import pyplot as plt
 
 from BIA_G8.model.preprocesor_pipeline import PreprocessorPipeline
-from BIA_G8.model.preprocessor import get_preprocessor_name_descriptions, get_preprocessor, LackRequiredArgumentError
+from BIA_G8.model.preprocessor import get_preprocessor_name_descriptions, get_preprocessor
+from BIA_G8.model import LackRequiredArgumentError
 
 
 def setup_pp(
@@ -25,11 +26,12 @@ def setup_pp(
         if selected_preprocessor_id == -1:
             break
         preprocessor = get_preprocessor(cached_preprocessor_name_description[selected_preprocessor_id][0])()
-        print(f"Selected preprocessor {preprocessor.name}. Available arguments: {list(preprocessor.argument_names)}")
+        print(f"Selected preprocessor {preprocessor.name}.")
         input_kwds = {}
-        for argument_name in preprocessor.argument_names:
-            argument_value = input(f"Argument Valye for {argument_name} (blank for default) >")
-            input_kwds[argument_name] = argument_value
+        for argument in preprocessor.arguments:
+            print(f"{argument}")
+            argument_value = input(f"Argument Value for {argument.name} (blank for default) >")
+            input_kwds[argument.name] = argument_value
         try:
             preprocessor = preprocessor.set_params(**input_kwds)
         except LackRequiredArgumentError as e:

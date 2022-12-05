@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import json
 from abc import abstractmethod
-from typing import Final, Dict, Callable, Any, Iterable, Union, Type, Tuple, List
+from typing import Final, Dict, Any, Iterable, Type, Tuple, List
 
 import numpy as np
 import skimage.exposure as skiexp
@@ -14,32 +14,10 @@ from numpy import typing as npt
 
 from BIA_G8 import get_lh
 from BIA_G8.helper.io_helper import AbstractTOMLSerializable
+from BIA_G8.model import unset, Argument, argument_string_to_int, argument_string_to_float, \
+    LackRequiredArgumentError
 
 _lh = get_lh(__name__)
-
-
-class _Unset:
-    pass
-
-
-_unset = _Unset()
-
-
-def _argument_string_to_int(instr: str) -> Union[_Unset, int]:
-    return _unset if instr == "" else int(instr)
-
-
-def _argument_string_to_float(instr: str) -> Union[_Unset, float]:
-    return _unset if instr == "" else float(instr)
-
-
-class LackRequiredArgumentError(ValueError):
-    """Argument Parser Exception for lack of required argument"""
-
-    def __init__(self, argument_names: str):
-        super().__init__(
-            f"Lack required arguments: {argument_names}"
-        )
 
 
 def _documentation_decorator(cls: Type[AbstractPreprocessor]) -> Type[AbstractPreprocessor]:
@@ -57,8 +35,7 @@ class AbstractPreprocessor(AbstractTOMLSerializable):
     """
     The abstraction of a general purposed preprocessing step.
     """
-    _arguments: Dict[str, Callable[[str], Any]]
-    _required_argument_names: List[str]
+    _arguments: Dict[str, Argument]
     _parsed_kwargs: Dict[str, Any]
     _description: str = "NOT AVAILABLE"
     _name: str = "UNNAMED"
@@ -78,8 +55,8 @@ class AbstractPreprocessor(AbstractTOMLSerializable):
         return self._name
 
     @property
-    def argument_names(self) -> Iterable[str]:
-        return iter(self._arguments.keys())
+    def arguments(self) -> Iterable[Argument]:
+        return iter(self._arguments.values())
 
     def __init__(self) -> None:
         if not hasattr(self, "_arguments"):
@@ -98,16 +75,18 @@ class AbstractPreprocessor(AbstractTOMLSerializable):
         """
         Set arguments to the preprocessor. See the documentation of corresponding subclasses for more details.
         """
-        for argument_name, argument_value in kwargs.items():
-            if argument_name not in self._arguments:
-                continue
-            parsed_argument_value = self._arguments[argument_name](argument_value)
-            if parsed_argument_value is not _unset:
-                self._parsed_kwargs[argument_name] = parsed_argument_value
+
+        for argument in self._arguments.values():
+            if argument.name not in kwargs:
+                if argument.is_required:
+                    raise LackRequiredArgumentError(argument)
+            parsed_argument_value = self._arguments[argument.name](kwargs[argument.name])
+            if parsed_argument_value is not unset:
+                self._parsed_kwargs[argument.name] = parsed_argument_value
+            else:
+                if argument.is_required:
+                    raise LackRequiredArgumentError(argument)
         _lh.debug(repr(self))
-        for argument_name in self._required_argument_names:
-            if argument_name not in self._parsed_kwargs:
-                raise LackRequiredArgumentError(argument_name)
         return self
 
     def execute(self, img: npt.NDArray) -> npt.NDArray:
@@ -129,8 +108,7 @@ class AbstractPreprocessor(AbstractTOMLSerializable):
 
 @_documentation_decorator
 class DumbPreprocessor(AbstractPreprocessor):
-    _arguments: Final[Dict[str, Callable[[str], Any]]] = {}
-    _required_argument_names: Final[List[str]] = []
+    _arguments: Final[Dict[str, Argument]] = {}
     _name: Final[str] = "dumb"
     _description: Final[str] = "This preprocessor does nothing!"
 
@@ -140,8 +118,7 @@ class DumbPreprocessor(AbstractPreprocessor):
 
 @_documentation_decorator
 class DimensionReductionPreprocessor(AbstractPreprocessor):
-    _arguments: Final[Dict[str, Callable[[str], Any]]] = {}
-    _required_argument_names: Final[List[str]] = []
+    _arguments: Final[Dict[str, Argument]] = {}
     _name: Final[str] = "dimension reduction"
 
     def _function(self, img: npt.NDArray, **kwargs) -> npt.NDArray:
@@ -152,8 +129,7 @@ class DimensionReductionPreprocessor(AbstractPreprocessor):
 
 @_documentation_decorator
 class AdjustExposurePreprocessor(AbstractPreprocessor):
-    _arguments: Final[Dict[str, Callable[[str], Any]]] = {}
-    _required_argument_names: Final[List[str]] = []
+    _arguments: Final[Dict[str, Argument]] = {}
     _name: Final[str] = "adjust exposure"
 
     def _function(self, img: npt.NDArray, **kwargs) -> npt.NDArray:
@@ -165,10 +141,16 @@ class AdjustExposurePreprocessor(AbstractPreprocessor):
 
 @_documentation_decorator
 class DenoiseMedianPreprocessor(AbstractPreprocessor):
-    _arguments: Final[Dict[str, Callable[[str], Any]]] = {
-        "footprint_length_width": _argument_string_to_int
+    _arguments: Final[Dict[str, Argument]] = {
+        argument.name:argument for argument in (
+            Argument(
+                name="footprint_length_width",
+                description="",
+                is_required=False,
+                parse_str=argument_string_to_int
+            ),
+        )
     }
-    _required_argument_names: Final[List[str]] = []
     _name: Final[str] = "denoise (median)"
 
     def _function(self, img: npt.NDArray, **kwargs) -> npt.NDArray:
@@ -182,10 +164,16 @@ class DenoiseMedianPreprocessor(AbstractPreprocessor):
 
 @_documentation_decorator
 class DenoiseMeanPreprocessor(AbstractPreprocessor):
-    _arguments: Final[Dict[str, Callable[[str], Any]]] = {
-        "footprint_length_width": _argument_string_to_int
+    _arguments: Final[Dict[str, Argument]] = {
+        argument.name:argument for argument in (
+            Argument(
+                name="footprint_length_width",
+                description="",
+                is_required=True,
+                parse_str=argument_string_to_int
+            ),
+        )
     }
-    _required_argument_names: Final[List[str]] = ["footprint_length_width"]
     _name: Final[str] = "denoise (mean)"
 
     def _function(self, img: npt.NDArray, **kwargs) -> npt.NDArray:
@@ -196,10 +184,16 @@ class DenoiseMeanPreprocessor(AbstractPreprocessor):
 
 @_documentation_decorator
 class DenoiseGaussianPreprocessor(AbstractPreprocessor):
-    _arguments: Final[Dict[str, Callable[[str], Any]]] = {
-        "sigma": _argument_string_to_int
+    _arguments: Final[Dict[str, Argument]] = {
+        argument.name:argument for argument in (
+            Argument(
+                name="sigma",
+                description="",
+                is_required=False,
+                parse_str=argument_string_to_int
+            ),
+        )
     }
-    _required_argument_names: Final[List[str]] = []
     _name: Final[str] = "denoise (gaussian)"
 
     def _function(self, img: npt.NDArray, **kwargs) -> npt.NDArray:
@@ -208,11 +202,22 @@ class DenoiseGaussianPreprocessor(AbstractPreprocessor):
 
 @_documentation_decorator
 class UnsharpMaskPreprocessor(AbstractPreprocessor):
-    _arguments: Final[Dict[str, Callable[[str], Any]]] = {
-        "radius": _argument_string_to_float,
-        "amount": _argument_string_to_float,
+    _arguments: Final[Dict[str, Argument]] = {
+        argument.name:argument for argument in (
+            Argument(
+                name="radius",
+                description="",
+                is_required=False,
+                parse_str=argument_string_to_float
+            ),
+            Argument(
+                name="amount",
+                description="",
+                is_required=False,
+                parse_str=argument_string_to_float
+            ),
+        )
     }
-    _required_argument_names: Final[List[str]] = []
     _name: Final[str] = "unsharp mask"
 
     def _function(self, img: npt.NDArray, **kwargs) -> npt.NDArray:
@@ -221,9 +226,21 @@ class UnsharpMaskPreprocessor(AbstractPreprocessor):
 
 @_documentation_decorator
 class WienerDeblurPreprocessor(AbstractPreprocessor):
-    _arguments: Final[Dict[str, Callable[[str], Any]]] = {
-        "kernel_size": _argument_string_to_int,
-        "balance": _argument_string_to_float,
+    _arguments: Final[Dict[str, Argument]] = {
+        argument.name:argument for argument in (
+            Argument(
+                name="kernel_size",
+                description="",
+                is_required=True,
+                parse_str=argument_string_to_float
+            ),
+            Argument(
+                name="balance",
+                description="",
+                is_required=True,
+                parse_str=argument_string_to_float
+            ),
+        )
     }
     _required_argument_names: Final[List[str]] = ["kernel_size", "balance"]
     _name: Final[str] = "wiener deblur"

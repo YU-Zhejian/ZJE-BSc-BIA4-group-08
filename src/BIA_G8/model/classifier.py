@@ -1,11 +1,11 @@
 from __future__ import annotations
 
+import os.path
 from abc import abstractmethod
 from typing import TypeVar, Type, Final, Optional, Iterable, Dict, Any
 
 import joblib
 import numpy as np
-import skimage.transform as skitrans
 import torch
 import torch.optim
 import torch.utils.data as tud
@@ -22,7 +22,6 @@ from BIA_G8.helper.io_helper import read_tensor_xz, write_tensor_xz, Serializabl
 from BIA_G8.helper.ml_helper import MachinelearningDatasetInterface
 from BIA_G8.helper.torch_helper import AbstractTorchModule
 from BIA_G8.model import LackingOptionalRequirementError
-from BIA_G8_DATA_ANALYSIS.covid_dataset import generate_fake_classification_dataset
 
 _lh = get_lh(__name__)
 
@@ -102,6 +101,7 @@ class BaseSklearnClassifier(AbstractClassifier):
         return cls(model=joblib.load(loaded_data["model_path"]), **loaded_data["params"])
 
     def save(self, path: str) -> None:
+        path = os.path.abspath(path)
         model_path = path + ".pkl.xz"
         joblib.dump(self._model, model_path)
         write_toml_with_metadata({
@@ -196,6 +196,7 @@ class BaseTorchClassifier(AbstractClassifier):
         )
 
     def save(self, path: str) -> None:
+        path = os.path.abspath(path)
         model_path = path + ".pt.xz"
         write_tensor_xz(self._model, model_path)
         write_toml_with_metadata({
@@ -350,38 +351,3 @@ def get_classifier_type(name: str) -> Type[AbstractClassifier]:
 def load_classifier(parameter_path: str) -> AbstractClassifier:
     loaded_data = read_toml_with_metadata(parameter_path)
     return get_classifier_type(loaded_data.pop("name")).load(parameter_path)
-
-
-if __name__ == '__main__':
-    ds = generate_fake_classification_dataset(300).parallel_apply(
-        lambda img: skitrans.resize(
-            img,
-            (128, 128)
-        )
-    )
-    ds_train, ds_test = ds.train_test_split()
-
-    XGBoostClassifier.new().fit(ds_train).save("xgb.toml")
-    m2 = load_classifier("xgb.toml")
-    print(m2.evaluate(ds_test))
-
-    SklearnVotingClassifier.new().fit(ds_train).save("vote.toml")
-    m2 = load_classifier("vote.toml")
-    print(m2.evaluate(ds_test))
-
-    ToyCNNClassifier.new(
-        hyper_params={
-            "batch_size": 17,
-            "num_epochs": 5,
-            "lr": 0.0001
-        },
-        model_params={
-            "n_features": 128 * 128,
-            "n_classes": 3,
-            "kernel_size": 3,
-            "stride": 2,
-            "padding": 1
-        }
-    ).fit(ds_train).save("cnn.toml")
-    m2 = load_classifier("cnn.toml")
-    print(m2.evaluate(ds_test))

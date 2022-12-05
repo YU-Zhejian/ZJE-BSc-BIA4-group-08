@@ -84,7 +84,7 @@ def _get_max_size_helper(
         image_with_label: Dict[Any, Any]
 ) -> int:
     if balanced:
-        max_size = min(map(len, image_with_label.values())) * 3
+        max_size = min(map(len, image_with_label.values())) * 4
     else:
         max_size = full_size
     if size == -1:

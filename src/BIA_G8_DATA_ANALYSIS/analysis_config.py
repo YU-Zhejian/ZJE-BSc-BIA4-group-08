@@ -36,18 +36,21 @@ class AnalysisConfiguration(AbstractTOMLSerializable):
             dataset_path: str,
             encoder_dict: Dict[str, int],
             preprocessor_pipeline_configuration_path: str,
-            classifier_pipeline_configuration_path:str
+            classifier_configuration_path: str,
+            n_data_to_load:int
     ):
+        self._n_data_to_load = n_data_to_load
         self._dataset_path = dataset_path
         self._encoder_dict = dict(encoder_dict)
         encode, decode = ml_helper.generate_encoder_decoder(self._encoder_dict)
         self._dataset = CovidDataSet.parallel_from_directory(
             dataset_path=self._dataset_path,
-            encode=encode, decode=decode
+            encode=encode, decode=decode,
+            size=self._n_data_to_load
         )
         self._preprocessor_pipeline_configuration = preprocessor_pipeline_configuration_path
         self._preprocessing_pipeline = PreprocessorPipeline.load(preprocessor_pipeline_configuration_path)
-        self._classifier_configuration_path = classifier_pipeline_configuration_path
+        self._classifier_configuration_path = classifier_configuration_path
         self._classifier = load_classifier(self._classifier_configuration_path)
 
     def to_dict(self) -> Dict[str, Any]:
@@ -55,7 +58,8 @@ class AnalysisConfiguration(AbstractTOMLSerializable):
             "dataset_path": self._dataset_path,
             "encoder_dict": self._encoder_dict,
             "preprocessor_pipeline_configuration_path": self._preprocessing_pipeline_configuration_path,
-            "classifier_configuration_path": self._classifier_configuration_path
+            "classifier_configuration_path": self._classifier_configuration_path,
+            "n_data_to_load": self._n_data_to_load
         }
 
     @classmethod
@@ -80,3 +84,20 @@ class AnalysisConfiguration(AbstractTOMLSerializable):
             accuracy * 100
         )
         return accuracy
+
+
+if __name__ == "__main__":
+    ac = AnalysisConfiguration(
+        dataset_path="/home/yuzj/Documents/2022-23-Group-08/data_analysis/covid_image_new",
+        encoder_dict={
+            "COVID": 0,
+            "Lung_Opacity": 1,
+            "Normal": 2,
+            "Viral Pneumonia": 3
+        },
+        preprocessor_pipeline_configuration_path="/home/yuzj/Documents/2022-23-Group-08/src/BIA_G8/_main/1.toml",
+        classifier_configuration_path="/home/yuzj/Documents/2022-23-Group-08/src/BIA_G8/_main/vote.toml",
+        n_data_to_load=300
+    )
+    ac.pre_process()
+    print(ac.ml())
