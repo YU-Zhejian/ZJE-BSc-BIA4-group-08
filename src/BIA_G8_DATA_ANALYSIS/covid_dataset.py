@@ -638,8 +638,11 @@ class CovidDataSet(MachinelearningDatasetInterface):
         self._loaded_images[i] = value
 
 
-def generate_fake_classification_dataset(size: int = 120) -> CovidDataSet:
-    labels = ["stride", "circle", "square"]
+def generate_fake_classification_dataset(
+        size: int = 120,
+        n_class: int = 4
+) -> CovidDataSet:
+    labels = ["stride", "circle", "square", "blank"][0:n_class]
     _encoder_dict = {k: v for k, v in zip(labels, range(len(labels)))}
     encode, decode = ml_helper.generate_encoder_decoder(_encoder_dict)
 
@@ -657,7 +660,7 @@ def generate_fake_classification_dataset(size: int = 120) -> CovidDataSet:
     square = skimage.img_as_int(square)
     images = [
         CovidImage.from_np_array(img, label, decode(label))
-        for label, img in enumerate((stride, circle, square))
+        for label, img in enumerate((stride, circle, square, blank))
     ]
     return CovidDataSet.from_loaded_images(
         itertools.chain(*itertools.repeat(images, size // 3)),

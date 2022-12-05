@@ -96,7 +96,7 @@ if __name__ == "__main__":
             "Viral Pneumonia": 3
         },
         preprocessor_pipeline_configuration_path="/home/yuzj/Documents/2022-23-Group-08/src/BIA_G8/_main/1.toml",
-        classifier_configuration_path="/home/yuzj/Documents/2022-23-Group-08/src/BIA_G8/_main/vote.toml",
+        classifier_configuration_path="/home/yuzj/Documents/2022-23-Group-08/src/BIA_G8/_main/cnn.toml",
         n_data_to_load=300
     )
     ac.pre_process()
