@@ -164,14 +164,14 @@ class DenoiseMedianPreprocessor(AbstractPreprocessor):
         argument.name: argument for argument in (
             Argument(
                 name="footprint_length_width",
-                description="degree of the filter",  # TODO
+                description="degree of the filter, the larger the smoother, recommended range: integer from 3 to 12",
                 is_required=False,
                 parse_str=argument_string_to_int
             ),
         )
     }
     name: Final[str] = "denoise (median)"
-    description: Final[str] = "This preprocessor can remove noise"
+    description: Final[str] = "This preprocessor can remove noise, especially salt & pepper noise"
 
     def _function(self, img: npt.NDArray, **kwargs) -> npt.NDArray:
         if "footprint_length_width" in kwargs:
@@ -191,14 +191,14 @@ class DenoiseMeanPreprocessor(AbstractPreprocessor):
         argument.name: argument for argument in (
             Argument(
                 name="footprint_length_width",
-                description="",  # TODO
+                description="degree of the filter, the larger the smoother, recommended range: integer from 3 to 12",
                 is_required=True,
                 parse_str=argument_string_to_int
             ),
         )
     }
     name: Final[str] = "denoise (mean)"
-    description: Final[str] = "This preprocessor can remove noise"
+    description: Final[str] = "This preprocessor can smooth the image and remove unnecessary details"
 
     def _function(self, img: npt.NDArray, **kwargs) -> npt.NDArray:
         footprint_length_width = kwargs["footprint_length_width"]
@@ -215,14 +215,15 @@ class DenoiseGaussianPreprocessor(AbstractPreprocessor):
         argument.name: argument for argument in (
             Argument(
                 name="sigma",
-                description="the degree of the blur effect of this filter",
+                description="the blur effect of this filter, the larger the smoother, recommended range: scalar from "
+                            "1 to 5",
                 is_required=False,
                 parse_str=argument_string_to_int
             ),
         )
     }
     name: Final[str] = "denoise (gaussian)"
-    description: Final[str] = "This preprocessor can remove noise"
+    description: Final[str] = "This preprocessor can remove noise, especially gaussian noise"
 
     def _function(self, img: npt.NDArray, **kwargs) -> npt.NDArray:
         return skifilt.gaussian(img, **kwargs)
@@ -234,20 +235,20 @@ class UnsharpMaskPreprocessor(AbstractPreprocessor):
         argument.name: argument for argument in (
             Argument(
                 name="radius",
-                description="the larger it is, the more detail the image will loss",
+                description="the larger it is, the clearer the edges, recommended range: float from 1 to 5",
                 is_required=False,
                 parse_str=argument_string_to_float
             ),
             Argument(
                 name="amount",
-                description="the extent that the image is enhanced",
+                description="the extent that the detail is amplified, recommended range: float from 1 to 15",
                 is_required=False,
                 parse_str=argument_string_to_float
             ),
         )
     }
     name: Final[str] = "unsharp mask"
-    description: Final[str] = "This preprocessor can sharp the images"
+    description: Final[str] = "This preprocessor can sharp the images, not recommended unless the image is blur"
 
     def _function(self, img: npt.NDArray, **kwargs) -> npt.NDArray:
         return skifilt.unsharp_mask(img, **kwargs)
@@ -259,13 +260,13 @@ class WienerDeblurPreprocessor(AbstractPreprocessor):
         argument.name: argument for argument in (
             Argument(
                 name="kernel_size",
-                description="the extent that the image is deblurred",  # TODO:
+                description="the point distribution pattern, recommended range: integer from 2 to 5",
                 is_required=True,
                 parse_str=argument_string_to_int
             ),
             Argument(
                 name="balance",
-                description="",  # TODO:
+                description="a parameter that tune the data restoration, recommended range: float from 0.005 to 1",
                 is_required=True,
                 parse_str=argument_string_to_int
             ),
@@ -273,7 +274,7 @@ class WienerDeblurPreprocessor(AbstractPreprocessor):
     }
     _required_argument_names: Final[List[str]] = ["kernel_size", "balance"]
     name: Final[str] = "wiener deblur"
-    description: Final[str] = "This preprocessor can deblur the images"
+    description: Final[str] = "This preprocessor can deblur the images which is caused by the mild movement of patient"
 
     def _function(self, img: npt.NDArray, **kwargs) -> npt.NDArray:
         kernel = np.ones(kwargs["kernel_size"])
