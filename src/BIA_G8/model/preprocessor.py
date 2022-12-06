@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import enum
 import json
 from abc import abstractmethod
 from typing import Final, Dict, Any, Iterable, Type, Tuple, List
@@ -22,9 +21,8 @@ from BIA_G8.model import unset, Argument, argument_string_to_int, argument_strin
 _lh = get_lh(__name__)
 
 
-def _documentation_decorator(cls: Type[AbstractPreprocessor]) -> Type[AbstractPreprocessor]:
-    """This class decorator generates documentations for arguments"""
-    cls.__doc__ = f"{cls.__name__} ({cls._name}) -- {cls._description}\n\n"
+def _preprocessor_documentation_decorator(cls: Type[AbstractPreprocessor]) -> Type[AbstractPreprocessor]:
+    cls.__doc__ = f"{cls.__name__} ({cls.name}) -- {cls.description}\n\n"
     if not cls._arguments:
         cls.__doc__ += "No arguments available\n"
     else:
@@ -33,38 +31,34 @@ def _documentation_decorator(cls: Type[AbstractPreprocessor]) -> Type[AbstractPr
     return cls
 
 
-class ImageInputFormat(enum.IntEnum):
-    ANY = 0
-    UINT8 = 1
-    FLOAT64_N1_1 = 2
-    FLOAT64_0_1 = 3
-
-
 class AbstractPreprocessor(AbstractTOMLSerializable):
     """
     The abstraction of a general purposed preprocessing step.
     """
     _arguments: Dict[str, Argument]
     _parsed_kwargs: Dict[str, Any]
-    _description: str = "NOT AVAILABLE"
-    _name: str = "UNNAMED"
+
+    description: str = "NOT AVAILABLE"
+    """
+    Class attribute that represents human readable preprocessor description.
+    
+    :meta private:
+    """
+
+    name: str = "UNNAMED"
+    """
+    Class attribute that represents human readable preprocessor name.
+    
+    :meta private:
+    """
 
     @abstractmethod
     def _function(self, img: npt.NDArray, **kwargs) -> npt.NDArray:
         raise NotImplementedError
 
     @property
-    def description(self) -> str:
-        """Description of this preprocessor"""
-        return self._description
-
-    @property
-    def name(self) -> str:
-        """Name of this preprocessor"""
-        return self._name
-
-    @property
     def arguments(self) -> Iterable[Argument]:
+        """Argument parsers inside this preprocessor"""
         return iter(self._arguments.values())
 
     def __init__(self) -> None:
@@ -73,7 +67,10 @@ class AbstractPreprocessor(AbstractTOMLSerializable):
         self._parsed_kwargs = {}
 
     def __repr__(self):
-        return f"Initialized filter '{self._name}' with arguments {json.dumps(self._parsed_kwargs)}"
+        return f"Initialized filter '{self.name}' with arguments {json.dumps(self._parsed_kwargs)}"
+
+    def __str__(self):
+        return repr(self)
 
     def __eq__(self, other: AbstractPreprocessor) -> bool:
         if not isinstance(other, self.__class__):
@@ -114,32 +111,32 @@ class AbstractPreprocessor(AbstractTOMLSerializable):
         return cls().set_params(**exported_dict)
 
 
-@_documentation_decorator
+@_preprocessor_documentation_decorator
 class DumbPreprocessor(AbstractPreprocessor):
     _arguments: Final[Dict[str, Argument]] = {}
-    _name: Final[str] = "dumb"
-    _description: Final[str] = "This preprocessor does nothing!"
+    name: Final[str] = "dumb"
+    description: Final[str] = "This preprocessor does nothing!"
 
     def _function(self, img: npt.NDArray, **kwargs) -> npt.NDArray:
         return img
 
 
-@_documentation_decorator
+@_preprocessor_documentation_decorator
 class DescribePreprocessor(AbstractPreprocessor):
     _arguments: Final[Dict[str, Argument]] = {}
-    _name: Final[str] = "describe"
-    _description: Final[str] = "This preprocessor describes status of current image"
+    name: Final[str] = "describe"
+    description: Final[str] = "This preprocessor describes status of current image"
 
     def _function(self, img: npt.NDArray, **kwargs) -> npt.NDArray:
         _lh.info(describe(img))
         return img
 
 
-@_documentation_decorator
+@_preprocessor_documentation_decorator
 class NormalizationPreprocessor(AbstractPreprocessor):
     _arguments: Final[Dict[str, Argument]] = {}
-    _name: Final[str] = "normalize"
-    _description: Final[str] = "This preprocessor normalize the image for analysis"
+    name: Final[str] = "normalize"
+    description: Final[str] = "This preprocessor normalize the image for analysis"
 
     def _function(self, img: npt.NDArray, **kwargs) -> npt.NDArray:
         if len(img.shape) == 3:
@@ -148,11 +145,11 @@ class NormalizationPreprocessor(AbstractPreprocessor):
         return img
 
 
-@_documentation_decorator
+@_preprocessor_documentation_decorator
 class AdjustExposurePreprocessor(AbstractPreprocessor):
     _arguments: Final[Dict[str, Argument]] = {}
-    _name: Final[str] = "adjust exposure"
-    _description: Final[str] = "This preprocessor can correct the image if it is underexposed or overexposed"
+    name: Final[str] = "adjust exposure"
+    description: Final[str] = "This preprocessor can correct the image if it is underexposed or overexposed"
 
     def _function(self, img: npt.NDArray, **kwargs) -> npt.NDArray:
         q2, q98 = np.percentile(img, (2, 98))
@@ -161,7 +158,7 @@ class AdjustExposurePreprocessor(AbstractPreprocessor):
         return img
 
 
-@_documentation_decorator
+@_preprocessor_documentation_decorator
 class DenoiseMedianPreprocessor(AbstractPreprocessor):
     _arguments: Final[Dict[str, Argument]] = {
         argument.name: argument for argument in (
@@ -173,8 +170,8 @@ class DenoiseMedianPreprocessor(AbstractPreprocessor):
             ),
         )
     }
-    _name: Final[str] = "denoise (median)"
-    _description: Final[str] = "This preprocessor can remove noise"
+    name: Final[str] = "denoise (median)"
+    description: Final[str] = "This preprocessor can remove noise"
 
     def _function(self, img: npt.NDArray, **kwargs) -> npt.NDArray:
         if "footprint_length_width" in kwargs:
@@ -188,7 +185,7 @@ class DenoiseMedianPreprocessor(AbstractPreprocessor):
             return skifiltrank.median(img)
 
 
-@_documentation_decorator
+@_preprocessor_documentation_decorator
 class DenoiseMeanPreprocessor(AbstractPreprocessor):
     _arguments: Final[Dict[str, Argument]] = {
         argument.name: argument for argument in (
@@ -200,8 +197,8 @@ class DenoiseMeanPreprocessor(AbstractPreprocessor):
             ),
         )
     }
-    _name: Final[str] = "denoise (mean)"
-    _description: Final[str] = "This preprocessor can remove noise"
+    name: Final[str] = "denoise (mean)"
+    description: Final[str] = "This preprocessor can remove noise"
 
     def _function(self, img: npt.NDArray, **kwargs) -> npt.NDArray:
         footprint_length_width = kwargs["footprint_length_width"]
@@ -212,7 +209,7 @@ class DenoiseMeanPreprocessor(AbstractPreprocessor):
         return skifiltrank.mean(img, footprint=footprint)
 
 
-@_documentation_decorator
+@_preprocessor_documentation_decorator
 class DenoiseGaussianPreprocessor(AbstractPreprocessor):
     _arguments: Final[Dict[str, Argument]] = {
         argument.name: argument for argument in (
@@ -224,14 +221,14 @@ class DenoiseGaussianPreprocessor(AbstractPreprocessor):
             ),
         )
     }
-    _name: Final[str] = "denoise (gaussian)"
-    _description: Final[str] = "This preprocessor can remove noise"
+    name: Final[str] = "denoise (gaussian)"
+    description: Final[str] = "This preprocessor can remove noise"
 
     def _function(self, img: npt.NDArray, **kwargs) -> npt.NDArray:
         return skifilt.gaussian(img, **kwargs)
 
 
-@_documentation_decorator
+@_preprocessor_documentation_decorator
 class UnsharpMaskPreprocessor(AbstractPreprocessor):
     _arguments: Final[Dict[str, Argument]] = {
         argument.name: argument for argument in (
@@ -249,14 +246,14 @@ class UnsharpMaskPreprocessor(AbstractPreprocessor):
             ),
         )
     }
-    _name: Final[str] = "unsharp mask"
-    _description: Final[str] = "This preprocessor can sharp the images"
+    name: Final[str] = "unsharp mask"
+    description: Final[str] = "This preprocessor can sharp the images"
 
     def _function(self, img: npt.NDArray, **kwargs) -> npt.NDArray:
         return skifilt.unsharp_mask(img, **kwargs)
 
 
-@_documentation_decorator
+@_preprocessor_documentation_decorator
 class WienerDeblurPreprocessor(AbstractPreprocessor):
     _arguments: Final[Dict[str, Argument]] = {
         argument.name: argument for argument in (
@@ -275,8 +272,8 @@ class WienerDeblurPreprocessor(AbstractPreprocessor):
         )
     }
     _required_argument_names: Final[List[str]] = ["kernel_size", "balance"]
-    _name: Final[str] = "wiener deblur"
-    _description: Final[str] = "This preprocessor can deblur the images"
+    name: Final[str] = "wiener deblur"
+    description: Final[str] = "This preprocessor can deblur the images"
 
     def _function(self, img: npt.NDArray, **kwargs) -> npt.NDArray:
         kernel = np.ones(kwargs["kernel_size"])
@@ -285,7 +282,7 @@ class WienerDeblurPreprocessor(AbstractPreprocessor):
 
 
 _preprocessors: Dict[str, Type[AbstractPreprocessor]] = {
-    cls._name: cls for cls in (
+    cls.name: cls for cls in (
         DumbPreprocessor,
         DescribePreprocessor,
         NormalizationPreprocessor,
@@ -304,7 +301,7 @@ def get_preprocessor(preprocessor_name: str) -> Type[AbstractPreprocessor]:
     return _preprocessors[preprocessor_name]
 
 
-def get_preprocessor_names() -> Iterable[str]:
+def get_available_preprocessor_names() -> Iterable[str]:
     """Get a list of names of available :py:class:`AbstractPreprocessor` subclass"""
     return iter(_preprocessors.keys())
 

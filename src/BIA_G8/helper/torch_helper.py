@@ -21,6 +21,7 @@ _lh = get_lh(__name__)
 
 
 class DictBackedTorchDataSet(tud.Dataset):
+    """Torch dataset with dictionary as backend."""
     _index: Dict[int, Tuple[torch.Tensor, torch.Tensor]]
 
     def __getitem__(self, index: int) -> Tuple[torch.Tensor, torch.Tensor]:
@@ -30,13 +31,16 @@ class DictBackedTorchDataSet(tud.Dataset):
         return len(self._index)
 
     def __init__(self, index: Optional[Dict[int, Tuple[torch.Tensor, torch.Tensor]]] = None) -> None:
+        """
+        :param index: The dictionary
+        """
         if index is None:
             index = {}
         self._index = dict(index)
 
 
 class AbstractTorchModule(nn.Module):
-    """``nn.Module`` with better type hints"""
+    """:py:class:`nn.Module` with better type hints"""
 
     def __init__(self, **params) -> None:
         super().__init__()

@@ -67,7 +67,7 @@ from sklearn.manifold import TSNE
 
 from xgboost.sklearn import XGBClassifier
 
-from BIA_G8_DATA_ANALYSIS import covid_dataset
+from BIA_G8.data_analysis import covid_dataset
 from BIA_G8.helper import joblib_helper
 
 # %% [markdown]

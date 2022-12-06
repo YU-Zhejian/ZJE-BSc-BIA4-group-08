@@ -3,11 +3,11 @@ from __future__ import annotations
 from typing import Dict, Any
 
 from BIA_G8 import get_lh
+from BIA_G8.data_analysis.covid_dataset import CovidDataSet
 from BIA_G8.helper import ml_helper
 from BIA_G8.helper.io_helper import AbstractTOMLSerializable
-from BIA_G8.model.classifier import AbstractClassifier, load_classifier
+from BIA_G8.model.classifier import ClassifierInterface, load_classifier
 from BIA_G8.model.preprocesor_pipeline import PreprocessorPipeline
-from BIA_G8_DATA_ANALYSIS.covid_dataset import CovidDataSet
 
 _lh = get_lh(__name__)
 
@@ -18,7 +18,7 @@ class AnalysisConfiguration(AbstractTOMLSerializable):
     _encoder_dict: Dict[str, int]
     _preprocessing_pipeline: PreprocessorPipeline
     _preprocessing_pipeline_configuration_path: str
-    _classifier: AbstractClassifier
+    _classifier: ClassifierInterface
     _classifier_configuration_path: str
     _n_classes: int
 
@@ -33,6 +33,10 @@ class AnalysisConfiguration(AbstractTOMLSerializable):
     @property
     def preprocessor_pipeline_configuration(self) -> PreprocessorPipeline:
         return self._preprocessing_pipeline
+
+    @property
+    def dataset(self) -> CovidDataSet:
+        return self.dataset
 
     def __init__(
             self,
@@ -100,25 +104,3 @@ class AnalysisConfiguration(AbstractTOMLSerializable):
     def save_classifier_as(self, path: str, with_model: bool = True):
         self._classifier_configuration_path = path
         self._classifier.save(self._classifier_configuration_path, with_model)
-
-
-if __name__ == "__main__":
-    ac = AnalysisConfiguration(
-        dataset_path="/home/yuzj/Documents/2022-23-Group-08/data_analysis/covid_image_new",
-        encoder_dict={
-            "COVID": 0,
-            "Lung_Opacity": 1,
-            "Normal": 2,
-            "Viral Pneumonia": 3
-        },
-        preprocessor_pipeline_configuration_path="/home/yuzj/Documents/2022-23-Group-08/src/BIA_G8_DATA_ANALYSIS/pp_adapt_hist.toml",
-        classifier_configuration_path="/home/yuzj/Documents/2022-23-Group-08/src/BIA_G8_DATA_ANALYSIS/cnn.toml",
-        n_data_to_load=600,
-        n_classes=4
-    )
-    ac.pre_process()
-    print(ac.ml())
-    ac.save("ac.toml")
-
-    ac2 = ac.load("ac.toml")
-    ac2.pre_process().ml()

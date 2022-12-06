@@ -1,3 +1,5 @@
+import glob
+import os
 from typing import Type
 
 from BIA_G8.data_analysis.covid_dataset import generate_fake_classification_dataset, CovidDataSet
@@ -15,26 +17,29 @@ def run(
 ):
     classifier_type.new(**kwargs).fit(_ds_train).save(save_path)
     m2 = load_classifier(save_path)
-    print(m2.evaluate(_ds_test))
+    _ = m2.evaluate(_ds_test)
+    _ = map(os.remove, glob.glob(save_path + "*"))
 
 
-if __name__ == '__main__':
-    width, height = 256, 256
-    ds = generate_fake_classification_dataset(
-        size=120,
-        width=width,
-        height=height
-    )
-    ds_train, ds_test = ds.train_test_split()
+width, height = 16, 16
+ds = generate_fake_classification_dataset(
+    size=12,
+    width=width,
+    height=height
+)
+ds_train, ds_test = ds.train_test_split()
+
+
+def test_resnet50():
     run(
         ds_train,
         ds_test,
         "resnet50.toml",
         Resnet50Classifier,
         hyper_params={
-            "batch_size": 17,
-            "num_epochs": 20,
-            "lr": 0.0001,
+            "batch_size": 4,
+            "num_epochs": 5,
+            "lr": 0.01,
             "device": "cuda"
         },
         model_params={
@@ -42,6 +47,9 @@ if __name__ == '__main__':
             "layers": 1
         }
     )
+
+
+def test_xgb():
     run(
         ds_train,
         ds_test,
@@ -49,42 +57,60 @@ if __name__ == '__main__':
         XGBoostClassifier,
         tree_method="gpu_hist"
     )
+
+
+def test_svc():
     run(
         ds_train,
         ds_test,
         "svc.toml",
         SklearnSupportingVectorMachineClassifier
     )
+
+
+def test_extra_trees():
     run(
         ds_train,
         ds_test,
         "extra_trees.toml",
         SklearnExtraTreesClassifier
     )
+
+
+def test_rf():
     run(
         ds_train,
         ds_test,
         "rf.toml",
         SklearnRandomForestClassifier
     )
+
+
+def test_knn():
     run(
         ds_train,
         ds_test,
         "knn.toml",
         SklearnKNearestNeighborsClassifier
     )
+
+
+def test_vote():
     run(
         ds_train,
         ds_test,
         "vote.toml",
         SklearnVotingClassifier
     )
+
+
+def test_cnn():
     run(
         ds_train, ds_test, "cnn.toml", ToyCNNClassifier,
         hyper_params={
-            "batch_size": 17,
-            "num_epochs": 20,
-            "lr": 0.0001,
+            "batch_size": 4,
+            "num_epochs": 5,
+            "lr": 0.01,
             "device": "cuda"
         },
         model_params={

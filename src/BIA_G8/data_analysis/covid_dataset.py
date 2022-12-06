@@ -693,6 +693,17 @@ def generate_fake_classification_dataset(
         width: int = 256,
         height: int = 256
 ) -> CovidDataSet:
+    """
+    Generate dataset that is similar to :py:mod:`CovidDataSet` in layout without any files.
+    Used in testing purposes only.
+    Generated dataset would be a series of ``["stride", "circle", "square", "blank"]``
+    with noises.
+
+    :param size: Number of data to generate.
+    :param n_classes: Number of classes. At most 4.
+    :param width: Width of the image.
+    :param height: Height of the image.
+    """
     labels = ["stride", "circle", "square", "blank"][0:n_classes]
     _encoder_dict = {k: v for k, v in zip(labels, range(len(labels)))}
     encode, decode = ml_helper.generate_encoder_decoder(_encoder_dict)

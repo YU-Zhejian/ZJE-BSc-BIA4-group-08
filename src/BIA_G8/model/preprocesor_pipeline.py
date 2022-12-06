@@ -1,3 +1,7 @@
+"""
+Preprocessing pipeline abstraction
+"""
+
 from __future__ import annotations
 
 from typing import List, Dict, Union, Any, Iterable
@@ -12,12 +16,17 @@ _lh = get_lh(__name__)
 
 
 class PreprocessorPipeline(AbstractTOMLSerializable):
+    """
+    A series of :py:mod:`AbstractPreprocessor` that can be written to or loaded from
+    configuration file.
+    """
     _steps: List[AbstractPreprocessor]
 
     def __init__(self):
         self._steps = []
 
     def add_step(self, preprocessor: AbstractPreprocessor) -> PreprocessorPipeline:
+        """Append a preprocessor to current pipeline. Can be chained."""
         self._steps.append(preprocessor)
         return self
 
@@ -37,12 +46,14 @@ class PreprocessorPipeline(AbstractTOMLSerializable):
         return pp
 
     def execute(self, img: npt.NDArray) -> npt.NDArray:
+        """Execute the preprocessors sequentially over an image"""
         for step in self._steps:
             img = step.execute(img)
         return img
 
     @property
     def steps(self) -> Iterable[AbstractPreprocessor]:
+        """Read-only preprocessors."""
         return iter(self._steps)
 
     def __eq__(self, other: PreprocessorPipeline) -> bool:

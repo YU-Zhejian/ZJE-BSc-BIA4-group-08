@@ -93,6 +93,8 @@ autodoc_default_options = {
     'special-members': '__init__',
 }
 
+autodoc_member_order = "bysource"
+
 # Intersphinx settings
 intersphinx_mapping = {
     'python': ('https://docs.python.org/3.8', None),

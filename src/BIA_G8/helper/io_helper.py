@@ -19,7 +19,10 @@ __all__ = (
     "write_np_xz",
     "write_tensor_xz",
     "SerializableInterface",
-    "AbstractTOMLSerializable"
+    "TOMLRepresentableInterface",
+    "AbstractTOMLSerializable",
+    "write_toml_with_metadata",
+    "read_toml_with_metadata"
 )
 
 import lzma
@@ -51,6 +54,7 @@ def read_tensor_xz(path: str) -> Union[torch.Tensor, Mapping[str, Any], nn.Modul
 
 
 def read_pickle_xz(path: str) -> Any:
+    """Reader of compressed pickle format"""
     with lzma.open(path, "rb") as reader:
         return pickle.load(reader)
 
@@ -68,11 +72,16 @@ def write_tensor_xz(array: Union[torch.Tensor, Mapping[str, Any], nn.Module], pa
 
 
 def write_pickle_xz(obj: Any, path: str) -> None:
+    """Writer of compressed pickle format"""
     with lzma.open(path, "wb", preset=9) as writer:
         pickle.dump(obj, writer)
 
 
 class SerializableInterface:
+    """
+    Something that can be saved or loaded to files.
+    """
+
     @classmethod
     def load(cls, path: str, **kwargs) -> SerializableInterface:
         """
@@ -92,9 +101,9 @@ class SerializableInterface:
         pass
 
 
-class TOMLSerializableInterface:
+class TOMLRepresentableInterface:
     """
-    Abstract Base Class of something that can be represented as TOML.
+    Interface of something that can be represented as TOML.
 
     Should be used as configuration class.
     """
@@ -106,12 +115,15 @@ class TOMLSerializableInterface:
 
     @classmethod
     @abstractmethod
-    def from_dict(cls, in_dict: Dict[str, Any]) -> TOMLSerializableInterface:
+    def from_dict(cls, in_dict: Dict[str, Any]) -> TOMLRepresentableInterface:
         """Load the item from a dictionary"""
         raise NotImplementedError
 
 
 def read_toml_with_metadata(path: str) -> Dict[str, Any]:
+    """
+    Read and validate TOML files with metadata.
+    """
     with open(path, "rb") as reader:
         in_dict = tomli.load(reader)
     if "version_info" in in_dict:
@@ -122,6 +134,9 @@ def read_toml_with_metadata(path: str) -> Dict[str, Any]:
 
 
 def write_toml_with_metadata(obj: Dict[str, Any], path: str) -> None:
+    """
+    Write TOML files with metadata.
+    """
     retd = dict(obj)
     retd["version_info"] = dump_versions()
     retd["metadata"] = dump_metadata()
@@ -131,7 +146,7 @@ def write_toml_with_metadata(obj: Dict[str, Any], path: str) -> None:
 
 class AbstractTOMLSerializable(
     SerializableInterface,
-    TOMLSerializableInterface,
+    TOMLRepresentableInterface,
     ABC
 ):
     """

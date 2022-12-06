@@ -23,6 +23,7 @@ from BIA_G8.helper import torch_helper
 def generate_encoder_decoder(
         encoder_dict: Dict[str, int]
 ) -> Tuple[Callable[[str], int], Callable[[int], str]]:
+    """Generate encoding and decoding function"""
     decoder_dict = {v: k for k, v in encoder_dict.items()}
 
     def encoder(label_str: str) -> int:
@@ -66,6 +67,9 @@ def print_confusion_matrix(
 
 
 class MachinelearningDatasetInterface:
+    """
+    Dataset that supports applying machine learning algorithms.
+    """
 
     @abstractmethod
     def __len__(self) -> int:
@@ -75,7 +79,7 @@ class MachinelearningDatasetInterface:
     @abstractmethod
     def sklearn_dataset(self) -> Tuple[npt.NDArray, npt.NDArray]:
         """
-        Prepare and return cached dataset for ``sklearn``.
+        Prepare and return cached dataset for :py:mod:`sklearn`.
 
         :return: A tuple of ``X`` and ``y`` for :py:func:`fit`-like functions.
             For example, as is used in :external+sklearn:py:class:`sklearn.neighbors.KNeighborsClassifier`.
@@ -85,6 +89,11 @@ class MachinelearningDatasetInterface:
     @property
     @abstractmethod
     def torch_dataset(self) -> torch_helper.DictBackedTorchDataSet:
+        """
+        Prepare and return cached dataset for :py:mod:`torch`.
+
+        :return: An iterable pytorch dataset.
+        """
         raise NotImplementedError
 
     @abstractmethod
@@ -92,4 +101,10 @@ class MachinelearningDatasetInterface:
         MachinelearningDatasetInterface,
         MachinelearningDatasetInterface
     ]:
+        """
+        Split current dataset into training and testing dataset.
+
+        :param ratio: Train-test ratio.
+        :return: Two new datasets
+        """
         raise NotImplementedError

@@ -58,7 +58,7 @@ except ImportError:
 from sklearn.model_selection import train_test_split
 from sklearn.neighbors import KNeighborsClassifier as KNN
 
-from BIA_G8_DATA_ANALYSIS import covid_dataset
+from BIA_G8.data_analysis import covid_dataset
 from BIA_G8.helper import matplotlib_helper
 
 # %% [markdown]
