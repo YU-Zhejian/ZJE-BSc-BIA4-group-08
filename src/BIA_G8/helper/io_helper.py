@@ -8,7 +8,8 @@ The compression algorithm would be Lempel-Ziv Markov Chain Algorithm (LZMA) vers
 `7-Zip <https://www.7-zip.org>`_. The implementation is provided Python standard library :py:mod:`lzma`.
 
 .. warning::
-    Since Python's standard LZMA implementation is single-threaded, it might be extremely slow to compress large objects!
+    Since Python's standard LZMA implementation is single-threaded,
+    it might be extremely slow to compress large objects!
 """
 
 from __future__ import annotations

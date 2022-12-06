@@ -71,11 +71,6 @@ try:
 except ImportError:
     torch = _DumbVersion()
 
-try:
-    import keras
-except ImportError:
-    keras = _DumbVersion()
-
 
 def dump_versions() -> Dict[str, str]:
     """
@@ -92,7 +87,6 @@ def dump_versions() -> Dict[str, str]:
         "tomli": tomli.__version__,
         "tomli-w": tomli_w.__version__,
         "torch": torch.__version__,
-        "keras": keras.__version__,
         "python": ".".join(map(str, sys.version_info[0:3]))
     }
 

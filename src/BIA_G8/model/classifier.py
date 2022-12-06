@@ -10,7 +10,7 @@ from __future__ import annotations
 import os.path
 from abc import abstractmethod
 from statistics import mean
-from typing import TypeVar, Type, Final, Optional, Iterable, Dict, Any
+from typing import TypeVar, Type, Final, Optional, Iterable, Dict, Any, Union
 
 import joblib
 import numpy as np
@@ -347,7 +347,7 @@ class BaseTorchClassifier(DiagnosableClassifierInterface):
     def __init__(
             self,
             *,
-            model: AbstractTorchModule,
+            model: Union[AbstractTorchModule, nn.Module],
             hyper_params: Dict[str, Any],
             model_params: Dict[str, Any]
     ):
@@ -414,10 +414,10 @@ class BaseTorchClassifier(DiagnosableClassifierInterface):
         return self
 
     def predict(self, image: npt.NDArray) -> npt.NDArray:
-        raise NotImplementedError
+        raise NotImplementedError  # TODO
 
     def predicts(self, images: Iterable[npt.NDArray]) -> npt.NDArray:
-        raise NotImplementedError
+        raise NotImplementedError  # TODO
 
     def diagnostic_fit(
             self,

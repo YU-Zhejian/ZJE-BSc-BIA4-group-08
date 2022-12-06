@@ -432,9 +432,12 @@ class CovidDataSet(MachinelearningDatasetInterface):
         :param dataset_path: Absolute path of the dataset-containing directory.
         :param size: Number of images needed to be loaded.
         :param balanced: Whether the loaded images should be "balanced" -- i.e., have same number of each category.
+        :param encode: The encoder function. If none, will be automatically inferred.
+        :param decode: the decoder function. If none, will be automatically inferred.
+        :param n_classes: Number of classes. If none, will be automatically inferred.
         """
 
-        if encode is None:
+        if encode is None or decode is None or n_classes is None:
             n_classes, (encode, decode) = infer_encode_decode_from_filesystem(dataset_path)
         new_ds = cls(encode=encode, decode=decode, n_classes=n_classes)
         all_image_paths = new_ds._preload_hook(

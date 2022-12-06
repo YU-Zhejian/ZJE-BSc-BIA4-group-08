@@ -66,7 +66,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.metrics import confusion_matrix
 from sklearn.model_selection import train_test_split
-from sklearn.neighbors import KNeighborsClassifier as KNN
+from sklearn.neighbors import KNeighborsClassifier
 
 from BIA_G8.data_analysis import covid_dataset
 from BIA_G8.helper import ml_helper
@@ -198,16 +198,16 @@ for i, ax in enumerate(axs.ravel()):
 
 # %%
 ds_enlarged_with_noise = ds_enlarged.parallel_apply(
-    lambda img: skimage.img_as_int(
+    lambda _img: skimage.img_as_int(
         skiutil.random_noise(
-            skimage.img_as_float(img),
+            skimage.img_as_float(_img),
             mode="pepper"
         )
     )
 ).parallel_apply(
-    lambda img: skimage.img_as_int(
+    lambda _img: skimage.img_as_int(
         skitrans.rotate(
-            img,
+            _img,
             random.random() * 120 - 60
         )
     )
@@ -242,7 +242,7 @@ ds_sklearn = ds_enlarged_with_noise.sklearn_dataset
 # %%
 X, y = ds_sklearn
 X_train, X_test, y_train, y_test = train_test_split(X, y, shuffle=True)
-knn = KNN()
+knn = KNeighborsClassifier()
 knn = knn.fit(X=X_train, y=y_train)
 pred = knn.predict(X_test)
 accuracy = np.sum(pred == y_test) / len(y_test)

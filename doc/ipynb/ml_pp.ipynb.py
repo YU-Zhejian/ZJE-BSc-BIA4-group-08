@@ -56,7 +56,7 @@ except ImportError:
     sklearnex = None
 
 from sklearn.model_selection import train_test_split
-from sklearn.neighbors import KNeighborsClassifier as KNN
+from sklearn.neighbors import KNeighborsClassifier
 
 from BIA_G8.data_analysis import covid_dataset
 from BIA_G8.helper import matplotlib_helper
@@ -75,7 +75,7 @@ accuracy = []
 for _ in tqdm.tqdm(iterable=range(200)):
     X, y = ds.sklearn_dataset
     X_train, X_test, y_train, y_test = train_test_split(X, y, shuffle=True)
-    accuracy.append(np.sum(KNN().fit(X=X_train, y=y_train).predict(X_test) == y_test) / len(y_test) * 100)
+    accuracy.append(np.sum(KNeighborsClassifier().fit(X=X_train, y=y_train).predict(X_test) == y_test) / len(y_test) * 100)
 print(f"Accuracy: {np.mean(accuracy):4.2f}")
 
 # %% [markdown]
@@ -127,7 +127,7 @@ accuracy_new = []
 for _ in tqdm.tqdm(iterable=range(200)):
     X, y = ds_enhanced.sklearn_dataset
     X_train, X_test, y_train, y_test = train_test_split(X, y, shuffle=True)
-    accuracy_new.append(np.sum(KNN().fit(X=X_train, y=y_train).predict(X_test) == y_test) / len(y_test) * 100)
+    accuracy_new.append(np.sum(KNeighborsClassifier().fit(X=X_train, y=y_train).predict(X_test) == y_test) / len(y_test) * 100)
 print(f"Accuracy: {np.mean(accuracy_new):4.2f}")
 
 # %% [markdown]

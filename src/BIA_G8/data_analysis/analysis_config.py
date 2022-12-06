@@ -46,7 +46,6 @@ class AnalysisConfiguration(AbstractTOMLSerializable):
         :param preprocessor_pipeline_configuration_path: Path to preprocessor pipeline configuration.
         :param classifier_configuration_path: Path to classifier configuration.
         :param size: Number of data to be loaded.
-        :param n_classes: Number of classes.
         :param load_pretrained_model: Whether to load pretrained model.
         """
         self._size = size

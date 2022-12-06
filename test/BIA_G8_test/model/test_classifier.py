@@ -5,7 +5,7 @@ from typing import Type
 from BIA_G8.data_analysis.covid_dataset import generate_fake_classification_dataset, CovidDataSet
 from BIA_G8.model.classifier import load_classifier, ToyCNNClassifier, \
     ClassifierInterface, XGBoostClassifier, SklearnVotingClassifier, SklearnSupportingVectorMachineClassifier, \
-    SklearnExtraTreesClassifier, SklearnRandomForestClassifier, SklearnKNearestNeighborsClassifier, Resnet50Classifier
+    SklearnExtraTreesClassifier, SklearnRandomForestClassifier, SklearnKNearestNeighborsClassifier
 
 
 def run(
