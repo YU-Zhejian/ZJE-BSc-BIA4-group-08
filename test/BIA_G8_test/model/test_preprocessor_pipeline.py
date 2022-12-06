@@ -8,7 +8,7 @@ def test():
     pp = (
         PreprocessorPipeline().
         add_step(
-            get_preprocessor("dimension reduction")().set_params()
+            get_preprocessor("normalize")().set_params()
         ).
         add_step(
             get_preprocessor("denoise (mean)")().set_params(footprint_length_width=5)

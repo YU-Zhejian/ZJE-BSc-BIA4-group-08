@@ -68,7 +68,11 @@ def resolve_label_str_from_path(abspath: str) -> str:
 
 
 def infer_encode_decode_from_filesystem(dataset_path: str) -> Tuple[
-    int, Tuple[Callable[[str], int], Callable[[int], str]]]:
+    int, Tuple[Callable[[str], int], Callable[[int], str]]
+]:
+    """
+    Infer encoder, decode and number of labels from directory.
+    """
     _lh.info("Inferring encoder decoder from directory...")
     encoder_dict = {
         os.path.basename(image_dirname.rstrip(os.path.sep)): index

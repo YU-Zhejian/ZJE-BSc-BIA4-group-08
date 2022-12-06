@@ -1,4 +1,4 @@
-from BIA_G8.data_analysis.brute_force_grid_search import grid_search
+from BIA_G8.data_analysis.analysis_config import grid_search
 
 if __name__ == "__main__":
     preprocessor_pipeline_configuration_paths = [
@@ -26,8 +26,7 @@ if __name__ == "__main__":
         },
         preprocessor_pipeline_configuration_paths=preprocessor_pipeline_configuration_paths,
         classifier_configuration_paths=classifier_configuration_paths,
-        n_data_to_load=600,
-        n_classes=4,
+        size=600,
         out_csv="gs_new_data_nomask.csv",
         replication=10
     )
@@ -40,8 +39,7 @@ if __name__ == "__main__":
         },
         preprocessor_pipeline_configuration_paths=preprocessor_pipeline_configuration_paths,
         classifier_configuration_paths=classifier_configuration_paths,
-        n_data_to_load=600,
-        n_classes=3,
+        size=600,
         out_csv="gs_old_data.csv",
         replication=10
     )
@@ -55,8 +53,7 @@ if __name__ == "__main__":
         },
         preprocessor_pipeline_configuration_paths=preprocessor_pipeline_configuration_paths,
         classifier_configuration_paths=classifier_configuration_paths,
-        n_data_to_load=600,
-        n_classes=4,
+        size=600,
         out_csv="gs_new_data.csv",
         replication=10
     )

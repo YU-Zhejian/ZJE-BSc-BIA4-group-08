@@ -214,7 +214,7 @@ class BaseSklearnClassifier(ClassifierInterface):
             return cls.new(**loaded_data["params"])
 
     def save(self, path: str, save_model: bool = True) -> None:
-        _lh.info("%s: Saving...", self.__name__)
+        _lh.info("%s: Saving...", self.__class__.__name__)
         path = os.path.abspath(path)
         out_dict = {
             "name": self.name,

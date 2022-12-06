@@ -30,23 +30,24 @@ ds = generate_fake_classification_dataset(
 ds_train, ds_test = ds.train_test_split()
 
 
-def test_resnet50():
-    run(
-        ds_train,
-        ds_test,
-        "resnet50.toml",
-        Resnet50Classifier,
-        hyper_params={
-            "batch_size": 4,
-            "num_epochs": 5,
-            "lr": 0.01,
-            "device": "cuda"
-        },
-        model_params={
-            "block": 1,
-            "layers": 1
-        }
-    )
+# Disabled, too slow.
+# def test_resnet50():
+#     run(
+#         ds_train,
+#         ds_test,
+#         "resnet50.toml",
+#         Resnet50Classifier,
+#         hyper_params={
+#             "batch_size": 4,
+#             "num_epochs": 5,
+#             "lr": 0.01,
+#             "device": "cuda"
+#         },
+#         model_params={
+#             "block": 1,
+#             "layers": 1
+#         }
+#     )
 
 
 def test_xgb():

@@ -1,6 +1,12 @@
+"""
+Configuration for grid search.
+"""
+
 from __future__ import annotations
 
-from typing import Dict, Any
+import itertools
+import os
+from typing import Dict, Any, Iterable
 
 from BIA_G8 import get_lh
 from BIA_G8.data_analysis.covid_dataset import CovidDataSet
@@ -13,6 +19,9 @@ _lh = get_lh(__name__)
 
 
 class AnalysisConfiguration(AbstractTOMLSerializable):
+    """
+    Analysis configuration that consists a preprocessor pipeline configuration and a classifier configuration.
+    """
     _dataset: CovidDataSet
     _dataset_path: str
     _encoder_dict: Dict[str, int]
@@ -20,23 +29,7 @@ class AnalysisConfiguration(AbstractTOMLSerializable):
     _preprocessing_pipeline_configuration_path: str
     _classifier: ClassifierInterface
     _classifier_configuration_path: str
-    _n_classes: int
-
-    @property
-    def dataset_path(self) -> str:
-        return self._dataset_path
-
-    @property
-    def encoder_dict(self) -> Dict[str, int]:
-        return dict(self._encoder_dict)
-
-    @property
-    def preprocessor_pipeline_configuration(self) -> PreprocessorPipeline:
-        return self._preprocessing_pipeline
-
-    @property
-    def dataset(self) -> CovidDataSet:
-        return self.dataset
+    _size: int
 
     def __init__(
             self,
@@ -44,21 +37,28 @@ class AnalysisConfiguration(AbstractTOMLSerializable):
             encoder_dict: Dict[str, int],
             preprocessor_pipeline_configuration_path: str,
             classifier_configuration_path: str,
-            n_data_to_load: int,
-            n_classes: int,
+            size: int,
             load_pretrained_model: bool = False
     ):
-        self._n_data_to_load = n_data_to_load
+        """
+        :param dataset_path: Path to the dataset.
+        :param encoder_dict: Encoder in dictionary format.
+        :param preprocessor_pipeline_configuration_path: Path to preprocessor pipeline configuration.
+        :param classifier_configuration_path: Path to classifier configuration.
+        :param size: Number of data to be loaded.
+        :param n_classes: Number of classes.
+        :param load_pretrained_model: Whether to load pretrained model.
+        """
+        self._size = size
         self._dataset_path = dataset_path
         self._encoder_dict = dict(encoder_dict)
-        self._n_classes = n_classes
         encode, decode = ml_helper.generate_encoder_decoder(self._encoder_dict)
         self._dataset = CovidDataSet.parallel_from_directory(
             dataset_path=self._dataset_path,
             encode=encode,
             decode=decode,
-            n_classes=self._n_classes,
-            size=self._n_data_to_load
+            n_classes=len(self._encoder_dict),
+            size=self._size
         )
         self._preprocessing_pipeline_configuration_path = preprocessor_pipeline_configuration_path
         self._preprocessing_pipeline = PreprocessorPipeline.load(preprocessor_pipeline_configuration_path)
@@ -71,8 +71,7 @@ class AnalysisConfiguration(AbstractTOMLSerializable):
             "encoder_dict": self._encoder_dict,
             "preprocessor_pipeline_configuration_path": self._preprocessing_pipeline_configuration_path,
             "classifier_configuration_path": self._classifier_configuration_path,
-            "n_data_to_load": self._n_data_to_load,
-            "n_classes": self._n_classes
+            "size": self._size
         }
 
     @classmethod
@@ -80,6 +79,7 @@ class AnalysisConfiguration(AbstractTOMLSerializable):
         return cls(**in_dict)
 
     def pre_process(self) -> AnalysisConfiguration:
+        """Execute preprocessor. This step can be chained."""
         _lh.info("Preprocessing...")
         self._dataset = self._dataset.parallel_apply(
             self._preprocessing_pipeline.execute,
@@ -89,6 +89,11 @@ class AnalysisConfiguration(AbstractTOMLSerializable):
         return self
 
     def ml(self) -> float:
+        """
+        Execute classifier.
+
+        :return: Accuracy
+        """
         _lh.info("Splitting dataset...")
         ds_train, ds_test = self._dataset.train_test_split()
         _lh.info("Training...")
@@ -101,6 +106,46 @@ class AnalysisConfiguration(AbstractTOMLSerializable):
         )
         return accuracy
 
-    def save_classifier_as(self, path: str, with_model: bool = True):
-        self._classifier_configuration_path = path
-        self._classifier.save(self._classifier_configuration_path, with_model)
+
+def grid_search(
+        preprocessor_pipeline_configuration_paths: Iterable[str],
+        classifier_configuration_paths: Iterable[str],
+        out_csv: str,
+        replication: int,
+        **kwargs
+) -> None:
+    """
+    Grid search using multiple preprocessor config and classifier config. The model will **NOT** be saved.
+
+    :param preprocessor_pipeline_configuration_paths: Paths to preprocessor pipeline TOMLs.
+    :param classifier_configuration_paths: Paths to classifier configurations.
+    :param out_csv: Path to output CSV.
+    :param replication: Number of replications of each method.
+    :param kwargs: Arguments for :py:class:`AnalysisConfiguration`
+    """
+    with open(out_csv, "w") as writer:
+        writer.write(",".join((
+            "replication",
+            "preprocessor_pipeline_configuration_path",
+            "classifier_configuration_path",
+            "accuracy"
+        )) + "\n")
+        for (
+                preprocessor_pipeline_configuration_path,
+                classifier_configuration_path
+        ) in itertools.product(
+            preprocessor_pipeline_configuration_paths,
+            classifier_configuration_paths
+        ):
+            for i in range(replication):
+                accu = AnalysisConfiguration(
+                    preprocessor_pipeline_configuration_path=preprocessor_pipeline_configuration_path,
+                    classifier_configuration_path=classifier_configuration_path, load_pretrained_model=False,
+                    **kwargs).pre_process().ml()
+                writer.write(",".join((
+                    str(i),
+                    os.path.basename(preprocessor_pipeline_configuration_path),
+                    os.path.basename(classifier_configuration_path),
+                    str(accu)
+                )) + "\n")
+                writer.flush()

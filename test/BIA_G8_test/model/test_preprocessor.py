@@ -4,7 +4,7 @@ from BIA_G8.model.preprocessor import get_preprocessor
 
 
 def test():
-    assert get_preprocessor("dimension reduction")().execute(np.zeros(shape=(1024, 1024))).shape == (256, 256)
+    assert get_preprocessor("normalize")().execute(np.zeros(shape=(1024, 1024))).shape == (256, 256)
     dnm = get_preprocessor("denoise (mean)")()
     assert list(argument.name for argument in dnm.arguments) == ['footprint_length_width']
     dnm = dnm.set_params(footprint_length_width=5, aaa=6)

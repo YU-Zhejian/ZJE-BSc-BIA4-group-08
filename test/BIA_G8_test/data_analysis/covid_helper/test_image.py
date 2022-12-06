@@ -9,7 +9,7 @@ import skimage
 import skimage.transform as skitrans
 
 from BIA_G8.data_analysis import covid_dataset
-from BIA_G8_DATA_ANALYSIS_test.covid_helper import stride
+from BIA_G8_test.data_analysis.covid_helper import stride
 
 label = "LBL"
 
