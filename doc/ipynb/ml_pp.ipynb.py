@@ -48,13 +48,6 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import tqdm
 
-try:
-    import sklearnex
-
-    sklearnex.patch_sklearn()
-except ImportError:
-    sklearnex = None
-
 from sklearn.model_selection import train_test_split
 from sklearn.neighbors import KNeighborsClassifier
 

@@ -13,7 +13,7 @@ __all__ = (
 import platform
 import sys
 import time
-from typing import Dict
+from typing import Dict, Any
 
 import BIA_G8
 
@@ -116,7 +116,7 @@ def validate_versions(compile_time_version_dict: Dict[str, str]) -> None:
         )
 
 
-def dump_metadata() -> Dict[str, str]:
+def dump_metadata() -> Dict[str, Any]:
     """
     Dump metadata to a dictionary.
     """

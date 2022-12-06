@@ -11,13 +11,6 @@ import os
 import sys
 import time
 
-try:
-    import sklearnex
-
-    sklearnex.patch_sklearn()
-except ImportError:
-    sklearnex = None
-
 sys.setrecursionlimit(int(1e8))
 PACKAGE_ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
 PROJECT_ROOT_DIR = os.path.dirname(

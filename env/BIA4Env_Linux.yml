@@ -12,10 +12,6 @@
 name: BIA4Env
 channels:
   - nodefaults
-#  - https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/conda-forge
-#  - https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/pytorch
-#  - https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/main
-#  - https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/free
   - conda-forge
   - anaconda
   - bioconda
@@ -28,27 +24,25 @@ dependencies:
   - python=3.8
   - matplotlib>=3.5
   - pyqt=5
-  - tk
   - numpy=1.23
   - pandas=1.5
 
   # general-purposed Image Processing Libraries
-  - pillow=9.2
   - scikit-image=0.19
 
   # ML Libs
   - scikit-learn=1.1
-  - scikit-learn-intelex # On Intel Platform for acceleration.
-  - pytorch>=1.12
+  - pytorch=1.13
   - torchvision
 
   # Recommended libraries
-  - seaborn=0.11 # A high-level plotting library over matplotlib.
-  - joblib=1.1 # An easy-to-use parallel helper.
+  - seaborn=0.12 # A high-level plotting library over matplotlib.
+  - joblib=1.2 # An easy-to-use parallel helper.
   - tqdm=4.64 # Progress bar.
   - click # For CLI applications
   - prettytable # For formatting tables
   - tomli # For fast parsing of TOML files
+  - tomli-w # For fast writing of TOML files
 
   # Development Utilities
   - bash
@@ -80,17 +74,17 @@ dependencies:
   - cudnn>=8.1.0
 
   # Testing
-  - pytest=7.1
+  - pytest=7.2
   - pytest-cov=4.0
-  - pytest-html=3.1
+  - pytest-html=3.2
   - coverage=6.5
 
   # Gradient Boosting Trees
-  - lightgbm>=3.2.1
-  - py-xgboost-gpu>=0.90
+  - py-xgboost-gpu=1.7
 
   - pip
   - setuptools
   - wheel
+  - build
   - pip:
     - pytype
