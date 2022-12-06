@@ -107,7 +107,7 @@ class AbstractPreprocessor(AbstractTOMLSerializable):
         return dict(self._parsed_kwargs)
 
     @classmethod
-    def from_dict(cls, exported_dict: Dict[str, Any]) -> AbstractPreprocessor:
+    def from_dict(cls, exported_dict: Dict[str, Any]):
         return cls().set_params(**exported_dict)
 
 

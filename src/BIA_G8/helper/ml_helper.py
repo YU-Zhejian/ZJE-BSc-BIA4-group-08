@@ -10,7 +10,7 @@ __all__ = (
     "MachinelearningDatasetInterface"
 )
 
-from abc import abstractmethod
+from abc import abstractmethod, ABC
 from typing import Dict, Tuple, Callable, Iterable
 
 import numpy as np
@@ -66,7 +66,7 @@ def print_confusion_matrix(
     return str(pt)
 
 
-class MachinelearningDatasetInterface:
+class MachinelearningDatasetInterface(ABC):
     """
     Dataset that supports applying machine learning algorithms.
     """

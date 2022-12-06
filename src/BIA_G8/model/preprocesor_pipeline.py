@@ -38,7 +38,7 @@ class PreprocessorPipeline(AbstractTOMLSerializable):
         return retd
 
     @classmethod
-    def from_dict(cls, in_dict: Dict[str, Dict[str, Union[str, Dict[str, Any]]]]) -> PreprocessorPipeline:
+    def from_dict(cls, in_dict: Dict[str, Dict[str, Union[str, Dict[str, Any]]]]):
         pp = cls()
         for _, step_name_args in in_dict.items():
             step = get_preprocessor(step_name_args["name"]).from_dict(step_name_args["args"])

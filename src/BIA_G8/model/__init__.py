@@ -6,7 +6,7 @@ Here contains data structures and utilities for preprocessing and classification
 
 from __future__ import annotations
 
-from typing import TypeVar, Callable, Union
+from typing import TypeVar, Callable, Union, Generic
 
 import BIA_G8
 
@@ -90,7 +90,7 @@ def argument_string_to_float(instr: str) -> Union[Unset, float]:
     return unset if instr == "" else float(instr)
 
 
-class Argument:
+class Argument(Generic[_ArgType]):
     """
     Parser and indicator of an argument. Used in frontend only.
 

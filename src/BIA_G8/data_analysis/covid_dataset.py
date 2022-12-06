@@ -164,7 +164,7 @@ class CovidImage:
             image_path: str,
             label: int,
             label_str: str
-    ) -> CovidImage:
+    ):
         """
         Generate a new instance from existing file.
 
@@ -184,7 +184,7 @@ class CovidImage:
         )
 
     @classmethod
-    def from_np_array(cls, image: npt.NDArray, label: int, label_str: str) -> CovidImage:
+    def from_np_array(cls, image: npt.NDArray, label: int, label_str: str):
         """
         Generate a new instance based on existing Numpy array.
 
@@ -407,7 +407,7 @@ class CovidDataSet(MachinelearningDatasetInterface):
             encode: Optional[Callable[[str], int]] = None,
             decode: Optional[Callable[[int], str]] = None,
             n_classes: Optional[int] = None
-    ) -> CovidDataSet:
+    ):
         """
         Generate a new instance from directory of images.
         The directory (absolute path to ``sample_covid_image``) should be like following structure:
@@ -465,7 +465,7 @@ class CovidDataSet(MachinelearningDatasetInterface):
             decode: Optional[Callable[[int], str]] = None,
             n_classes: Optional[int] = None,
             joblib_kwds: Optional[Mapping[str, Any]] = None
-    ) -> CovidDataSet:
+    ):
         """
         Parallel version of :py:func:`from_directory`.
         """
@@ -501,7 +501,7 @@ class CovidDataSet(MachinelearningDatasetInterface):
             encode: Callable[[str], int],
             decode: Callable[[int], str],
             n_classes: int
-    ) -> CovidDataSet:
+    ):
         """
         Generate a new instance from a list of py:class:`CovidImage`.
         """
@@ -672,7 +672,7 @@ class CovidDataSet(MachinelearningDatasetInterface):
 
     def __getitem__(self, i: Union[int, slice]) -> Union[CovidImage, CovidDataSet]:
         if isinstance(i, slice):
-            retl = []
+            retl: List[CovidImage] = []
             start, stop, step = i.start, i.stop, i.step
             if step is None:
                 step = 1
@@ -681,14 +681,15 @@ class CovidDataSet(MachinelearningDatasetInterface):
             if start is None:
                 start = 0
             for _i in range(start, stop, step):
-                retl.append(self[_i])
+                retl.append(self._loaded_images[_i])
             return self.from_loaded_images(
                 loaded_images=retl,
                 encode=self.encode,
                 decode=self.decode,
                 n_classes=self.n_classes
             )
-        return self._loaded_images[i]
+        else:
+            return self._loaded_images[i]
 
     def __setitem__(self, i: int, value: CovidImage):
         self._loaded_images[i] = value

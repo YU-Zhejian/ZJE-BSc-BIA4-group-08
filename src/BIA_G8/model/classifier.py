@@ -10,7 +10,7 @@ from __future__ import annotations
 import os.path
 from abc import abstractmethod
 from statistics import mean
-from typing import TypeVar, Type, Final, Optional, Iterable, Dict, Any, Union
+from typing import TypeVar, Type, Final, Optional, Iterable, Dict, Any, Union, Generic
 
 import joblib
 import numpy as np
@@ -104,7 +104,7 @@ class ClassifierInterface(SerializableInterface):
 
     @classmethod
     @abstractmethod
-    def new(cls, **params) -> ClassifierInterface:
+    def new(cls, **params):
         """
         Initialize the
 
@@ -114,7 +114,7 @@ class ClassifierInterface(SerializableInterface):
 
     @classmethod
     @abstractmethod
-    def load(cls, path: str, load_model: bool = True) -> ClassifierInterface:
+    def load(cls, path: str, load_model: bool = True):
         """
         Load the model from TOML
 
@@ -162,7 +162,7 @@ class DiagnosableClassifierInterface(ClassifierInterface):
 _SKLearnModelType = TypeVar("_SKLearnModelType")
 
 
-class BaseSklearnClassifier(ClassifierInterface):
+class BaseSklearnClassifier(ClassifierInterface, Generic[_SKLearnModelType]):
     """
     Basic wrapper for SKLearn-compatible classifiers.
     """
@@ -184,7 +184,7 @@ class BaseSklearnClassifier(ClassifierInterface):
         self._model = model
 
     @classmethod
-    def new(cls, **params) -> BaseSklearnClassifier:
+    def new(cls, **params):
         return cls(model=cls._model_type(**params), **params)
 
     def fit(self, dataset: MachinelearningDatasetInterface) -> BaseSklearnClassifier:
@@ -204,7 +204,7 @@ class BaseSklearnClassifier(ClassifierInterface):
         return np.sum(y_pred == y_test) / len(y_test)
 
     @classmethod
-    def load(cls, path: str, load_model: bool = True) -> BaseSklearnClassifier:
+    def load(cls, path: str, load_model: bool = True):
         loaded_data = read_toml_with_metadata(path)
         if "model_path" in loaded_data and load_model:
             _lh.info("%s: Loading pretrained model...", cls.__name__)
@@ -285,7 +285,7 @@ class SklearnVotingClassifier(BaseSklearnClassifier):
     _model_type: Final[_SKLearnModelType] = VotingClassifier
 
     @classmethod
-    def new(cls, **params) -> BaseSklearnClassifier:
+    def new(cls, **params):
         new_instance = cls(model=cls._model_type(estimators=[
             ('knn', KNeighborsClassifier()),
             ('svm', SVC()),
@@ -305,7 +305,7 @@ class XGBoostClassifier(BaseSklearnClassifier):
     _model_type: Final[_SKLearnModelType] = XGBClassifier
 
     @classmethod
-    def new(cls, **params) -> BaseSklearnClassifier:
+    def new(cls, **params):
         if cls._model_type is None:
             raise LackingOptionalRequirementError(
                 name="XGBoost",
@@ -360,7 +360,7 @@ class BaseTorchClassifier(DiagnosableClassifierInterface):
         self._model = model
 
     @classmethod
-    def load(cls, path: str, load_model: bool = True) -> BaseTorchClassifier:
+    def load(cls, path: str, load_model: bool = True):
         loaded_data = read_toml_with_metadata(path)
         if "model_path" in loaded_data and load_model:
             _lh.info("%s: Loading pretrained model...", cls.__name__)
@@ -495,7 +495,7 @@ class BaseTorchClassifier(DiagnosableClassifierInterface):
             cls,
             hyper_params: Dict[str, Any],
             model_params: Dict[str, Any]
-    ) -> BaseTorchClassifier:
+    ):
         return cls(
             hyper_params=hyper_params,
             model_params=model_params,

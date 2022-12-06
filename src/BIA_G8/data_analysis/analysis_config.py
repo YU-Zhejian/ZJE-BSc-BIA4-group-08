@@ -74,7 +74,7 @@ class AnalysisConfiguration(AbstractTOMLSerializable):
         }
 
     @classmethod
-    def from_dict(cls, in_dict: Dict[str, Any]) -> AbstractTOMLSerializable:
+    def from_dict(cls, in_dict: Dict[str, Any]):
         return cls(**in_dict)
 
     def pre_process(self) -> AnalysisConfiguration:

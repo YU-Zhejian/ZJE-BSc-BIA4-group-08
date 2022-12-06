@@ -78,20 +78,20 @@ def write_pickle_xz(obj: Any, path: str) -> None:
         pickle.dump(obj, writer)
 
 
-class SerializableInterface:
+class SerializableInterface(ABC):
     """
     Something that can be saved or loaded to files.
     """
 
     @classmethod
-    def load(cls, path: str, **kwargs) -> SerializableInterface:
+    def load(cls, path: str, **kwargs):
         """
         Load configuration from a file.
 
         :param path: Filename to read from.
         :return: New instance of corresponding class.
         """
-        pass
+        raise NotImplementedError
 
     def save(self, path: str, **kwargs) -> None:
         """
@@ -99,10 +99,10 @@ class SerializableInterface:
 
         :param path: Filename to write to.
         """
-        pass
+        raise NotImplementedError
 
 
-class TOMLRepresentableInterface:
+class TOMLRepresentableInterface(ABC):
     """
     Interface of something that can be represented as TOML.
 
@@ -116,7 +116,7 @@ class TOMLRepresentableInterface:
 
     @classmethod
     @abstractmethod
-    def from_dict(cls, in_dict: Dict[str, Any]) -> TOMLRepresentableInterface:
+    def from_dict(cls, in_dict: Dict[str, Any]):
         """Load the item from a dictionary"""
         raise NotImplementedError
 
@@ -157,7 +157,7 @@ class AbstractTOMLSerializable(
     """
 
     @classmethod
-    def load(cls, path: str, **kwargs) -> AbstractTOMLSerializable:
+    def load(cls, path: str, **kwargs):
         return cls.from_dict(read_toml_with_metadata(path))
 
     def save(self, path: str, **kwargs) -> None:
