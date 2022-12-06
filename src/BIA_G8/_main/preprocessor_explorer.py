@@ -1,9 +1,7 @@
 import numpy.typing as npt
-import skimage
 from matplotlib import pyplot as plt
 
 from BIA_G8.helper.io_helper import read_np_xz
-from BIA_G8.helper.ndarray_helper import describe, scale_np_array
 from BIA_G8.model.preprocesor_pipeline import PreprocessorPipeline
 from BIA_G8.model.preprocessor import get_preprocessor_name_descriptions, get_preprocessor
 
@@ -41,8 +39,16 @@ def setup_pp(
         print(f"Preprocessor {repr(preprocessor)}")
         orig_img_copy = orig_img.copy()
         transformed_img = pp.execute(orig_img_copy)
-        transformed_img = preprocessor.execute(transformed_img)
-        plt.imshow(transformed_img)
+        try:
+            transformed_img = preprocessor.execute(transformed_img)
+        except Exception as e:
+            print(f"Exception {e} captured!")
+            continue
+        plt.imshow(
+            transformed_img,
+            cmap="bone"
+        )
+        plt.colorbar()
         plt.show()
         is_accepted = input("Accept? Y/N >") == "Y"
         if is_accepted:
@@ -55,9 +61,7 @@ def setup_pp(
 
 if __name__ == '__main__':
     input_path: str = "/home/yuzj/Documents/2022-23-Group-08/data_analysis/covid_image_new/Viral Pneumonia/Viral Pneumonia-1029.npy.xz"
-    image = scale_np_array(read_np_xz(input_path), (-1, 1))
-    print(describe(image))
     setup_pp(
-        skimage.img_as_uint(image),
-        "../../BIA_G8_DATA_ANALYSIS/explore.toml"
+        read_np_xz(input_path),
+        "explore.toml"
     )

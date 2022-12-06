@@ -62,6 +62,15 @@ class AbstractClassifier(SerializableInterface):
     def new(cls, **params) -> AbstractClassifier:
         raise NotImplementedError
 
+    @classmethod
+    @abstractmethod
+    def load(self, path: str, load_model: bool = True) -> AbstractClassifier:
+        raise NotImplementedError
+
+    @abstractmethod
+    def save(self, path: str, save_model: bool = True) -> None:
+        raise NotImplementedError
+
 
 _SKLearnModelType = TypeVar("_SKLearnModelType")
 
@@ -96,19 +105,26 @@ class BaseSklearnClassifier(AbstractClassifier):
         return np.sum(y_pred == y_test) / len(y_test)
 
     @classmethod
-    def load(cls, path: str) -> BaseSklearnClassifier:
+    def load(cls, path: str, load_model: bool = True) -> BaseSklearnClassifier:
         loaded_data = read_toml_with_metadata(path)
-        return cls(model=joblib.load(loaded_data["model_path"]), **loaded_data["params"])
+        if "model_path" in loaded_data and load_model:
+            _lh.info("%s: Loading pretrained model...", cls.__name__)
+            return cls(model=joblib.load(loaded_data["model_path"]), **loaded_data["params"])
+        else:
+            _lh.info("%s: Loading parameters only...", cls.__name__)
+            return cls.new(**loaded_data["params"])
 
-    def save(self, path: str) -> None:
+    def save(self, path: str, save_model: bool = True) -> None:
         path = os.path.abspath(path)
-        model_path = path + ".pkl.xz"
-        joblib.dump(self._model, model_path)
-        write_toml_with_metadata({
+        out_dict = {
             "name": self._name,
-            "params": self._params,
-            "model_path": model_path
-        }, path)
+            "params": self._params
+        }
+        if save_model:
+            model_path = path + ".pkl.xz"
+            joblib.dump(self._model, model_path)
+            out_dict["model_path"] = model_path
+        write_toml_with_metadata(out_dict, path)
 
 
 class SklearnKNearestNeighborsClassifier(BaseSklearnClassifier):
@@ -165,6 +181,7 @@ class XGBoostClassifier(BaseSklearnClassifier):
 
 class BaseTorchClassifier(AbstractClassifier):
     _model: AbstractTorchModule
+    _device: str
     _num_epochs: int
     _batch_size: int
     _lr: float
@@ -182,31 +199,40 @@ class BaseTorchClassifier(AbstractClassifier):
         self._hyper_params = hyper_params
         self._batch_size = hyper_params["batch_size"]
         self._num_epochs = hyper_params["num_epochs"]
+        self._device = hyper_params["device"]
         self._lr = hyper_params["lr"]
         self._model_params = model_params
         self._model = model
 
     @classmethod
-    def load(cls, path: str) -> BaseTorchClassifier:
+    def load(cls, path: str, load_model: bool = True) -> BaseTorchClassifier:
         loaded_data = read_toml_with_metadata(path)
-        return cls(
-            model=read_tensor_xz(loaded_data["model_path"]),
-            hyper_params=loaded_data["hyper_params"],
-            model_params=loaded_data["model_params"]
-        )
+        if "model_path" in loaded_data and load_model:
+            _lh.info("%s: Loading pretrained model...", cls.__name__)
+            return cls(
+                model=read_tensor_xz(loaded_data["model_path"]),
+                hyper_params=loaded_data["hyper_params"],
+                model_params=loaded_data["model_params"]
+            )
+        else:
+            _lh.info("%s: Loading parameters only...", cls.__name__)
+            return cls.new(hyper_params=loaded_data["hyper_params"], model_params=loaded_data["model_params"])
 
-    def save(self, path: str) -> None:
+    def save(self, path: str, save_model: bool = True) -> None:
         path = os.path.abspath(path)
-        model_path = path + ".pt.xz"
-        write_tensor_xz(self._model, model_path)
-        write_toml_with_metadata({
+        out_dict = {
             "name": self._name,
             "hyper_params": self._hyper_params,
-            "model_params": self._model_params,
-            "model_path": model_path
-        }, path)
+            "model_params": self._model_params
+        }
+        if save_model:
+            model_path = path + ".pt.xz"
+            write_tensor_xz(self._model, model_path)
+            out_dict["model_path"] = model_path
+        write_toml_with_metadata(out_dict, path)
 
     def fit(self, dataset: MachinelearningDatasetInterface) -> BaseTorchClassifier:
+        self._model = self._model.to(self._device)
         train_data_loader = tud.DataLoader(dataset.torch_dataset, batch_size=self._batch_size, shuffle=True)
         loss_func = nn.CrossEntropyLoss()
         opt = torch.optim.Adam(
@@ -215,6 +241,7 @@ class BaseTorchClassifier(AbstractClassifier):
         )
         for epoch in range(self._num_epochs):
             for i, (x_train, y_train) in enumerate(train_data_loader):
+                x_train, y_train = x_train.to(self._device), y_train.to(self._device)
                 y_pred_prob = self._model(x_train)
                 y_pred = torch.argmax(y_pred_prob, dim=-1)
                 loss = loss_func(y_pred_prob, y_train)
@@ -223,7 +250,7 @@ class BaseTorchClassifier(AbstractClassifier):
                 opt.step()
                 accu = (torch.sum(torch.eq(y_pred, y_train)) * 100 / y_train.shape[0]).item()
                 if i % 10 == 0:
-                    _lh.info(f"Epoch {epoch} batch {i}: accuracy {accu:.2f}")
+                    _lh.info(f"%s Epoch {epoch} batch {i}: accuracy {accu:.2f}", self.__class__.__name__)
         return self
 
     def predict(self, image: npt.NDArray) -> npt.NDArray:
@@ -248,6 +275,7 @@ class BaseTorchClassifier(AbstractClassifier):
         test_data_loader = tud.DataLoader(test_dataset.torch_dataset, batch_size=self._batch_size, shuffle=True)
         correct_count = 0
         for i, (x_test, y_test) in enumerate(test_data_loader):
+            x_test, y_test = x_test.to(self._device), y_test.to(self._device)
             y_pred = torch.argmax(self._model(x_test), dim=-1)
             correct_count += torch.sum(torch.eq(y_pred, y_test)).item()
         return correct_count / len(test_dataset)
@@ -348,6 +376,6 @@ def get_classifier_type(name: str) -> Type[AbstractClassifier]:
     return _classifiers[name]
 
 
-def load_classifier(parameter_path: str) -> AbstractClassifier:
+def load_classifier(parameter_path: str, load_model: bool = True) -> AbstractClassifier:
     loaded_data = read_toml_with_metadata(parameter_path)
-    return get_classifier_type(loaded_data.pop("name")).load(parameter_path)
+    return get_classifier_type(loaded_data.pop("name")).load(parameter_path, load_model=load_model)

@@ -31,7 +31,7 @@ def _scale_impl(
 def scale_np_array(
         x: npt.NDArray[Union[int, float]],
         out_range: Tuple[Union[int, float], Union[int, float]] = (0, 1)
-) -> npt.NDArray[Union[int, float]]:
+) -> npt.NDArray[float]:
     """
     Scale a Numpy array to specific range.
 
