@@ -10,6 +10,7 @@ import numpy.typing as npt
 
 from BIA_G8 import get_lh
 from BIA_G8.helper.io_helper import AbstractTOMLSerializable
+from BIA_G8.helper.ndarray_helper import scale_np_array
 from BIA_G8.model.preprocessor import AbstractPreprocessor, get_preprocessor
 
 _lh = get_lh(__name__)
@@ -47,8 +48,10 @@ class PreprocessorPipeline(AbstractTOMLSerializable):
 
     def execute(self, img: npt.NDArray) -> npt.NDArray:
         """Execute the preprocessors sequentially over an image"""
+        img = scale_np_array(img)
         for step in self._steps:
             img = step.execute(img)
+        img = scale_np_array(img)
         return img
 
     @property

@@ -2,58 +2,29 @@ from BIA_G8.data_analysis.analysis_config import grid_search
 
 if __name__ == "__main__":
     preprocessor_pipeline_configuration_paths = [
-        "/home/yuzj/Documents/2022-23-Group-08/src/BIA_G8_DATA_ANALYSIS/pp_plain.toml",
-        "/home/yuzj/Documents/2022-23-Group-08/src/BIA_G8_DATA_ANALYSIS/pp_adapt_hist.toml",
-        "/home/yuzj/Documents/2022-23-Group-08/src/BIA_G8_DATA_ANALYSIS/pp_unsharp.toml",
+        "pp_plain.toml",
+        "pp_adapt_hist.toml",
+        "pp_unsharp.toml",
     ]
     classifier_configuration_paths = [
-        "/home/yuzj/Documents/2022-23-Group-08/src/BIA_G8_DATA_ANALYSIS/cnn.toml",
-        "/home/yuzj/Documents/2022-23-Group-08/src/BIA_G8_DATA_ANALYSIS/vote.toml",
-        "/home/yuzj/Documents/2022-23-Group-08/src/BIA_G8_DATA_ANALYSIS/xgb.toml",
-        "/home/yuzj/Documents/2022-23-Group-08/src/BIA_G8_DATA_ANALYSIS/knn.toml",
-        "/home/yuzj/Documents/2022-23-Group-08/src/BIA_G8_DATA_ANALYSIS/svc.toml",
-        "/home/yuzj/Documents/2022-23-Group-08/src/BIA_G8_DATA_ANALYSIS/extra_trees.toml",
-        "/home/yuzj/Documents/2022-23-Group-08/src/BIA_G8_DATA_ANALYSIS/rf.toml",
-        "/home/yuzj/Documents/2022-23-Group-08/src/BIA_G8_DATA_ANALYSIS/resnet50.toml"
+        "ml_cnn.toml",
+        "ml_vote.toml",
+        "ml_xgb.toml",
+        "ml_knn.toml",
+        "ml_svc.toml",
+        "ml_extra_trees.toml",
+        "ml_rf.toml",
+        "ml_resnet50.toml"
+    ]
+    dataset_configuration_paths = [
+        "ds_new.toml",
+        "ds_new_nomask.toml",
+        "ds_old.toml"
     ]
     grid_search(
-        dataset_path="/home/yuzj/Documents/2022-23-Group-08/data_analysis/covid_image_new_nomask",
-        encoder_dict={
-            "COVID": 0,
-            "Lung_Opacity": 1,
-            "Normal": 2,
-            "Viral Pneumonia": 3,
-        },
+        dataset_configuration_paths=dataset_configuration_paths,
         preprocessor_pipeline_configuration_paths=preprocessor_pipeline_configuration_paths,
         classifier_configuration_paths=classifier_configuration_paths,
-        size=600,
-        out_csv="gs_new_data_nomask.csv",
-        replication=10
-    )
-    grid_search(
-        dataset_path="/home/yuzj/Documents/2022-23-Group-08/data_analysis/covid_image",
-        encoder_dict={
-            "COVID-19": 0,
-            "NORMAL": 1,
-            "Viral_Pneumonia": 2
-        },
-        preprocessor_pipeline_configuration_paths=preprocessor_pipeline_configuration_paths,
-        classifier_configuration_paths=classifier_configuration_paths,
-        size=600,
-        out_csv="gs_old_data.csv",
-        replication=10
-    )
-    grid_search(
-        dataset_path="/home/yuzj/Documents/2022-23-Group-08/data_analysis/covid_image_new",
-        encoder_dict={
-            "COVID": 0,
-            "Lung_Opacity": 1,
-            "Normal": 2,
-            "Viral Pneumonia": 3,
-        },
-        preprocessor_pipeline_configuration_paths=preprocessor_pipeline_configuration_paths,
-        classifier_configuration_paths=classifier_configuration_paths,
-        size=600,
-        out_csv="gs_new_data.csv",
+        out_csv="gs.csv",
         replication=10
     )

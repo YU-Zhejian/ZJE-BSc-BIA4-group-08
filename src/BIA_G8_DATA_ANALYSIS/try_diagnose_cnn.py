@@ -1,12 +1,9 @@
-from BIA_G8.data_analysis.covid_dataset import CovidDataSet
+from BIA_G8.data_analysis.covid_dataset_configuration import CovidDatasetConfiguration
 from BIA_G8.model.classifier import ToyCNNClassifier, Resnet50Classifier
 
 if __name__ == "__main__":
     width, height = 256, 256
-    ds = CovidDataSet.parallel_from_directory(
-        dataset_path="/home/yuzj/Documents/2022-23-Group-08/data_analysis/covid_image_new",
-        size=600
-    )
+    ds = CovidDatasetConfiguration.load("ds_new.toml").dataset
     ds_train, ds_test = ds.train_test_split()
     ToyCNNClassifier.new(
         hyper_params={

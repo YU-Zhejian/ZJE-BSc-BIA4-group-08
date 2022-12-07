@@ -8,13 +8,13 @@ __all__ = (
     "describe"
 )
 
-from typing import Union, Tuple, TypeVar
+from typing import Union, Tuple
 
 import numpy as np
 import torch
 from numpy import typing as npt
 
-_Tensor = TypeVar("_Tensor", npt.NDArray[Union[float, int]], torch.Tensor)
+_Tensor = Union[npt.NDArray, torch.Tensor]
 
 
 def _scale_impl(
@@ -29,9 +29,9 @@ def _scale_impl(
 
 
 def scale_np_array(
-        x: npt.NDArray[Union[int, float]],
+        x: npt.NDArray,
         out_range: Tuple[Union[int, float], Union[int, float]] = (0, 1)
-) -> npt.NDArray[float]:
+) -> npt.NDArray:
     """
     Scale a Numpy array to specific range.
 

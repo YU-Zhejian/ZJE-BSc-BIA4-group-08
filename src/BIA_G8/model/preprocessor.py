@@ -1,3 +1,7 @@
+"""
+Abstraction of a single preprocessor step
+"""
+
 from __future__ import annotations
 
 import json
@@ -268,7 +272,7 @@ class WienerDeblurPreprocessor(AbstractPreprocessor):
                 name="balance",
                 description="a parameter that tune the data restoration, recommended range: float from 0.005 to 1",
                 is_required=True,
-                parse_str=argument_string_to_int
+                parse_str=argument_string_to_float
             ),
         )
     }

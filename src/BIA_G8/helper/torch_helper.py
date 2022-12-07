@@ -10,7 +10,6 @@ from typing import Dict, Tuple, Optional
 
 import numpy as np
 import numpy.typing as npt
-
 import torch
 import torch.utils.data as tud
 

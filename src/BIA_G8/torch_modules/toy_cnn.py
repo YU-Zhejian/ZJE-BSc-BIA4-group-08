@@ -84,5 +84,3 @@ class ToyCNNModule(AbstractTorchModule):
         x = self.mlp2(x)
         # x = self.describe(x)
         return x
-
-

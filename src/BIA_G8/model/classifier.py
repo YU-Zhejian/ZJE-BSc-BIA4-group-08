@@ -30,10 +30,10 @@ from BIA_G8.helper.io_helper import read_tensor_xz, write_tensor_xz, Serializabl
 from BIA_G8.helper.ml_helper import MachinelearningDatasetInterface
 from BIA_G8.helper.ndarray_helper import scale_np_array
 from BIA_G8.helper.torch_helper import convert_np_image_to_torch_tensor
-from BIA_G8.torch_modules import AbstractTorchModule
 from BIA_G8.model import LackingOptionalRequirementError
-from BIA_G8.torch_modules.toy_cnn import ToyCNNModule
+from BIA_G8.torch_modules import AbstractTorchModule
 from BIA_G8.torch_modules.torchvision_resnet50 import TorchVisionResnet50Module
+from BIA_G8.torch_modules.toy_cnn import ToyCNNModule
 
 _lh = get_lh(__name__)
 

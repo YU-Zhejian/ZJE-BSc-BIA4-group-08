@@ -29,7 +29,7 @@ if __name__ == '__main__':
     run(
         ds_train,
         ds_test,
-        "resnet50.toml",
+        "ml_resnet50.toml",
         Resnet50Classifier,
         hyper_params={
             "batch_size": 17,
@@ -45,42 +45,42 @@ if __name__ == '__main__':
     run(
         ds_train,
         ds_test,
-        "xgb.toml",
+        "ml_xgb.toml",
         XGBoostClassifier,
         tree_method="gpu_hist"
     )
     run(
         ds_train,
         ds_test,
-        "svc.toml",
+        "ml_svc.toml",
         SklearnSupportingVectorMachineClassifier
     )
     run(
         ds_train,
         ds_test,
-        "extra_trees.toml",
+        "ml_extra_trees.toml",
         SklearnExtraTreesClassifier
     )
     run(
         ds_train,
         ds_test,
-        "rf.toml",
+        "ml_rf.toml",
         SklearnRandomForestClassifier
     )
     run(
         ds_train,
         ds_test,
-        "knn.toml",
+        "ml_knn.toml",
         SklearnKNearestNeighborsClassifier
     )
     run(
         ds_train,
         ds_test,
-        "vote.toml",
+        "ml_vote.toml",
         SklearnVotingClassifier
     )
     run(
-        ds_train, ds_test, "cnn.toml", ToyCNNClassifier,
+        ds_train, ds_test, "ml_cnn.toml", ToyCNNClassifier,
         hyper_params={
             "batch_size": 17,
             "num_epochs": 20,

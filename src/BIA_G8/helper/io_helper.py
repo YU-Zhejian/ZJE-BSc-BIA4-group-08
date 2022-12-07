@@ -42,7 +42,7 @@ from torch import nn
 from BIA_G8.helper.metadata_helper import validate_versions, dump_versions, dump_metadata
 
 
-def read_np_xz(path: str) -> npt.NDArray[Any]:
+def read_np_xz(path: str) -> npt.NDArray:
     """Reader of compressed Numpy serialization format"""
     with lzma.open(path, "rb") as reader:
         return npy_format.read_array(reader)
@@ -60,7 +60,7 @@ def read_pickle_xz(path: str) -> Any:
         return pickle.load(reader)
 
 
-def write_np_xz(array: npt.NDArray[Any], path: str) -> None:
+def write_np_xz(array: npt.NDArray, path: str) -> None:
     """Writer of compressed Numpy serialization format"""
     with lzma.open(path, "wb", preset=9) as writer:
         npy_format.write_array(writer, np.asanyarray(array))

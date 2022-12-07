@@ -1,9 +1,8 @@
 import torch
 
+from BIA_G8 import get_lh
 from BIA_G8.helper import ndarray_helper
 from BIA_G8.torch_modules import AbstractTorchModule
-
-from BIA_G8 import get_lh
 
 _lh = get_lh(__name__)
 

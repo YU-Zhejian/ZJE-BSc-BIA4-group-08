@@ -1,15 +1,26 @@
-import numpy.typing as npt
+import click
+import skimage.io as skiio
 from matplotlib import pyplot as plt
 
-from BIA_G8.helper.io_helper import read_np_xz
+from BIA_G8.helper import io_helper
+from BIA_G8.helper.ndarray_helper import scale_np_array
 from BIA_G8.model.preprocesor_pipeline import PreprocessorPipeline
 from BIA_G8.model.preprocessor import get_preprocessor_name_descriptions, get_preprocessor
 
 
+@click.command
+@click.option("--input_path", help="Path to sample image")
+@click.option("--pp_output_path", help="Output path of Preprocessor Pipeline Config.")
 def setup_pp(
-        orig_img: npt.NDArray,
+        input_path: str,
         pp_output_path: str
 ) -> PreprocessorPipeline:
+    if input_path.endswith("npy.xz"):
+        orig_img = io_helper.read_np_xz(input_path)
+    else:
+        orig_img = skiio.imread(input_path)
+    orig_img = scale_np_array(orig_img)
+
     pp = PreprocessorPipeline()
     cached_preprocessor_name_description = {
         preprocessor_id: name_description for preprocessor_id, name_description in
@@ -60,8 +71,4 @@ def setup_pp(
 
 
 if __name__ == '__main__':
-    input_path: str = "/home/yuzj/Documents/2022-23-Group-08/data_analysis/covid_image_new/Viral Pneumonia/Viral Pneumonia-1029.npy.xz"
-    setup_pp(
-        read_np_xz(input_path),
-        "explore.toml"
-    )
+    setup_pp()

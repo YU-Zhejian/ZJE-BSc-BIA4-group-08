@@ -1,10 +1,11 @@
 import glob
 import os
+import tempfile
 from typing import Type
 
 import numpy as np
 
-from BIA_G8.data_analysis.covid_dataset import generate_fake_classification_dataset, CovidDataSet
+from BIA_G8.data_analysis.covid_dataset import generate_fake_classification_dataset
 from BIA_G8.model.classifier import load_classifier, ToyCNNClassifier, \
     ClassifierInterface, XGBoostClassifier, SklearnVotingClassifier, SklearnSupportingVectorMachineClassifier, \
     SklearnExtraTreesClassifier, SklearnRandomForestClassifier, SklearnKNearestNeighborsClassifier
@@ -23,13 +24,14 @@ def run(
         **kwargs
 ):
     global ds_train, ds_test, width, height
-    save_path = "tmp.toml"
-    classifier_type.new(**kwargs).fit(ds_train).save(save_path)
-    m2 = load_classifier(save_path)
-    _ = m2.predict(np.zeros(shape=(width, height), dtype=int))
-    _ = m2.predicts([np.zeros(shape=(width, height), dtype=int)] * 1024)
-    _ = m2.evaluate(ds_test)
-    _ = map(os.remove, glob.glob(save_path + "*"))
+    with tempfile.TemporaryDirectory() as tmpdir:
+        save_path = os.path.join(tmpdir, "tmp.toml")
+        classifier_type.new(**kwargs).fit(ds_train).save(save_path)
+        m2 = load_classifier(save_path)
+        _ = m2.predict(np.zeros(shape=(width, height), dtype=int))
+        _ = m2.predicts([np.zeros(shape=(width, height), dtype=int)] * 1024)
+        _ = m2.evaluate(ds_test)
+        _ = map(os.remove, glob.glob(save_path + "*"))
 
 
 # Disabled, too slow.
@@ -37,7 +39,7 @@ def run(
 #     run(
 #         ds_train,
 #         ds_test,
-#         "resnet50.toml",
+#         "ml_resnet50.toml",
 #         Resnet50Classifier,
 #         hyper_params={
 #             "batch_size": 4,
@@ -65,7 +67,7 @@ def test_extra_trees():
 
 
 def test_rf():
-    run( SklearnRandomForestClassifier)
+    run(SklearnRandomForestClassifier)
 
 
 def test_knn():
@@ -73,7 +75,7 @@ def test_knn():
 
 
 def test_vote():
-    run( SklearnVotingClassifier)
+    run(SklearnVotingClassifier)
 
 
 def test_cnn():
