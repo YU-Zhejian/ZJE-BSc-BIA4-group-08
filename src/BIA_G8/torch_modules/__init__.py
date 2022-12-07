@@ -1,7 +1,7 @@
 """
 Self-created torch modules.
 """
-
+from abc import abstractmethod
 from typing import Callable
 
 import torch
@@ -15,3 +15,7 @@ class AbstractTorchModule(nn.Module):
         super().__init__()
 
     __call__: Callable[[torch.Tensor], torch.Tensor]
+
+    @abstractmethod
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        raise NotImplementedError

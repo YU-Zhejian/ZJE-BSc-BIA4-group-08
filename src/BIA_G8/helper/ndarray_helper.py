@@ -8,7 +8,7 @@ __all__ = (
     "describe"
 )
 
-from typing import Union, Tuple
+from typing import Union, Tuple, Optional
 
 import numpy as np
 import torch
@@ -30,6 +30,7 @@ def _scale_impl(
 
 def scale_np_array(
         x: npt.NDArray,
+        domain: Optional[Tuple[Union[int, float], Union[int, float]]] = None,
         out_range: Tuple[Union[int, float], Union[int, float]] = (0, 1)
 ) -> npt.NDArray:
     """
@@ -42,12 +43,14 @@ def scale_np_array(
     >>> scale_np_array(np.array([1,2,3,4,5]), (0, 1))
     array([0.  , 0.25, 0.5 , 0.75, 1.  ])
     """
-    domain = np.min(x), np.max(x)
+    if domain is None:
+        domain = np.min(x), np.max(x)
     return _scale_impl(x, out_range, domain)
 
 
 def scale_torch_array(
         x: torch.Tensor,
+        domain: Optional[Tuple[Union[int, float], Union[int, float]]] = None,
         out_range: Tuple[Union[int, float], Union[int, float]] = (0, 1)
 ) -> torch.Tensor:
     """
@@ -60,7 +63,8 @@ def scale_torch_array(
     >>> scale_torch_array(torch.tensor(np.array([1,2,3,4,5])), (0, 1))
     tensor([0.0000, 0.2500, 0.5000, 0.7500, 1.0000])
     """
-    domain = torch.min(x).item(), torch.max(x).item()
+    if domain is None:
+        domain = torch.min(x).item(), torch.max(x).item()
     return _scale_impl(x, out_range, domain)
 
 

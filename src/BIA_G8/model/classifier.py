@@ -25,11 +25,11 @@ from sklearn.tree import DecisionTreeClassifier
 from torch import nn
 
 from BIA_G8 import get_lh
+from BIA_G8.helper import ndarray_helper
 from BIA_G8.helper.io_helper import read_tensor_xz, write_tensor_xz, SerializableInterface, read_toml_with_metadata, \
     write_toml_with_metadata
 from BIA_G8.helper.ml_helper import MachinelearningDatasetInterface
 from BIA_G8.helper.ndarray_helper import scale_np_array
-from BIA_G8.helper.torch_helper import convert_np_image_to_torch_tensor
 from BIA_G8.model import LackingOptionalRequirementError
 from BIA_G8.torch_modules import AbstractTorchModule
 from BIA_G8.torch_modules.torchvision_resnet50 import TorchVisionResnet50Module
@@ -149,15 +149,14 @@ class DiagnosableClassifierInterface(ClassifierInterface):
             test_dataset: MachinelearningDatasetInterface,
             output_diagnoistics_path: str,
             **kwargs
-    ):
+    ) -> ClassifierInterface:
         """
-        TODO
+        Fit a model with diagnostic information and validation.
+        This method is used to find the best epoch number.
 
-        :param train_dataset:
-        :param test_dataset:
+        :param train_dataset: Datset for training.
+        :param test_dataset: Dataset for testing.
         :param output_diagnoistics_path: Path for output diagnostic file.
-        :param kwargs:
-        :return:
         """
         raise NotImplementedError
 
@@ -194,7 +193,7 @@ class BaseSklearnClassifier(ClassifierInterface, Generic[_SKLearnModelType]):
         self._model.fit(*dataset.sklearn_dataset)
         return self
 
-    def predict(self, image: npt.NDArray) -> npt.NDArray:
+    def predict(self, image: npt.NDArray) -> int:
         return self.predicts([image])[0]
 
     def predicts(self, images: Iterable[npt.NDArray]) -> npt.NDArray:
@@ -345,6 +344,9 @@ class BaseTorchClassifier(DiagnosableClassifierInterface):
 
     @staticmethod
     def _convert_to_3_channels(batched_input: torch.Tensor) -> torch.Tensor:
+        """
+        ``[BATCH_SIZE, 1, WID, HEIGHT] -> [BATCH_SIZE, 3, WID, HEIGHT]``
+        """
         images_in_3_channels = []
         for img in batched_input:
             images_in_3_channels.extend(torch.stack([img, img, img], dim=1))
@@ -363,7 +365,7 @@ class BaseTorchClassifier(DiagnosableClassifierInterface):
         self._device = hyper_params["device"]
         self._lr = hyper_params["lr"]
         self._model_params = model_params
-        self._model = model
+        self._model = model.to(self._device)
 
     @classmethod
     def load(cls, path: str, load_model: bool = True):
@@ -394,7 +396,6 @@ class BaseTorchClassifier(DiagnosableClassifierInterface):
         write_toml_with_metadata(out_dict, path)
 
     def fit(self, dataset: MachinelearningDatasetInterface) -> BaseTorchClassifier:
-        self._model = self._model.to(self._device)
         train_data_loader = tud.DataLoader(dataset.torch_dataset, batch_size=self._batch_size, shuffle=True)
         loss_func = nn.CrossEntropyLoss()
         opt = torch.optim.Adam(
@@ -419,12 +420,18 @@ class BaseTorchClassifier(DiagnosableClassifierInterface):
                     _lh.info(f"%s Epoch {epoch} batch {i}: accuracy {accu:.2f}", self.__class__.__name__)
         return self
 
-    def predict(self, image: npt.NDArray) -> npt.NDArray:
+    def predict(self, image: npt.NDArray) -> int:
         return self.predicts([image])[0]
 
     def predicts(self, images: Iterable[npt.NDArray]) -> npt.NDArray:
         images_torch = list(map(
-            convert_np_image_to_torch_tensor,
+            lambda image: torch.tensor(
+                data=np.expand_dims(
+                    ndarray_helper.scale_np_array(image),
+                    axis=0
+                ),
+                dtype=torch.float
+            ),
             images
         ))
         images_batch = torch.stack(images_torch, dim=0)
@@ -441,7 +448,6 @@ class BaseTorchClassifier(DiagnosableClassifierInterface):
     ) -> BaseTorchClassifier:
         if num_epochs is None:
             num_epochs = self._num_epochs
-        self._model = self._model.to(self._device)
         train_data_loader = tud.DataLoader(train_dataset.torch_dataset, batch_size=self._batch_size, shuffle=True)
         test_data_loader = tud.DataLoader(test_dataset.torch_dataset, batch_size=self._batch_size, shuffle=True)
         loss_func = nn.CrossEntropyLoss()

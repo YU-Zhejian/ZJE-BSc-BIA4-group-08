@@ -35,9 +35,8 @@ import torch
 import tqdm
 
 from BIA_G8 import get_lh
-from BIA_G8.helper import io_helper, joblib_helper, torch_helper, ml_helper
+from BIA_G8.helper import io_helper, joblib_helper, torch_helper, ml_helper, ndarray_helper
 from BIA_G8.helper.ml_helper import MachinelearningDatasetInterface
-from BIA_G8.helper.torch_helper import convert_np_image_to_torch_tensor
 
 _lh = get_lh(__name__)
 
@@ -128,8 +127,15 @@ class CovidImage:
 
     @property
     def torch_tensor(self) -> torch.Tensor:
+        """The ``[N_CHANNELS, WID, HEIGHT]`` tensor"""
         if self._torch_tensor is None:
-            self._torch_tensor = convert_np_image_to_torch_tensor(self._np_array)
+            self._torch_tensor = torch.tensor(
+                data=np.expand_dims(
+                    ndarray_helper.scale_np_array(self._np_array),
+                    axis=0
+                ),
+                dtype=torch.float
+            )
         return self._torch_tensor
 
     @property
