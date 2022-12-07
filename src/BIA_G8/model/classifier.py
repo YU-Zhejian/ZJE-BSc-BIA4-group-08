@@ -23,14 +23,17 @@ from sklearn.neighbors import KNeighborsClassifier
 from sklearn.svm import SVC
 from sklearn.tree import DecisionTreeClassifier
 from torch import nn
-from torchvision.models import resnet50
 
 from BIA_G8 import get_lh
 from BIA_G8.helper.io_helper import read_tensor_xz, write_tensor_xz, SerializableInterface, read_toml_with_metadata, \
     write_toml_with_metadata
 from BIA_G8.helper.ml_helper import MachinelearningDatasetInterface
-from BIA_G8.helper.torch_helper import AbstractTorchModule
+from BIA_G8.helper.ndarray_helper import scale_np_array
+from BIA_G8.helper.torch_helper import convert_np_image_to_torch_tensor
+from BIA_G8.torch_modules import AbstractTorchModule
 from BIA_G8.model import LackingOptionalRequirementError
+from BIA_G8.torch_modules.toy_cnn import ToyCNNModule
+from BIA_G8.torch_modules.torchvision_resnet50 import TorchVisionResnet50Module
 
 _lh = get_lh(__name__)
 
@@ -192,11 +195,14 @@ class BaseSklearnClassifier(ClassifierInterface, Generic[_SKLearnModelType]):
         return self
 
     def predict(self, image: npt.NDArray) -> npt.NDArray:
-        return self._model.predict(image.reshape(1, -1))[0]
+        return self.predicts([image])[0]
 
-    def predicts(self, images: npt.NDArray) -> npt.NDArray:
-        image = images[0]
-        return self._model.predict(images.reshape(-1, image.ravel().shape[0]))
+    def predicts(self, images: Iterable[npt.NDArray]) -> npt.NDArray:
+        images = np.array(list(map(
+            lambda image: scale_np_array(image).ravel(),
+            images
+        )))
+        return self._model.predict(images)
 
     def evaluate(self, test_dataset: MachinelearningDatasetInterface) -> float:
         x_test, y_test = test_dataset.sklearn_dataset
@@ -414,10 +420,17 @@ class BaseTorchClassifier(DiagnosableClassifierInterface):
         return self
 
     def predict(self, image: npt.NDArray) -> npt.NDArray:
-        raise NotImplementedError  # TODO
+        return self.predicts([image])[0]
 
     def predicts(self, images: Iterable[npt.NDArray]) -> npt.NDArray:
-        raise NotImplementedError  # TODO
+        images_torch = list(map(
+            convert_np_image_to_torch_tensor,
+            images
+        ))
+        images_batch = torch.stack(images_torch, dim=0)
+
+        with torch.no_grad():
+            return torch.argmax(self._model(images_batch.to(self._device)), dim=-1).cpu().detach().numpy()
 
     def diagnostic_fit(
             self,
@@ -503,108 +516,19 @@ class BaseTorchClassifier(DiagnosableClassifierInterface):
         )
 
     def evaluate(self, test_dataset: MachinelearningDatasetInterface) -> float:
-        test_data_loader = tud.DataLoader(test_dataset.torch_dataset, batch_size=self._batch_size, shuffle=True)
-        correct_count = 0
-        for i, (x_test, y_test) in enumerate(test_data_loader):
+        with torch.no_grad():
+            test_data_loader = tud.DataLoader(test_dataset.torch_dataset, batch_size=self._batch_size, shuffle=True)
+            correct_count = 0
+            for i, (x_test, y_test) in enumerate(test_data_loader):
 
-            if self._should_be_convert_to_3_channels:
-                x_test = self._convert_to_3_channels(x_test)
-            x_test, y_test = x_test.to(self._device), y_test.to(self._device)
-            y_test_pred_prob = self._model(x_test)
+                if self._should_be_convert_to_3_channels:
+                    x_test = self._convert_to_3_channels(x_test)
+                x_test, y_test = x_test.to(self._device), y_test.to(self._device)
+                y_test_pred_prob = self._model(x_test)
 
-            y_test_pred = torch.argmax(y_test_pred_prob, dim=-1)
-            correct_count += torch.sum(torch.eq(y_test_pred, y_test)).item()
+                y_test_pred = torch.argmax(y_test_pred_prob, dim=-1)
+                correct_count += torch.sum(torch.eq(y_test_pred, y_test)).item()
         return correct_count / len(test_dataset)
-
-
-class ToyCNNModule(AbstractTorchModule):
-    """
-    A 2-layer small CNN that is very fast.
-
-    Modified from <https://blog.csdn.net/qq_45588019/article/details/120935828>
-    """
-
-    def __init__(
-            self,
-            n_features: int,
-            n_classes: int,
-            kernel_size: int,
-            stride: int,
-            padding: int
-    ):
-        """
-        :param n_features: Number of pixels in each image.
-        :param n_classes: Number of output classes.
-        :param kernel_size: Convolutional layer parameter.
-        :param stride: Convolutional layer parameter.
-        :param padding: Convolutional layer parameter.
-        """
-        super(ToyCNNModule, self).__init__()
-        self.conv1 = torch.nn.Sequential(
-            torch.nn.Conv2d(
-                in_channels=1,
-                out_channels=16,
-                kernel_size=kernel_size,
-                stride=stride,
-                padding=padding
-            ),
-            torch.nn.BatchNorm2d(num_features=16),
-            torch.nn.ReLU()
-        )
-        """
-        ``[BATCH_SIZE, 1, WID, HEIGHT] -> [BATCH_SIZE, 16, WID // 2, HEIGHT // 2]``
-        """
-        self.conv2 = torch.nn.Sequential(
-            torch.nn.Conv2d(
-                in_channels=16,
-                out_channels=32,
-                kernel_size=kernel_size,
-                stride=stride,
-                padding=padding
-            ),
-            torch.nn.BatchNorm2d(num_features=32),
-            torch.nn.ReLU()
-        )
-        """
-        ``[BATCH_SIZE, 16, WID // 2, HEIGHT // 2] -> [BATCH_SIZE, 32, WID // 4, HEIGHT // 4]``
-        """
-        self.mlp1 = torch.nn.Linear(
-            in_features=32 * n_features // (4 ** 2),
-            out_features=64
-        )
-        """
-        ``[BATCH_SIZE, 32, WID // 4, HEIGHT // 4] -> [BATCH_SIZE, 64]``
-        """
-        self.mlp2 = torch.nn.Linear(
-            in_features=64,
-            out_features=n_classes
-        )
-        """
-        ``[BATCH_SIZE, 64] -> [BATCH_SIZE, 3]``
-        """
-        # self.describe = Describe()
-
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
-        batch_size = x.shape[0]
-        # x = self.describe(x)
-        x = self.conv1(x)
-        # x = self.describe(x)
-        x = self.conv2(x)
-        # x = self.describe(x)
-        x = self.mlp1(x.view(batch_size, -1))
-        # x = self.describe(x)
-        x = self.mlp2(x)
-        # x = self.describe(x)
-        return x
-
-
-class Resnet50ModuleWrapper(AbstractTorchModule):
-    """
-    Wrapper to resnet50 provided by :py:mod:`torchvision`.
-    """
-
-    def __new__(cls, *args, **kwargs):
-        return resnet50()
 
 
 @_classifier_interface_documentation_decorator
@@ -619,8 +543,8 @@ class ToyCNNClassifier(BaseTorchClassifier):
 class Resnet50Classifier(BaseTorchClassifier):
     _should_be_convert_to_3_channels: Final[bool] = True
     name: Final[str] = "CNN (Resnet 50)"
-    description = "CNN classification using :py:class:`Resnet50ModuleWrapper`"
-    _model_type = Resnet50ModuleWrapper
+    description = "CNN classification using :py:class:`TorchVisionResnet50Module`"
+    _model_type = TorchVisionResnet50Module
 
 
 _classifiers = {

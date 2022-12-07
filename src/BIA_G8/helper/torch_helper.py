@@ -3,16 +3,16 @@ Utility functions and tools for pytorch.
 """
 __all__ = (
     "DictBackedTorchDataSet",
-    "Describe",
-    "get_torch_device",
-    "AbstractTorchModule"
+    "get_torch_device"
 )
 
-from typing import Dict, Tuple, Optional, Callable
+from typing import Dict, Tuple, Optional
+
+import numpy as np
+import numpy.typing as npt
 
 import torch
 import torch.utils.data as tud
-from torch import nn
 
 from BIA_G8 import get_lh
 from BIA_G8.helper import ndarray_helper
@@ -39,41 +39,24 @@ class DictBackedTorchDataSet(tud.Dataset):
         self._index = dict(index)
 
 
-class AbstractTorchModule(nn.Module):
-    """:py:class:`nn.Module` with better type hints"""
-
-    def __init__(self, **params) -> None:
-        super().__init__()
-
-    __call__: Callable[[torch.Tensor], torch.Tensor]
-
-
-class Describe(AbstractTorchModule):
-    """
-    The Describe Layer of PyTorch Module.
-
-    Prints the description of matrix generated from last layer and pass the matrix without modification.
-    """
-
-    def __init__(self, prefix: str = ""):
-        """
-        The initializer
-
-        :param prefix: Prefix of the printed message. Recommended to be the name of previous layer.
-
-        See also: py:func:`BIA_G8.helper.ndarray_helper.describe`.
-        """
-        super().__init__()
-        self._prefix = prefix
-
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
-        """"""
-        _lh.debug(self._prefix + ndarray_helper.describe(x))
-        return x
-
-
 def get_torch_device() -> torch.device:
     """
     Get suitable torch device. Will use NVidia GPU if possible.
     """
     return torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+
+
+def convert_np_image_to_torch_tensor(img: npt.NDArray) -> torch.Tensor:
+    """
+    Convert numpy image to torch tensor.
+
+    :param img: 2D single channel image in numpy format.
+    :return: Torch tensor normalized to ``[0, 1]``
+    """
+    return torch.tensor(
+        data=np.expand_dims(
+            ndarray_helper.scale_np_array(img),
+            axis=0
+        ),
+        dtype=torch.float
+    )
