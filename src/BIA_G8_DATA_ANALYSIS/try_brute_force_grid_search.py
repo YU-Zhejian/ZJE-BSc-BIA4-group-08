@@ -11,7 +11,6 @@ if __name__ == "__main__":
         "ml_cnn.toml",
         "ml_vote.toml",
         "ml_xgb.toml",
-        "ml_knn.toml",
         "ml_svc.toml",
         "ml_extra_trees.toml",
         "ml_rf.toml",
