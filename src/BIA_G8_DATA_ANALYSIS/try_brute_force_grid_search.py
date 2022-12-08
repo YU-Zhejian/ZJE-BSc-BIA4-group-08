@@ -2,9 +2,10 @@ from BIA_G8.data_analysis.analysis_config import grid_search
 
 if __name__ == "__main__":
     preprocessor_pipeline_configuration_paths = [
-        "pp_plain.toml",
-        "pp_adapt_hist.toml",
-        "pp_unsharp.toml",
+        # "pp_plain.toml",
+        # "pp_adapt_hist.toml",
+        # "pp_unsharp.toml",
+        "pp_scgan.toml"
     ]
     classifier_configuration_paths = [
         "ml_cnn.toml",
@@ -14,7 +15,7 @@ if __name__ == "__main__":
         "ml_svc.toml",
         "ml_extra_trees.toml",
         "ml_rf.toml",
-        "ml_resnet50.toml"
+        "ml_resnet50.toml",
     ]
     dataset_configuration_paths = [
         "ds_new.toml",

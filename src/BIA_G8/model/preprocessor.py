@@ -6,7 +6,7 @@ from __future__ import annotations
 
 import json
 from abc import abstractmethod
-from typing import Final, Dict, Any, Iterable, Type, Tuple, List
+from typing import Final, Dict, Any, Iterable, Type, Tuple, List, Optional
 
 import numpy as np
 import skimage.exposure as skiexp
@@ -20,7 +20,8 @@ from BIA_G8 import get_lh
 from BIA_G8.helper.io_helper import AbstractTOMLSerializable
 from BIA_G8.helper.ndarray_helper import describe
 from BIA_G8.model import unset, Argument, argument_string_to_int, argument_string_to_float, \
-    LackRequiredArgumentError
+    LackRequiredArgumentError, argument_string_to_string
+from BIA_G8.model.upscaller_preprocessor import SCGAN
 
 _lh = get_lh(__name__)
 
@@ -276,7 +277,6 @@ class WienerDeblurPreprocessor(AbstractPreprocessor):
             ),
         )
     }
-    _required_argument_names: Final[List[str]] = ["kernel_size", "balance"]
     name: Final[str] = "wiener deblur"
     description: Final[str] = "This preprocessor can deblur the images which is caused by the mild movement of patient"
 
@@ -284,6 +284,30 @@ class WienerDeblurPreprocessor(AbstractPreprocessor):
         kernel = np.ones(kwargs["kernel_size"])
         balance = kwargs["balance"]
         return skiresort.wiener(img, psf=kernel / np.size(kernel), balance=balance)
+
+
+class SCGANPreprocessor(AbstractPreprocessor):
+    _model: Optional[SCGAN]
+    _arguments: Final[Dict[str, Argument]] = {
+        argument.name: argument for argument in (
+            Argument(
+                name="config_path",
+                description="Path to pretrained SCGAN configuration",
+                is_required=True,
+                parse_str=argument_string_to_string
+            ),
+        )
+    }
+    name: Final[str] = "SCGAN deblur"
+    description: Final[str] = "This preprocessor can deblur the images using SCGAN"
+    def __init__(self):
+        super().__init__()
+        self._model = None
+
+    def _function(self, img: npt.NDArray, **kwargs) -> npt.NDArray:
+        if self._model is None:
+            self._model = SCGAN.load(kwargs["config_path"])
+        return self._model.predict(img)
 
 
 _preprocessors: Dict[str, Type[AbstractPreprocessor]] = {
@@ -296,7 +320,8 @@ _preprocessors: Dict[str, Type[AbstractPreprocessor]] = {
         DenoiseMeanPreprocessor,
         DenoiseGaussianPreprocessor,
         UnsharpMaskPreprocessor,
-        WienerDeblurPreprocessor
+        WienerDeblurPreprocessor,
+        SCGANPreprocessor
     )
 }
 

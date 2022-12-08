@@ -383,7 +383,7 @@ if __name__ == "__main__":
             "j": 4
         },
         hyper_params={
-            "num_epochs": 1,
+            "num_epochs": 130,
             "lr": 0.0001,
             "device": "cuda",
             "batch_size": 16,
