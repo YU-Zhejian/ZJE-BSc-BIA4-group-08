@@ -21,7 +21,7 @@ from BIA_G8.helper.io_helper import AbstractTOMLSerializable
 from BIA_G8.helper.ndarray_helper import describe
 from BIA_G8.model import unset, Argument, argument_string_to_int, argument_string_to_float, \
     LackRequiredArgumentError, argument_string_to_string
-from BIA_G8.model.upscaller_preprocessor import SCGAN
+from BIA_G8.model.upscaller_preprocessor import SCGANUpscaler
 
 _lh = get_lh(__name__)
 
@@ -287,7 +287,7 @@ class WienerDeblurPreprocessor(AbstractPreprocessor):
 
 
 class SCGANPreprocessor(AbstractPreprocessor):
-    _model: Optional[SCGAN]
+    _model: Optional[SCGANUpscaler]
     _arguments: Final[Dict[str, Argument]] = {
         argument.name: argument for argument in (
             Argument(
@@ -306,7 +306,7 @@ class SCGANPreprocessor(AbstractPreprocessor):
 
     def _function(self, img: npt.NDArray, **kwargs) -> npt.NDArray:
         if self._model is None:
-            self._model = SCGAN.load(kwargs["config_path"])
+            self._model = SCGANUpscaler.load(kwargs["config_path"])
         return self._model.predict(img)
 
 
@@ -329,6 +329,8 @@ _preprocessors: Dict[str, Type[AbstractPreprocessor]] = {
 def get_preprocessor(preprocessor_name: str) -> Type[AbstractPreprocessor]:
     """Get :py:class:`AbstractPreprocessor` subclass using its name"""
     return _preprocessors[preprocessor_name]
+
+
 
 
 def get_available_preprocessor_names() -> Iterable[str]:

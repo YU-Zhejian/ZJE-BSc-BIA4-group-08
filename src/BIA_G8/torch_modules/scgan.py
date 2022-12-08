@@ -1,3 +1,9 @@
+"""
+The SCGAN module for super resolution.
+
+Modified from <https://blog.csdn.net/qianbin3200896/article/details/104181552>
+"""
+
 import math
 from typing import Optional
 
@@ -282,15 +288,14 @@ class SCGANDiscriminator(nn.Module):
             fc_size: int
     ):
         """
-        参数 kernel_size: 所有卷积层的核大小
-        参数 n_channels: 初始卷积层输出通道数, 后面每隔一个卷积层通道数翻倍
-        参数 n_blocks: 卷积块数量
-        参数 fc_size: 全连接层连接数
+        :param kernel_size: Number of kernel size of all convolutional layers
+        :param n_channels: Initial number of channels in convolutional layer
+        :param n_blocks: Number of convolutional blocks
+        :param fc_size: Number of fully connected layers
         """
         super(SCGANDiscriminator, self).__init__()
         out_channels = in_channels
 
-        # 卷积系列，参照论文SRGAN进行设计
         conv_blocks = []
         for i in range(n_blocks):
             out_channels = (n_channels if i is 0 else in_channels * 2) if i % 2 is 0 else in_channels
@@ -307,20 +312,17 @@ class SCGANDiscriminator(nn.Module):
             in_channels = out_channels
         self.conv_blocks = nn.Sequential(*conv_blocks)
 
-        # 固定输出大小
         self.adaptive_pool = nn.AdaptiveAvgPool2d((6, 6))
         self.fc1 = nn.Linear(out_channels * 6 * 6, fc_size)
         self.leaky_relu = nn.LeakyReLU(0.2)
         self.fc2 = nn.Linear(1024, 1)
 
-        # 最后不需要添加sigmoid层，因为PyTorch的nn.BCEWithLogitsLoss()已经包含了这个步骤
+        # BCEWithLogitsLoss incldues sigmoid layer, so not needed.
 
     def forward(self, imgs):
         """
-        前向传播.
-
-        参数 imgs: 用于作判别的原始高清图或超分重建图，张量表示，大小为(N, 3, w * scaling factor, h * scaling factor)
-        返回: 一个评分值， 用于判断一副图像是否是高清图, 张量表示，大小为 (N)
+        ``[BATCH_SIZE, N_INTERMEDIATE_CHANNELS, WID * SF, HEIGHT * SF] ->
+        [BATCH_SIZE]``
         """
         batch_size = imgs.size(0)
         output = self.conv_blocks(imgs)
@@ -364,11 +366,5 @@ class TruncatedVGG19(nn.Module):
         self.truncated_vgg19 = nn.Sequential(*list(vgg19.features.children())[:truncate_at + 1])
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        """
-        前向传播
-        参数 x: 高清原始图或超分重建图，张量表示，大小为 (N, 3, w * scaling factor, h * scaling factor)
-        返回: VGG19特征图，张量表示，大小为 (N, feature_map_channels, feature_map_w, feature_map_h)
-        """
-        output = self.truncated_vgg19(x)  # (N, feature_map_channels, feature_map_w, feature_map_h)
-
+        output = self.truncated_vgg19(x)
         return output

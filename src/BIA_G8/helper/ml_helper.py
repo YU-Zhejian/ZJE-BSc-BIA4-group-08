@@ -103,6 +103,7 @@ class MachinelearningDatasetInterface(ABC):
     ]:
         """
         Split current dataset into training and testing dataset.
+        See: :py:func:`sklearn.model_selection.train_test_split()` for more details.
 
         :param ratio: Train-test ratio.
         :return: Two new datasets

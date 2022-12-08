@@ -1,3 +1,7 @@
+"""
+The upscalers would upscale the image by deep learning.
+"""
+
 from __future__ import annotations
 
 import gc
@@ -106,7 +110,7 @@ class UpscalerInterface(SerializableInterface):
         raise NotImplementedError
 
 
-class SCGAN(UpscalerInterface):
+class SCGANUpscaler(UpscalerInterface):
     _generator: SCGANGenerator
     _discriminator: SCGANDiscriminator
     _truncated_vgg19: TruncatedVGG19
@@ -154,7 +158,7 @@ class SCGAN(UpscalerInterface):
             downscaled_images.extend(torch.tensor(downscaled_image))
         return torch.stack(downscaled_images, dim=0)
 
-    def fit(self, dataset: MachinelearningDatasetInterface) -> SCGAN:
+    def fit(self, dataset: MachinelearningDatasetInterface) -> SCGANUpscaler:
         optimizer_g = torch.optim.Adam(
             params=filter(lambda p: p.requires_grad, self._generator.parameters()),
             lr=self._lr
@@ -362,7 +366,7 @@ class SCGAN(UpscalerInterface):
 
 
 if __name__ == "__main__":
-    SCGAN.new(
+    SCGANUpscaler.new(
         generator_params={
             "large_kernel_size": 9,
             "small_kernel_size": 3,
@@ -392,7 +396,7 @@ if __name__ == "__main__":
         }
     ).fit(
         dataset=CovidDatasetConfiguration.load(
-            "/home/yuzj/Documents/2022-23-Group-08/src/BIA_G8_DATA_ANALYSIS/ds_old.toml"
+            "ds_old.toml"
         ).dataset.parallel_apply(
             lambda img: skitrans.resize(
                 img,

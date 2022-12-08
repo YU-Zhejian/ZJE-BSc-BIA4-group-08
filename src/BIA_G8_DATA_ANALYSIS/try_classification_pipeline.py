@@ -1,6 +1,7 @@
 from typing import Type
 
 from BIA_G8.data_analysis.covid_dataset import generate_fake_classification_dataset, CovidDataSet
+from BIA_G8.data_analysis.covid_dataset_configuration import CovidDatasetConfiguration
 from BIA_G8.model.classifier import load_classifier, ToyCNNClassifier, \
     ClassifierInterface, XGBoostClassifier, SklearnVotingClassifier, SklearnSupportingVectorMachineClassifier, \
     SklearnExtraTreesClassifier, SklearnRandomForestClassifier, SklearnKNearestNeighborsClassifier, Resnet50Classifier
@@ -20,11 +21,7 @@ def run(
 
 if __name__ == '__main__':
     width, height = 256, 256
-    ds = generate_fake_classification_dataset(
-        size=120,
-        width=width,
-        height=height
-    )
+    ds = CovidDatasetConfiguration.load("ds_new.toml")
     ds_train, ds_test = ds.train_test_split()
     run(
         ds_train,
