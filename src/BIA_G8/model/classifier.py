@@ -211,9 +211,10 @@ class BaseSklearnClassifier(ClassifierInterface, Generic[_SKLearnModelType]):
     @classmethod
     def load(cls, path: str, load_model: bool = True):
         loaded_data = read_toml_with_metadata(path)
-        if "model_path" in loaded_data and load_model:
+        model_path = path + ".pkl.xz"
+        if os.path.exists(model_path) and load_model:
             _lh.info("%s: Loading pretrained model...", cls.__name__)
-            return cls(model=joblib.load(loaded_data["model_path"]), **loaded_data["params"])
+            return cls(model=joblib.load(model_path), **loaded_data["params"])
         else:
             _lh.info("%s: Loading parameters only...", cls.__name__)
             return cls.new(**loaded_data["params"])
@@ -370,10 +371,11 @@ class BaseTorchClassifier(DiagnosableClassifierInterface):
     @classmethod
     def load(cls, path: str, load_model: bool = True):
         loaded_data = read_toml_with_metadata(path)
-        if "model_path" in loaded_data and load_model:
+        model_path = path + ".pt.xz"
+        if os.path.exists(model_path) and load_model:
             _lh.info("%s: Loading pretrained model...", cls.__name__)
             return cls(
-                model=read_tensor_xz(loaded_data["model_path"]),
+                model=read_tensor_xz(model_path),
                 hyper_params=loaded_data["hyper_params"],
                 model_params=loaded_data["model_params"]
             )

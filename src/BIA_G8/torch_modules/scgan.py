@@ -219,7 +219,6 @@ class SRResNet(AbstractTorchModule):
          [BATCH_SIZE, N_INTERMEDIATE_CHANNELS, WID * SF, HEIGHT * SF]``
         """
 
-        # 最后一个卷积模块
         self.conv_block3 = ConvolutionalBlock(
             in_channels=n_intermediate_channels,
             out_channels=3,
@@ -298,14 +297,14 @@ class SCGANDiscriminator(nn.Module):
 
         conv_blocks = []
         for i in range(n_blocks):
-            out_channels = (n_channels if i is 0 else in_channels * 2) if i % 2 is 0 else in_channels
+            out_channels = (n_channels if i == 0 else in_channels * 2) if i % 2 is 0 else in_channels
             conv_blocks.append(
                 ConvolutionalBlock(
                     in_channels=in_channels,
                     out_channels=out_channels,
                     kernel_size=kernel_size,
-                    stride=1 if i % 2 is 0 else 2,
-                    include_batch_norm=i is not 0,
+                    stride=1 if i % 2 == 0 else 2,
+                    include_batch_norm=i != 0,
                     activation='LeakyReLu'
                 )
             )

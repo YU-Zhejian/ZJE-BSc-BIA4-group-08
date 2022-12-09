@@ -319,16 +319,24 @@ class SCGANUpscaler(UpscalerInterface):
     @classmethod
     def load(cls, path: str, load_model: bool = True):
         loaded_data = read_toml_with_metadata(path)
-        if "generator_path" in loaded_data and load_model:
+        generator_path = path + ".generator.pt.xz"
+        discriminator_path = path + ".discriminator.pt.xz"
+        truncated_vgg19_path = path + ".truncated_vgg19.pt.xz"
+        if (
+                os.path.exists(generator_path) and
+                os.path.exists(discriminator_path) and
+                os.path.exists(truncated_vgg19_path) and
+                load_model
+        ):
             _lh.info("%s: Loading pretrained model...", cls.__name__)
             return cls(
                 hyper_params=loaded_data["hyper_params"],
                 generator_params=loaded_data["generator_params"],
                 discriminator_params=loaded_data["discriminator_params"],
                 truncated_vgg19_params=loaded_data["truncated_vgg19_params"],
-                generator=read_tensor_xz(loaded_data["generator_path"]),
-                discriminator=read_tensor_xz(loaded_data["discriminator_path"]),
-                truncated_vgg19=read_tensor_xz(loaded_data["truncated_vgg19_path"]),
+                generator=read_tensor_xz(generator_path),
+                discriminator=read_tensor_xz(discriminator_path),
+                truncated_vgg19=read_tensor_xz(truncated_vgg19_path),
             )
 
         else:
@@ -352,56 +360,10 @@ class SCGANUpscaler(UpscalerInterface):
         }
         if save_model:
             generator_path = path + ".generator.pt.xz"
-            write_tensor_xz(self._generator, generator_path)
-            out_dict["generator_path"] = generator_path
-
             discriminator_path = path + ".discriminator.pt.xz"
-            write_tensor_xz(self._generator, discriminator_path)
-            out_dict["discriminator_path"] = discriminator_path
-
             truncated_vgg19_path = path + ".truncated_vgg19.pt.xz"
+
+            write_tensor_xz(self._generator, generator_path)
+            write_tensor_xz(self._generator, discriminator_path)
             write_tensor_xz(self._generator, truncated_vgg19_path)
-            out_dict["truncated_vgg19_path"] = truncated_vgg19_path
         write_toml_with_metadata(out_dict, path)
-
-
-if __name__ == "__main__":
-    SCGANUpscaler.new(
-        generator_params={
-            "large_kernel_size": 9,
-            "small_kernel_size": 3,
-            "n_intermediate_channels": 64,
-            "n_blocks": 16,
-            "scale_factor": 2,
-            "in_channels": 3
-        },
-        discriminator_params={
-            "kernel_size": 3,
-            "n_channels": 64,
-            "n_blocks": 8,
-            "fc_size": 1024,
-            "in_channels": 3
-        },
-        truncated_vgg19_params={
-            "i": 5,
-            "j": 4
-        },
-        hyper_params={
-            "num_epochs": 130,
-            "lr": 0.0001,
-            "device": "cuda",
-            "batch_size": 16,
-            "beta": 0.001,
-            "scale_factor": 2
-        }
-    ).fit(
-        dataset=CovidDatasetConfiguration.load(
-            "ds_old.toml"
-        ).dataset.parallel_apply(
-            lambda img: skitrans.resize(
-                img,
-                (128, 128)
-            ),
-            desc="Scaling to wanted size..."
-        )
-    ).save("scgan.toml")
