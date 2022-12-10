@@ -4,6 +4,7 @@ gs <- readr::read_csv("gs.csv") %>%
     dplyr::filter(
         classifier_configuration_path != "ml_knn.toml"
     )
+
 g <- ggplot(gs) +
     geom_violin(aes(
         y = classifier_configuration_path,
@@ -15,13 +16,7 @@ g <- ggplot(gs) +
         scales = "free"
     ) +
     theme_bw()
-
-ggsave(
-    "gs.png",
-    plot=g,
-    width=10,
-    height=5
-)
+ggsave("gs.png", plot=g, width=10, height=5)
 
 g <- ggplot(gs) +
     geom_violin(aes(
@@ -34,13 +29,7 @@ g <- ggplot(gs) +
         scales = "free"
     ) +
     theme_bw()
-
-ggsave(
-    "gs_pp.png",
-    plot=g,
-    width=10,
-    height=5
-)
+ggsave("gs_pp.png", plot=g, width=10, height=5)
 
 g <- ggplot(gs) +
     geom_violin(aes(
@@ -53,13 +42,8 @@ g <- ggplot(gs) +
         scales = "free"
     ) +
     theme_bw()
+ggsave("gs_classifier.png", plot=g, width=10, height=5)
 
-ggsave(
-    "gs_classifier.png",
-    plot=g,
-    width=10,
-    height=5
-)
 g <- ggplot(gs) +
     geom_violin(aes(
         y = dataset_configuration_path,
@@ -67,10 +51,4 @@ g <- ggplot(gs) +
         fill = dataset_configuration_path
     )) +
     theme_bw()
-
-ggsave(
-    "gs_dataset.png",
-    plot=g,
-    width=10,
-    height=5
-)
+ggsave("gs_dataset.png", plot=g, width=10, height=5)
