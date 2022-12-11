@@ -39,14 +39,14 @@ if __name__ == '__main__':
         "num_classes": ds.n_classes
     })
 
-    run(ds, "ml_resnet50_cpu.toml", Resnet50Classifier, hyper_params={
-        "batch_size": 17,
-        "num_epochs": 50,
-        "lr": 0.0001,
-        "device": "cpu"
-    }, model_params={
-        "num_classes": ds.n_classes
-    })
+    # run(ds, "ml_resnet50_cpu.toml", Resnet50Classifier, hyper_params={
+    #     "batch_size": 17,
+    #     "num_epochs": 50,
+    #     "lr": 0.0001,
+    #     "device": "cpu"
+    # }, model_params={
+    #     "num_classes": ds.n_classes
+    # })
 
     run(ds, "ml_xgb.toml", XGBoostClassifier)
     run(ds, "ml_svc.toml", SklearnSupportingVectorMachineClassifier)
@@ -66,18 +66,18 @@ if __name__ == '__main__':
         "stride": 2,
         "padding": 1
     })
-    run(ds, "ml_cnn_cpu.toml", ToyCNNClassifier, hyper_params={
-        "batch_size": 17,
-        "num_epochs": 50,
-        "lr": 0.0001,
-        "device": "cpu"
-    }, model_params={
-        "n_features": width * height,
-        "n_classes": ds.n_classes,
-        "kernel_size": 3,
-        "stride": 2,
-        "padding": 1
-    })
+    # run(ds, "ml_cnn_cpu.toml", ToyCNNClassifier, hyper_params={
+    #     "batch_size": 17,
+    #     "num_epochs": 50,
+    #     "lr": 0.0001,
+    #     "device": "cpu"
+    # }, model_params={
+    #     "n_features": width * height,
+    #     "n_classes": ds.n_classes,
+    #     "kernel_size": 3,
+    #     "stride": 2,
+    #     "padding": 1
+    # })
     SCGANUpscaler.new(
         generator_params={
             "large_kernel_size": 9,
@@ -115,40 +115,40 @@ if __name__ == '__main__':
             desc="Scaling to wanted size..."
         )
     ).save("scgan_cuda.toml")
-    SCGANUpscaler.new(
-        generator_params={
-            "large_kernel_size": 9,
-            "small_kernel_size": 3,
-            "n_intermediate_channels": 64,
-            "n_blocks": 16,
-            "scale_factor": 2,
-            "in_channels": 3
-        },
-        discriminator_params={
-            "kernel_size": 3,
-            "n_channels": 64,
-            "n_blocks": 8,
-            "fc_size": 1024,
-            "in_channels": 3
-        },
-        truncated_vgg19_params={
-            "i": 5,
-            "j": 4
-        },
-        hyper_params={
-            "num_epochs": 130,
-            "lr": 0.0001,
-            "device": "cpu",
-            "batch_size": 16,
-            "beta": 0.001,
-            "scale_factor": 2
-        }
-    ).fit(
-        dataset=ds.parallel_apply(
-            lambda img: skitrans.resize(
-                img,
-                (128, 128)
-            ),
-            desc="Scaling to wanted size..."
-        )
-    ).save("scgan_cpu.toml")
+    # SCGANUpscaler.new(
+    #     generator_params={
+    #         "large_kernel_size": 9,
+    #         "small_kernel_size": 3,
+    #         "n_intermediate_channels": 64,
+    #         "n_blocks": 16,
+    #         "scale_factor": 2,
+    #         "in_channels": 3
+    #     },
+    #     discriminator_params={
+    #         "kernel_size": 3,
+    #         "n_channels": 64,
+    #         "n_blocks": 8,
+    #         "fc_size": 1024,
+    #         "in_channels": 3
+    #     },
+    #     truncated_vgg19_params={
+    #         "i": 5,
+    #         "j": 4
+    #     },
+    #     hyper_params={
+    #         "num_epochs": 130,
+    #         "lr": 0.0001,
+    #         "device": "cpu",
+    #         "batch_size": 16,
+    #         "beta": 0.001,
+    #         "scale_factor": 2
+    #     }
+    # ).fit(
+    #     dataset=ds.parallel_apply(
+    #         lambda img: skitrans.resize(
+    #             img,
+    #             (128, 128)
+    #         ),
+    #         desc="Scaling to wanted size..."
+    #     )
+    # ).save("scgan_cpu.toml")
