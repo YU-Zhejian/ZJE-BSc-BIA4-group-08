@@ -1,12 +1,53 @@
 from typing import Optional
 
+import matplotlib
 import matplotlib.pyplot as plt
 import numpy.typing as npt
-from PyQt5.QtWidgets import QFileDialog, QMessageBox, QDialog
+from PyQt5.QtWidgets import QDialog, QPushButton, QVBoxLayout
+from PyQt5.QtWidgets import QFileDialog, QMessageBox
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
+from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
 
 from BIA_G8._ui.method_selector import Ui_MethodSelector
 from BIA_G8.model.preprocesor_pipeline import PreprocessorPipeline
 from BIA_G8.model.preprocessor import get_preprocessor, AbstractPreprocessor
+
+
+matplotlib.use("agg")
+
+class ImageDisplayDialog(QDialog):
+    _img: npt.NDArray
+
+    # constructor
+    def __init__(self, parent, img: npt.NDArray):
+        super().__init__(parent)
+        self._img = img
+
+        self.figure = plt.figure()
+
+        self.canvas = FigureCanvas(self.figure)
+        self.toolbar = NavigationToolbar(self.canvas, self)
+
+        self.accept_button = QPushButton()
+        self.accept_button.setText("Accept")
+        self.accept_button.clicked.connect(lambda: self.accept())
+
+        self.reject_button = QPushButton()
+        self.reject_button.setText("Reject")
+        self.reject_button.clicked.connect(lambda: self.reject())
+
+        layout = QVBoxLayout()
+        layout.addWidget(self.toolbar)
+        layout.addWidget(self.canvas)
+        layout.addWidget(self.accept_button)
+        layout.addWidget(self.reject_button)
+        self.setLayout(layout)
+
+        self.figure.clear()
+        ax = self.figure.add_subplot(111)
+        ax.imshow(self._img)
+
+        self.canvas.draw()
 
 
 # Link button and interface
@@ -79,13 +120,10 @@ class PreprocessorPipelineWindow(QDialog):
         )
         plt.colorbar()
         plt.show()
-        is_accepted = QMessageBox.question(
+        is_accepted = ImageDisplayDialog(
             self,
-            "Accept?",
-            "Do you accept this effect?",
-            buttons=QMessageBox.Yes | QMessageBox.No,
-            defaultButton=QMessageBox.No
-        ) == QMessageBox.Yes
+            transformed_img
+        ).exec() == QDialog.Accepted
         if is_accepted:
             self.save(preprocessor)
         else:
@@ -181,4 +219,3 @@ class PreprocessorPipelineWindow(QDialog):
             'balance': self.ui.lineEdit_2.text()
         }
         self.process_kwargs(param_dict)
-
