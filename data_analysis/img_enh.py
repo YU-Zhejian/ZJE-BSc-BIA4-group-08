@@ -122,12 +122,12 @@ def my_sharp(image, kernel, levels):
     collapsed_image = collapse_pyramid(lap_pyr, gauss_pyr)
     return collapsed_image
 
-
-kernel = smooth_gaussian_kernel(0.4)
-levels = 10
-image = skiio.imread("D:\BIA-G8\src\ipynb\COVID-19_Radiography_Dataset\images\COVID\COVID-1.png")
-imge_sharp=my_sharp(image, kernel, levels)
-fig,ax=plt.subplots(1,2)
-ax[0].imshow(image[100:150,50:200])
-ax[1].imshow(imge_sharp[100:150,50:200])
-plt.show()
+if __name__ == "__main__":
+    kernel = smooth_gaussian_kernel(0.4)
+    levels = 10
+    image = skiio.imread("D:\BIA-G8\src\ipynb\COVID-19_Radiography_Dataset\images\COVID\COVID-1.png")
+    imge_sharp=my_sharp(image, kernel, levels)
+    fig,ax=plt.subplots(1,2)
+    ax[0].imshow(image[100:150,50:200])
+    ax[1].imshow(imge_sharp[100:150,50:200])
+    plt.show()

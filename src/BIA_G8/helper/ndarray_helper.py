@@ -40,7 +40,7 @@ def scale_np_array(
 
     Example:
 
-    >>> scale_np_array(np.array([1,2,3,4,5]), (0, 1))
+    >>> scale_np_array(np.array([1,2,3,4,5]), out_range=(0, 1))
     array([0.  , 0.25, 0.5 , 0.75, 1.  ])
     """
     if domain is None:
@@ -60,7 +60,7 @@ def scale_torch_array(
 
     Example:
 
-    >>> scale_torch_array(torch.tensor(np.array([1,2,3,4,5])), (0, 1))
+    >>> scale_torch_array(torch.tensor(np.array([1,2,3,4,5])), out_range=(0, 1))
     tensor([0.0000, 0.2500, 0.5000, 0.7500, 1.0000])
     """
     if domain is None:
