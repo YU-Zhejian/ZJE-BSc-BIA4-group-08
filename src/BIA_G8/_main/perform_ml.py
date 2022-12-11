@@ -7,15 +7,19 @@ from BIA_G8.model.classifier import load_classifier
 from BIA_G8.model.preprocesor_pipeline import PreprocessorPipeline
 
 
-decode_dict = {} # TODO: Have no idea wo convert this information, so hard coded.
+decode_dict = {
+    0:"COVID",
+    1:"Normal",
+    2:"Viral Pneumonia"
+} # TODO: Have no idea wo convert this information, so hard coded.
 
 @click.command
 @click.option("--preprocessor_pipeline_config_path", help="Path to preprocessor config")
-@click.option("--classifier_configuration_paths", help="Path to classifier config")
+@click.option("--classifier_configuration_path", help="Path to classifier config")
 @click.option("--input_image_path", help="Path to input image")
 def perform_ml(
         preprocessor_pipeline_config_path: str,
-        classifier_configuration_paths: str,
+        classifier_configuration_path: str,
         input_image_path: str
 ) -> None:
     if input_image_path.endswith("npy.xz"):
@@ -24,7 +28,7 @@ def perform_ml(
         orig_img = skiio.imread(input_image_path)
     orig_img = scale_np_array(orig_img)
     pp = PreprocessorPipeline.load(preprocessor_pipeline_config_path)
-    classifier = load_classifier(classifier_configuration_paths)
+    classifier = load_classifier(classifier_configuration_path)
     preprocessed_image = pp.execute(orig_img)
     category = classifier.predict(preprocessed_image)
     print(decode_dict[category])

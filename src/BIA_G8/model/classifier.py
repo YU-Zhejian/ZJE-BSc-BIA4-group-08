@@ -436,6 +436,8 @@ class BaseTorchClassifier(DiagnosableClassifierInterface):
         ))
         images_batch = torch.stack(images_torch, dim=0)
 
+        if self._should_be_convert_to_3_channels:
+            images_batch = self._convert_to_3_channels(images_batch)
         with torch.no_grad():
             return torch.argmax(self._model(images_batch.to(self._device)), dim=-1).cpu().detach().numpy()
 

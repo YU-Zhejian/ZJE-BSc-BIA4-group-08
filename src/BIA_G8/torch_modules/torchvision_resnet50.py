@@ -11,4 +11,4 @@ class TorchVisionResnet50Module(AbstractTorchModule):
     """
 
     def __new__(cls, *args, **kwargs):
-        return resnet50()
+        return resnet50(*args, **kwargs)

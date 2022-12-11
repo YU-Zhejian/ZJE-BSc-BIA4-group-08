@@ -22,7 +22,9 @@ def run(
 
 if __name__ == '__main__':
     width, height = 256, 256
-    ds = CovidDatasetConfiguration.load("ds_new_nomask_full.toml").dataset.parallel_apply(
+    ds = CovidDatasetConfiguration.load(
+        "ds_new_nomask_full.toml"
+    ).dataset.sample(10).parallel_apply(
         lambda img: img[:, :, 0] if len(img.shape) == 3 else img
     ).parallel_apply(
         lambda img: skitrans.resize(img, (width, height))
@@ -32,7 +34,7 @@ if __name__ == '__main__':
 
     run(ds, "ml_resnet50_cuda.toml", Resnet50Classifier, hyper_params={
         "batch_size": 17,
-        "num_epochs": 50,
+        "num_epochs": 2,
         "lr": 0.0001,
         "device": "cuda"
     }, model_params={
@@ -41,7 +43,7 @@ if __name__ == '__main__':
 
     run(ds, "ml_resnet50_cpu.toml", Resnet50Classifier, hyper_params={
         "batch_size": 17,
-        "num_epochs": 50,
+        "num_epochs": 2,
         "lr": 0.0001,
         "device": "cpu"
     }, model_params={
@@ -56,7 +58,7 @@ if __name__ == '__main__':
     run(ds, "ml_vote.toml", SklearnVotingClassifier)
     run(ds, "ml_cnn_cuda.toml", ToyCNNClassifier, hyper_params={
         "batch_size": 17,
-        "num_epochs": 50,
+        "num_epochs": 2,
         "lr": 0.0001,
         "device": "cuda"
     }, model_params={
@@ -68,7 +70,7 @@ if __name__ == '__main__':
     })
     run(ds, "ml_cnn_cpu.toml", ToyCNNClassifier, hyper_params={
         "batch_size": 17,
-        "num_epochs": 50,
+        "num_epochs": 2,
         "lr": 0.0001,
         "device": "cpu"
     }, model_params={
@@ -99,7 +101,7 @@ if __name__ == '__main__':
             "j": 4
         },
         hyper_params={
-            "num_epochs": 130,
+            "num_epochs": 2,
             "lr": 0.0001,
             "device": "cuda",
             "batch_size": 16,
@@ -136,7 +138,7 @@ if __name__ == '__main__':
             "j": 4
         },
         hyper_params={
-            "num_epochs": 130,
+            "num_epochs": 2,
             "lr": 0.0001,
             "device": "cpu",
             "batch_size": 16,

@@ -45,8 +45,7 @@ class ImageDisplayDialog(QDialog):
 
         self.figure.clear()
         ax = self.figure.add_subplot(111)
-        ax.imshow(self._img)
-
+        ax.imshow(self._img, cmap="bone")
         self.canvas.draw()
 
 
