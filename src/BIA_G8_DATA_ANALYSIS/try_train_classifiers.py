@@ -17,18 +17,18 @@ def run(
         classifier_type: Type[ClassifierInterface],
         **kwargs
 ):
-    classifier_type.new(**kwargs).fit(_ds.sample(10)).save(save_path)
+    classifier_type.new(**kwargs).fit(_ds).save(save_path)
 
 
 if __name__ == '__main__':
     width, height = 256, 256
     ds = CovidDatasetConfiguration.load("ds_new_nomask_full.toml").dataset.parallel_apply(
         lambda img: img[:, :, 0] if len(img.shape) == 3 else img
-    ).parallel_apply(lambda img: skitrans.resize(img,(width, height))
+    ).parallel_apply(
+        lambda img: skitrans.resize(img, (width, height))
     ).parallel_apply(
         scale_np_array
     )
-
 
     run(ds, "ml_resnet50_cuda.toml", Resnet50Classifier, hyper_params={
         "batch_size": 17,

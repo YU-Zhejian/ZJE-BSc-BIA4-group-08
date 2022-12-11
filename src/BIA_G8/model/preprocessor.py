@@ -6,7 +6,7 @@ from __future__ import annotations
 
 import json
 from abc import abstractmethod
-from typing import Final, Dict, Any, Iterable, Type, Tuple, List, Optional
+from typing import Final, Dict, Any, Iterable, Type, Tuple, Optional
 
 import numpy as np
 import skimage.exposure as skiexp
@@ -300,6 +300,7 @@ class SCGANPreprocessor(AbstractPreprocessor):
     }
     name: Final[str] = "SCGAN deblur"
     description: Final[str] = "This preprocessor can deblur the images using SCGAN"
+
     def __init__(self):
         super().__init__()
         self._model = None
@@ -329,8 +330,6 @@ _preprocessors: Dict[str, Type[AbstractPreprocessor]] = {
 def get_preprocessor(preprocessor_name: str) -> Type[AbstractPreprocessor]:
     """Get :py:class:`AbstractPreprocessor` subclass using its name"""
     return _preprocessors[preprocessor_name]
-
-
 
 
 def get_available_preprocessor_names() -> Iterable[str]:

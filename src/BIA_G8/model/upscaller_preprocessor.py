@@ -21,7 +21,6 @@ from skimage.metrics import peak_signal_noise_ratio, structural_similarity, mean
 from torch import nn
 
 from BIA_G8 import get_lh
-from BIA_G8.data_analysis.covid_dataset_configuration import CovidDatasetConfiguration
 from BIA_G8.helper.io_helper import SerializableInterface, write_tensor_xz, write_toml_with_metadata, \
     read_toml_with_metadata, read_tensor_xz
 from BIA_G8.helper.ml_helper import MachinelearningDatasetInterface
