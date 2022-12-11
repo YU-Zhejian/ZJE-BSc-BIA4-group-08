@@ -68,6 +68,11 @@ This software can be installed in the following ways:
     3. Build the wheel using `python -m build`.
     4. Install the wheel built at `{PROJECT_ROOT}/dist`.
 
+```{note}
+% TODO
+For BIA4 marking: You may use pretrained data available at <https://zjuintl-my.sharepoint.com/:f:/g/personal/zhejian_19_intl_zju_edu_cn/Ej931YIXtr1EmYsDXLs7QW8B0pby-0XIzyv3kE1nP8PRUg?e=TUIxOg>.
+```
+
 ## Preprocesor Explorer (PPE): CLI
 
 Before, we need to create the preprocessor configuration file: in TOML format. This step can be done by Preprocessor Explorer, or use pre-trained preprocessing configurations available at `{PROJECT_ROOT}/pretrained/pp_*.toml`.

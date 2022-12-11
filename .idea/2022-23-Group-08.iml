@@ -24,6 +24,7 @@
       <excludeFolder url="file://$MODULE_DIR$/data_analysis/covid_image_new" />
       <excludeFolder url="file://$MODULE_DIR$/tmp" />
       <excludeFolder url="file://$MODULE_DIR$/data_analysis/covid_image_new_nomask" />
+      <excludeFolder url="file://$MODULE_DIR$/src/BIA_G8.egg-info" />
     </content>
     <orderEntry type="jdk" jdkName="Python 3.8 (BIA4Env)" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />

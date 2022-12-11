@@ -7,8 +7,7 @@ lr = 0.0001
 device = "cuda"
 
 [model_params]
-block = 1
-layers = 1
+num_classes = 3
 
 [version_info]
 BIA_G8 = "0.0.1"
@@ -24,8 +23,8 @@ torch = "1.13.0.post200"
 python = "3.8.15"
 
 [metadata]
-time_gmt = "Sun Dec 11 08:00:14 2022"
-time_local = "Sun Dec 11 16:00:14 2022"
+time_gmt = "Sun Dec 11 14:33:39 2022"
+time_local = "Sun Dec 11 22:33:39 2022"
 
 [metadata.platform_uname]
 system = "Linux"

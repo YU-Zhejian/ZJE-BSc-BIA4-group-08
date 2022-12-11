@@ -10,8 +10,12 @@ build-backend = "setuptools.build_meta"
 name = "BIA_G8"
 description = "A COVID Image Classifier Using Traditional- and Deep Learning Methods"
 authors = [
-    { name = "Niels Zeilemaker", email = "nielszeilemaker@godatadriven.com" },
-    { name = "Niels Zeilemaker II", email = "nielszeilemaker2@godatadriven.com" },
+    { name = "HE Kangning", email = "kangning.19@intl.zju.edu.cn" },
+    { name = "LI Pengshan", email = "pengshan.19@intl.zju.edu.cn" },
+    { name = "XUE Heling", email = "heling.19@intl.zju.edu.cn" },
+    { name = "YANG Yanjia", email = "yanjia.19@intl.zju.edu.cn" },
+    { name = "YU Zhejian", email = "zhejian.19@intl.zju.edu.cn" },
+    { name = "ZHU Wangyi", email = "wangyi.19@intl.zju.edu.cn" },
 ]
 classifiers = [
     "Programming Language :: Python :: 3",

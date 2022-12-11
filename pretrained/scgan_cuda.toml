@@ -1,17 +1,31 @@
-name = "CNN (Toy)"
+name = "SCGAN"
 
 [hyper_params]
-batch_size = 17
-num_epochs = 50
+num_epochs = 130
 lr = 0.0001
-device = "cpu"
+device = "cuda"
+batch_size = 16
+beta = 0.001
+scale_factor = 2
 
-[model_params]
-n_features = 65536
-n_classes = 3
+[generator_params]
+large_kernel_size = 9
+small_kernel_size = 3
+n_intermediate_channels = 64
+n_blocks = 16
+scale_factor = 2
+in_channels = 3
+
+[discriminator_params]
 kernel_size = 3
-stride = 2
-padding = 1
+n_channels = 64
+n_blocks = 8
+fc_size = 1024
+in_channels = 3
+
+[truncated_vgg19_params]
+i = 5
+j = 4
 
 [version_info]
 BIA_G8 = "0.0.1"
@@ -27,8 +41,8 @@ torch = "1.13.0.post200"
 python = "3.8.15"
 
 [metadata]
-time_gmt = "Sun Dec 11 08:02:26 2022"
-time_local = "Sun Dec 11 16:02:26 2022"
+time_gmt = "Sun Dec 11 19:24:33 2022"
+time_local = "Mon Dec 12 03:24:33 2022"
 
 [metadata.platform_uname]
 system = "Linux"
