@@ -17,9 +17,9 @@ if __name__ == "__main__":
         "ml_resnet50.toml",
     ]
     dataset_configuration_paths = [
-        "ds_new.toml",
         "ds_new_nomask.toml",
-        "ds_old.toml"
+        # "ds_new_nomask.toml",
+        # "ds_old.toml"
     ]
     grid_search(
         dataset_configuration_paths=dataset_configuration_paths,

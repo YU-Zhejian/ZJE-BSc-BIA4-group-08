@@ -229,7 +229,6 @@ class BaseSklearnClassifier(ClassifierInterface, Generic[_SKLearnModelType]):
         if save_model:
             model_path = path + ".pkl.xz"
             joblib.dump(self._model, model_path)
-            out_dict["model_path"] = model_path
         write_toml_with_metadata(out_dict, path)
 
 
@@ -394,7 +393,6 @@ class BaseTorchClassifier(DiagnosableClassifierInterface):
         if save_model:
             model_path = path + ".pt.xz"
             write_tensor_xz(self._model, model_path)
-            out_dict["model_path"] = model_path
         write_toml_with_metadata(out_dict, path)
 
     def fit(self, dataset: MachinelearningDatasetInterface) -> BaseTorchClassifier:

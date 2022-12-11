@@ -681,7 +681,7 @@ class CovidDataSet(MachinelearningDatasetInterface):
                 start = 0
             for _i in range(start, stop, step):
                 retl.append(self._loaded_images[_i])
-            return self.from_loaded_images(
+            return CovidDataSet.from_loaded_images(
                 loaded_images=retl,
                 encode=self.encode,
                 decode=self.decode,

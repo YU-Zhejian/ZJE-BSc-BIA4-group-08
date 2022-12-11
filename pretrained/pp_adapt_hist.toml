@@ -1,0 +1,35 @@
+[0]
+name = "normalize"
+
+[0.args]
+
+[1]
+name = "adjust exposure"
+
+[1.args]
+
+[version_info]
+BIA_G8 = "0.0.1"
+numpy = "1.23.4"
+sklearn = "1.1.3"
+joblib = "1.1.1"
+xgboost = "1.7.0"
+matplotlib = "3.6.2"
+skimage = "0.19.3"
+tomli = "2.0.1"
+tomli-w = "1.0.0"
+torch = "1.12.1.post201"
+keras = "UNKNOWN"
+python = "3.8.13"
+
+[metadata]
+time_gmt = "Mon Dec  5 08:11:11 2022"
+time_local = "Mon Dec  5 16:11:11 2022"
+
+[metadata.platform_uname]
+system = "Linux"
+node = "yuzj-pc"
+release = "6.0.0-5-amd64"
+version = "#1 SMP PREEMPT_DYNAMIC Debian 6.0.10-1 (2022-11-26)"
+machine = "x86_64"
+processor = ""
