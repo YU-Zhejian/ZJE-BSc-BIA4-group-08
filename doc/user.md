@@ -7,7 +7,7 @@
 
 - You are recommended to use this software on a Workstation with a recent x86\_64 (Intel/AMD) CPU and 16 GiB of memory. Using this software on domestic laptops is possible but slow.
 - You are recommended to use a POSIX-compiliant operating system.  Microsoft Windows is supported but with impaired performance.
-- If you wish to use pre-processors or classifiers with neuron networks (e.g., SCGAN, ToyCNN, ResNet50), you are recommended to NVidia General-Purposed Graph Processing Unit (GPGPU) with 6 GiB GDDR6 display memory (e.g., NVidia GeForce RTX 2060). Using the CPU is possible but much slower.
+- If you wish to use pre-processors or classifiers with neuron networks (e.g., SCGAN, ToyCNN, ResNet50), you are recommended to NVidia General-Purposed Graph Processing Unit (GPGPU) with 6 GiB GDDR6 display memory (e.g., NVidia GeForce RTX 2060). Pre-trained models in CPU is not provided since training on CPU is too slow.
 - Your operating system should have a Python interpreter (version at least 3.8; CPython implementation). You are recommended to manage the dependencies using [Conda](https://docs.conda.io/), which is a general-purpose user-level package management system.
 
 ## Usage with Installation
@@ -29,11 +29,43 @@ Use a command-line version of Preprocessor Explorer using:
 python -m BIA_G8._main.preprocessor_explorer --help
 ```
 
-% TODO
-
 ### Using the Graphical User Interface
 
-% TODO
+Guidance of How to use this software 
+
+1. Click "Upload" to input the picture from yur local PC.
+
+![LEGEND](figs/upload.png)
+
+2. Click "Start" to select the preprocessing method.
+
+![LEGEND](figs/start.png)
+
+3. Apply your preprocessing method to your picture, and the procedures are shown as below: 
+    1. Click "method_3" and click "OK", then the normalized picture will be showed up like this:
+
+    ![LEGEND](figs/method-3.png)
+    ![LEGEND](figs/accept1.png)
+
+    Click "Accept" to receive the modification and you can save the new picture to your local PC. 
+
+    ![LEGEND](figs/save.png)
+       
+    2. Apply suitable preprocessing methods and parameters to your normalized picture. Here, we take the example of clicking "method_8" ('Unsharp mask'): Click "method_8" and set the radius at 5, amount at 5, then click "OK" to apply these modifications.
+
+    ![LEGEND](figs/method-8.png)
+
+    After that, the new preprocessed picture will be showed up. Click "Accept" and the new modified picture will cover the old version. 
+
+    ![LEGEND](figs/accept2.png)
+
+    3. Click "method_3" and "OK", then click "Accept" to to normalize the modified picture again. This modification will cover the old version as well. 
+
+    ![LEGEND](figs/accept3.png)
+
+4. Click " Save Exit" to exit the software and complete the preprocessing steps.
+
+![LEGEND](figs/save_exit.png)
 
 ````{hint}
 **Always check whether you are using the correct Python Interpreter.**
