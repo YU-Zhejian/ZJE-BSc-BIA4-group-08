@@ -16,7 +16,7 @@ from BIA_G8.torch_modules import AbstractTorchModule
 
 class ConvolutionalBlock(AbstractTorchModule):
     """
-    TODO
+    Convolution model is consisted of layers of Convolution, Batch Normalization, and Activation
     """
 
     def __init__(
@@ -71,7 +71,7 @@ class ConvolutionalBlock(AbstractTorchModule):
 
 class SRResNetSubPixelConvolutionalBlock(AbstractTorchModule):
     """
-    TODO
+    Sub-pixel convolution module, including convolution, pixel cleaning and activation layers
     """
 
     def __init__(
@@ -108,7 +108,7 @@ class SRResNetSubPixelConvolutionalBlock(AbstractTorchModule):
 
 class SRResNetResidualBlock(AbstractTorchModule):
     """
-    TODO
+    The residual module consists of two convolution modules and a skip connection
     """
 
     def __init__(
@@ -151,7 +151,7 @@ class SRResNetResidualBlock(AbstractTorchModule):
 
 class SRResNet(AbstractTorchModule):
     """
-    TODO
+    The module of SRResNET
     """
 
     def __init__(
@@ -245,7 +245,7 @@ class SRResNet(AbstractTorchModule):
 
 class SCGANGenerator(nn.Module):
     """
-    TODO
+    The module of the generator, the structure of which is almost the same as module SRResNET
     """
 
     def __init__(
@@ -275,7 +275,7 @@ class SCGANGenerator(nn.Module):
 
 class SCGANDiscriminator(nn.Module):
     """
-    TODO
+    SRGAN discriminator
     """
 
     def __init__(
@@ -335,7 +335,7 @@ class SCGANDiscriminator(nn.Module):
 
 class TruncatedVGG19(nn.Module):
     """
-    TODO
+    The network of truncated VGG19 that is used to calculate the MSE loss of VGG feature space
     """
 
     def __init__(self, i, j):

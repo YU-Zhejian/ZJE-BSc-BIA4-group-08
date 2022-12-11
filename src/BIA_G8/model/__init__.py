@@ -65,6 +65,7 @@ class LackingOptionalRequirementError(ValueError):
 
 _ArgType = TypeVar("_ArgType")
 
+
 def argument_string_to_string(instr: str) -> Union[Unset, str]:
     """
     Parse a string to integer. Return :py:class:`Unset` if string is empty.
