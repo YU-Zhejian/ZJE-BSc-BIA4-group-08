@@ -1,20 +1,79 @@
-# Users' Guide for `proc_profiler`
+# Users' Guide for `BIA_G8`
 
-## Installation
+## Concepts and Procedures
 
-The recommended way of setting up the project is through [Conda](https://docs.conda.io/), which is a general-purposed user-level package management system.
 
-```{hint}
-Since the environment is large, it make take tens of minutes for Conda to resolve the dependencies. You are recommended to use [mamba](https://mamba.readthedocs.io/) as a drop-in replacement of Conda, which is faster.
+## Recommended Runtime Environment
+
+- You are recommended to use this software on a Workstation with a recent x86\_64 (Intel/AMD) CPU and 16 GiB of memory. Using this software on domestic laptops is possible but slow.
+- You are recommended to use a POSIX-compiliant operating system.  Microsoft Windows is supported but with impaired performance.
+- If you wish to use pre-processors or classifiers with neuron networks (e.g., SCGAN, ToyCNN, ResNet50), you are recommended to NVidia General-Purposed Graph Processing Unit (GPGPU) with 6 GiB GDDR6 display memory (e.g., NVidia GeForce RTX 2060). Using the CPU is possible but much slower.
+- Your operating system should have a Python interpreter (version at least 3.8; CPython implementation). You are recommended to manage the dependencies using [Conda](https://docs.conda.io/), which is a general-purpose user-level package management system.
+
+## Usage with Installation
+
+This software can be installed in the following ways:
+
+1. Use pre-built binary wheels. Install this software using `pip install /path/to/BIA-G8-XXX.whl`.
+2. Clone this repository, build the wheels using `setuptools`, and install it.
+    1. Clone this repository using [Git](https://git-scm.com). We suppose you cloned it into somewhere called `{PROJECT_ROOT}`. Command: `git clone https://gitee.com/yuzjlab/2022-23-group-08`.
+    2. Install `setuptool`, `build`, and `pip`.
+    3. Build the wheel using `python -m build`.
+    4. Install the wheel built at `{PROJECT_ROOT}/dist`.
+
+### Using the Commandline Interface
+
+Use a command-line version of Preprocessor Explorer using:
+
+```shell
+python -m BIA_G8._main.preprocessor_explorer --help
 ```
 
-You may also use PIP-based virtual environment providers like [venv](https://docs.python.org/3/library/venv.html), [pipenv](https://pipenv.pypa.io/en/latest/index.html) or [virtualenv](https://virtualenv.pypa.io).
+% TODO
 
-## Using the User Interface
+### Using the Graphical User Interface
+
+% TODO
+
+````{hint}
+**Always check whether you are using the correct Python Interpreter.**
+
+Windows CMD:
+
+```bat
+where python
+```
+
+and look at the first value.
+
+Windows Powershell:
+
+```powershell
+cmd /C where python
+```
+
+or:
+
+```powershell
+Get-Command python
+```
+
+POSIX shell with GNU CoreUtils (or similiar alternative):
+
+```shell
+which python
+```
+
+If the Python intepreter displayed is not what you want, you may retry by replacing `python` with `python3` or `py`.
+
+Conda may not work well on Windows Powershell, so using CMD is recommended.
+
+Conda may forget to update the `PATH` environment variable after activating the corresponding environment. If so, you may invoke Python using `${CONDA_PREFIX}/python`.
+````
 
 ## Tutorials on Data Structures
 
-Following pages contains tutorials on data structures used in this project.
+The following pages contain tutorials on data structures used in this project. You may use them on your own datasets.
 
 
 ```{toctree}
