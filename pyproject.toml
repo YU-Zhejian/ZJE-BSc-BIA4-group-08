@@ -1,0 +1,74 @@
+[build-system]
+requires = [
+    "setuptools",
+    "wheel",
+    "pyqt5"
+]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "BIA_G8"
+description = "A COVID Image Classifier Using Traditional- and Deep Learning Methods"
+authors = [
+    { name = "HE Kangning", email = "kangning.19@intl.zju.edu.cn" },
+    { name = "LI Pengshan", email = "pengshan.19@intl.zju.edu.cn" },
+    { name = "XUE Heling", email = "heling.19@intl.zju.edu.cn" },
+    { name = "YANG Yanjia", email = "yanjia.19@intl.zju.edu.cn" },
+    { name = "YU Zhejian", email = "zhejian.19@intl.zju.edu.cn" },
+    { name = "ZHU Wangyi", email = "wangyi.19@intl.zju.edu.cn" },
+]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: Linux",
+    "Development Status :: 4 - Beta",
+    "Environment :: Console",
+    "Intended Audience :: Science/Research",
+    "Operating System :: MacOS :: MacOS X",
+    "Operating System :: POSIX",
+    "Programming Language :: R",
+]
+requires-python = ">=3.8"
+dynamic = ["version", "readme", "dependencies", "optional-dependencies"]
+
+[project.urls]
+homepage = "https://gitee.com/yuzjlab/2022-23-group-08/"
+
+[tool.setuptools]
+license-files = ["License.md", "Copying.md"]
+
+[tool.setuptools.dynamic]
+version = { attr = "BIA_G8.__version__" }
+readme = { file = "Readme.md" }
+dependencies = { file = "requirements.txt" }
+
+[tool.setuptools.dynamic.optional-dependencies]
+dev = { file = "requirements.txt" }
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+addopts = " --doctest-modules -vv --continue-on-collection-errors --junitxml=pytest/junit.xml --cov --cov-report=html --html=pytest/pytest_report.html --self-contained-html --ignore-glob='*.ipynb.py'"
+testpaths = ["test", "src"]
+log_level = 8
+log_file = "log/pytest.log"
+log_file_level = 8
+log_cli = false
+junit_logging = "all"
+junit_log_passing_tests = true
+junit_duration_report = "call"
+
+[tool.coverage.run]
+source = [
+    "src",
+]
+omit = [
+    "*/_main/*",
+]
+
+[tool.coverage.report]
+skip_empty = true
+
+[tool.coverage.html]
+directory = "pytest/cov_html"

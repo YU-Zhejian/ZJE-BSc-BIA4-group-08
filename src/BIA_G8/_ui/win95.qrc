@@ -1,0 +1,10 @@
+<RCC>
+  <qresource prefix="office">
+    <file>BEANY.BMP</file>
+    <file>WASTE.BMP</file>
+    <file>DELETE.BMP</file>
+    <file>HELP.BMP</file>
+    <file>OPEN.BMP</file>
+    <file>SAVE.BMP</file>
+  </qresource>
+</RCC>

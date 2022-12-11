@@ -1,0 +1,28 @@
+name = "Random Forest (sklearn)"
+
+[params]
+
+[version_info]
+BIA_G8 = "0.0.1"
+numpy = "1.23.5"
+sklearn = "1.1.3"
+joblib = "1.2.0"
+xgboost = "1.7.1"
+matplotlib = "3.6.2"
+skimage = "0.19.3"
+tomli = "2.0.1"
+tomli-w = "1.0.0"
+torch = "1.13.0.post200"
+python = "3.8.15"
+
+[metadata]
+time_gmt = "Sun Dec 11 14:51:08 2022"
+time_local = "Sun Dec 11 22:51:08 2022"
+
+[metadata.platform_uname]
+system = "Linux"
+node = "yuzj-pc"
+release = "6.0.0-5-amd64"
+version = "#1 SMP PREEMPT_DYNAMIC Debian 6.0.10-1 (2022-11-26)"
+machine = "x86_64"
+processor = ""
