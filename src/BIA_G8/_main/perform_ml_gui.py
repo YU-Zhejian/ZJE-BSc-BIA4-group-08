@@ -191,9 +191,11 @@ class ClassificationWindow(QMainWindow):
                 k: v
                 for k, v in zip(
                     self._loaded_data.keys(),
-                    self._loaded_classifier.predicts(
-                        self._loaded_data.values()
-                    )
+                    map(
+                        lambda _k: decode_dict.get(_k, "UNKNOWN"),
+                        self._loaded_classifier.predicts(
+                            self._loaded_data.values()
+                        ))
                 )
             }
         except Exception as e:
@@ -205,7 +207,7 @@ class ClassificationWindow(QMainWindow):
         self.statusBar().showMessage("Updating table view...")
         for i, (file_path, predict) in enumerate(self._prediction.items()):
             self.ui.tableWidget.setItem(i, 0, QTableWidgetItem(file_path))
-            self.ui.tableWidget.setItem(i, 1, QTableWidgetItem(decode_dict[predict]))
+            self.ui.tableWidget.setItem(i, 1, QTableWidgetItem(predict))
 
         self.statusBar().showMessage("Prediction Finished!")
 

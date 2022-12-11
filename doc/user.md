@@ -216,7 +216,6 @@ Conda may forget to update the `PATH` environment variable after activating the 
 
 The following pages contain tutorials on data structures used in this project. You may use them on your own datasets.
 
-
 ```{toctree}
 :glob:
 :maxdepth: 2

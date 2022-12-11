@@ -326,3 +326,4 @@ tmp/
 *.xlsx
 *.csv
 *.tsv
+/.idea/csv-editor.xml
