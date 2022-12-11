@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module type="PYTHON_MODULE" version="4">
+  <component name="NewModuleRootManager">
+    <content url="file://$MODULE_DIR$">
+      <sourceFolder url="file://$MODULE_DIR$/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/test" isTestSource="true" />
+      <excludeFolder url="file://$MODULE_DIR$/.idea/ZeppelinRemoteNotebooks" />
+      <excludeFolder url="file://$MODULE_DIR$/doc/_apidoc" />
+      <excludeFolder url="file://$MODULE_DIR$/doc/_build" />
+      <excludeFolder url="file://$MODULE_DIR$/doc/_root" />
+      <excludeFolder url="file://$MODULE_DIR$/doc/_templates" />
+      <excludeFolder url="file://$MODULE_DIR$/log" />
+      <excludeFolder url="file://$MODULE_DIR$/pytest" />
+      <excludeFolder url="file://$MODULE_DIR$/.pytest_cache" />
+      <excludeFolder url="file://$MODULE_DIR$/src/BIA_KiTS19/ipynb/.ipynb_checkpoints" />
+      <excludeFolder url="file://$MODULE_DIR$/.empty" />
+      <excludeFolder url="file://$MODULE_DIR$/build" />
+      <excludeFolder url="file://$MODULE_DIR$/dist" />
+      <excludeFolder url="file://$MODULE_DIR$/src/BIA_COVID_CLASS.egg-info" />
+      <excludeFolder url="file://$MODULE_DIR$/doc/_ipynb" />
+      <excludeFolder url="file://$MODULE_DIR$/.mypy_cache" />
+      <excludeFolder url="file://$MODULE_DIR$/.pytype" />
+      <excludeFolder url="file://$MODULE_DIR$/data_analysis/covid_image" />
+      <excludeFolder url="file://$MODULE_DIR$/data_analysis/covid_image_new" />
+      <excludeFolder url="file://$MODULE_DIR$/tmp" />
+      <excludeFolder url="file://$MODULE_DIR$/data_analysis/covid_image_new_nomask" />
+      <excludeFolder url="file://$MODULE_DIR$/src/BIA_G8.egg-info" />
+    </content>
+    <orderEntry type="jdk" jdkName="Python 3.8 (BIA4Env)" jdkType="Python SDK" />
+    <orderEntry type="sourceFolder" forTests="false" />
+  </component>
+</module>
