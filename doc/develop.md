@@ -1,4 +1,4 @@
-# Developers' Guide for `proc_profiler`
+# Developers' Guide for `BIA_G8`
 
 ## Get Started
 

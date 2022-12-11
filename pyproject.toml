@@ -6,7 +6,7 @@ requires = [
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "BIA_COVID_CLASS"
+name = "BIA_G8"
 description = "A COVID Image Classifier Using Traditional- and Deep Learning Methods"
 authors = [
     { name = "Niels Zeilemaker", email = "nielszeilemaker@godatadriven.com" },

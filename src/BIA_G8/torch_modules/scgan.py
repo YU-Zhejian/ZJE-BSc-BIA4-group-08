@@ -297,7 +297,7 @@ class SCGANDiscriminator(nn.Module):
 
         conv_blocks = []
         for i in range(n_blocks):
-            out_channels = (n_channels if i == 0 else in_channels * 2) if i % 2 is 0 else in_channels
+            out_channels = (n_channels if i == 0 else in_channels * 2) if i % 2 == 0 else in_channels
             conv_blocks.append(
                 ConvolutionalBlock(
                     in_channels=in_channels,

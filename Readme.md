@@ -1,4 +1,4 @@
-# Readme for CovidXrayClassifier
+# Readme for BIA_G8
 
 **Markdown Compatibility Guide**: This readme is written in [MyST-Flavor Markdown](https://myst-parser.readthedocs.io/en/latest/syntax/syntax.html). If you have problem previewing it, please download Microsoft Visual Studio Code and install a plugin with ID [ExecutableBookProject.myst-highlight](https://marketplace.visualstudio.com/items?itemName=ExecutableBookProject.myst-highlight).
 
