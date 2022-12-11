@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
  <class>MethodSelector</class>
- <widget class="QMainWindow" name="MethodSelector">
+ <widget class="QDialog" name="MethodSelector">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -16,7 +16,15 @@
   <property name="styleSheet">
    <string notr="true"/>
   </property>
-  <widget class="QWidget" name="centralwidget">
+  <widget class="QWidget" name="centralwidget" native="true">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>701</width>
+     <height>421</height>
+    </rect>
+   </property>
    <widget class="QWidget" name="layoutWidget">
     <property name="geometry">
      <rect>
@@ -74,8 +82,8 @@ background:#cdd1d3
          <property name="geometry">
           <rect>
            <x>0</x>
-           <y>-16</y>
-           <width>138</width>
+           <y>0</y>
+           <width>145</width>
            <height>500</height>
           </rect>
          </property>
@@ -1102,29 +1110,6 @@ background:#cdd1d3
 background:#e2e1e4
 }</string>
     </property>
-    <widget class="QPushButton" name="pushButton_11">
-     <property name="geometry">
-      <rect>
-       <x>450</x>
-       <y>370</y>
-       <width>93</width>
-       <height>28</height>
-      </rect>
-     </property>
-     <property name="text">
-      <string>Path</string>
-     </property>
-    </widget>
-    <widget class="QLineEdit" name="lineEdit_3">
-     <property name="geometry">
-      <rect>
-       <x>70</x>
-       <y>370</y>
-       <width>341</width>
-       <height>31</height>
-      </rect>
-     </property>
-    </widget>
     <widget class="QPushButton" name="pushButton_15">
      <property name="geometry">
       <rect>
@@ -1135,14 +1120,23 @@ background:#e2e1e4
       </rect>
      </property>
      <property name="text">
-      <string>Output</string>
+      <string>Save &amp; Exit</string>
      </property>
     </widget>
    </widget>
    <zorder>widget</zorder>
    <zorder>layoutWidget</zorder>
   </widget>
-  <widget class="QStatusBar" name="statusbar"/>
+  <widget class="QStatusBar" name="statusbar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>3</width>
+     <height>22</height>
+    </rect>
+   </property>
+  </widget>
  </widget>
  <resources>
   <include location="lps.qrc"/>

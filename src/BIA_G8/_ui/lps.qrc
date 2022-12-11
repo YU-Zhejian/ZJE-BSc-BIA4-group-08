@@ -1,0 +1,5 @@
+<RCC>
+  <qresource prefix="figure">
+    <file>lake.jpg</file>
+  </qresource>
+</RCC>

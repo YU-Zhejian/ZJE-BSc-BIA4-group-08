@@ -1,21 +1,29 @@
+from typing import Optional
+
 import matplotlib.pyplot as plt
 import numpy.typing as npt
-from PyQt5.QtWidgets import QFileDialog, QMainWindow, QMessageBox
+from PyQt5.QtWidgets import QFileDialog, QMessageBox, QDialog
 
 from BIA_G8._ui.method_selector import Ui_MethodSelector
 from BIA_G8.model.preprocesor_pipeline import PreprocessorPipeline
-from BIA_G8.model.preprocessor import get_preprocessor
+from BIA_G8.model.preprocessor import get_preprocessor, AbstractPreprocessor
 
 
 # Link button and interface
-class link_method(QMainWindow):
+class PreprocessorPipelineWindow(QDialog):
     _orig_img: npt.NDArray
+    _pp: PreprocessorPipeline
+    _output_path: Optional[str]
 
-    def __init__(self, ori_img:npt.NDArray):
+    def __init__(self, ori_img: npt.NDArray):
         self._orig_img = ori_img
+        self._pp = PreprocessorPipeline()
+        self._output_path = None
         super().__init__()
         self.ui = Ui_MethodSelector()
         self.ui.setupUi(self)
+        self.setWindowTitle("PPE <UNSAVED>")
+
         # Click the button to jump to the corresponding page
         self.ui.pushButton.clicked.connect(lambda: self.ui.stackedWidget.setCurrentIndex(0))
         self.ui.pushButton_2.clicked.connect(lambda: self.ui.stackedWidget.setCurrentIndex(1))
@@ -46,93 +54,91 @@ class link_method(QMainWindow):
         self.ui.pushButton_8.clicked.connect(self.setparam6)
         self.ui.pushButton_16.clicked.connect(self.setparam7)
         self.ui.pushButton_5.clicked.connect(self.setparam8)
-        # dispaly the prompt box
-        self.ui.pushButton_7.clicked.connect(self.openwindow3)
-        self.ui.pushButton_14.clicked.connect(self.openwindow3)
-        self.ui.pushButton_13.clicked.connect(self.openwindow3)
-        self.ui.pushButton_12.clicked.connect(self.openwindow3)
-        self.ui.pushButton_10.clicked.connect(self.openwindow3)
-        self.ui.pushButton_9.clicked.connect(self.openwindow3)
-        self.ui.pushButton_8.clicked.connect(self.openwindow3)
-        self.ui.pushButton_16.clicked.connect(self.openwindow3)
-        self.ui.pushButton_5.clicked.connect(self.openwindow3)
-        #
-        self.ui.pushButton_11.clicked.connect(self.output_path)
-        #
-        self.ui.pushButton_15.clicked.connect(self.out)
-        #
+
+        self.ui.pushButton_15.clicked.connect(lambda: self.save())
         self.ui.pushButton_15.clicked.connect(lambda: self.close())
 
-
-    def openwindow3(self):
-        from end_page_function import accept
-        self.m = accept()
-        self.m.show()
-
-    def Process(self, param_dict):
-        global my_pp
-        global pp
-        pp = PreprocessorPipeline()
-        my_pp = get_preprocessor(param_dict.pop('name'))()
+    def process_kwargs(self, param_dict):
+        preprocessor = get_preprocessor(param_dict.pop('name'))()
         try:
-            my_pp = my_pp.set_params(**param_dict)
+            preprocessor = preprocessor.set_params(**param_dict)
         except Exception as e:
-            QMessageBox.about(self, 'Warning', f"Exception {e} captured!")
-        print(f"Preprocessor {repr(my_pp)}")
+            QMessageBox.critical(self, 'ERROR', f"Exception {e} captured!")
+            return
+        print(f"Preprocessor {repr(preprocessor)}")
         orig_img_copy = self._orig_img.copy()
-        transformed_img = pp.execute(orig_img_copy)
+        transformed_img = self._pp.execute(orig_img_copy)
         try:
-            transformed_img = my_pp.execute(transformed_img)
+            transformed_img = preprocessor.execute(transformed_img)
         except Exception as e:
-            QMessageBox.about(self, 'Warning', f"Exception {e} captured!")
+            QMessageBox.critical(self, 'ERROR', f"Exception {e} captured!")
+            return
         plt.imshow(
             transformed_img,
             cmap="bone"
         )
         plt.colorbar()
         plt.show()
+        is_accepted = QMessageBox.question(
+            self,
+            "Accept?",
+            "Do you accept this effect?",
+            buttons=QMessageBox.Yes | QMessageBox.No,
+            defaultButton=QMessageBox.No
+        ) == QMessageBox.Yes
+        if is_accepted:
+            self.save(preprocessor)
+        else:
+            return
 
-    def output_path(self):
-        global my_pp
-        global pp
-        global pp_output_path
-        pp_output_path, _ = QFileDialog.getSaveFileName(self, "Select the output path", "\\pyproject", "toml(*.toml)")
-        self.ui.lineEdit_3.setText(pp_output_path)
-
-    def out(self):
-        global my_pp
-        global pp
-        global pp_output_path
-        pp = pp.add_step(my_pp)
-        pp.save(pp_output_path)
+    def save(self, preprocessor: Optional[AbstractPreprocessor] = None):
+        if self._output_path is None:
+            output_path, _ = QFileDialog.getSaveFileName(
+                self,
+                caption="Select the output path",
+                directory=".",
+                filter="TOML (*.toml);;ALL (*.*)"
+            )
+            if output_path == "":
+                QMessageBox.critical(
+                    self,
+                    'ERROR',
+                    "Save failed -- You did not select any path!"
+                )
+                return
+            self._output_path = output_path
+        self.setWindowTitle(f"PPE <{self._output_path}>")
+        if preprocessor is not None:
+            self._pp = self._pp.add_step(preprocessor)
+        self._pp.save(self._output_path)
 
     # function of method_1
     def setparam0(self):
         param_dict = {
             'name': 'dumb',
         }
-        self.Process(param_dict)
+        self.process_kwargs(param_dict)
 
     # function of method_2
     def setparam1(self):
         param_dict = {
             'name': 'describe',
         }
-        self.Process(param_dict)
+        self.process_kwargs(param_dict)
 
     # function of method_3
     def setparam2(self):
         param_dict = {
             'name': 'normalize',
         }
-        self.Process(param_dict)
+        self.process_kwargs(param_dict)
 
     # function of method_4
     def setparam3(self):
         param_dict = {
             'name': 'adjust exposure',
         }
-        self.Process(param_dict)
+        self.process_kwargs(param_dict)
 
     # function of method_5
     def setparam4(self):
@@ -140,7 +146,7 @@ class link_method(QMainWindow):
             'name': 'denoise (median)',
             'footprint_length_width': self.ui.lineEdit_24.text()
         }
-        self.Process(param_dict)
+        self.process_kwargs(param_dict)
 
     # function of method_6
     def setparam5(self):
@@ -148,7 +154,7 @@ class link_method(QMainWindow):
             'name': 'denoise (mean)',
             'footprint_length_width': self.ui.lineEdit_23.text()
         }
-        self.Process(param_dict)
+        self.process_kwargs(param_dict)
 
     # function of method_7
     def setparam6(self):
@@ -156,7 +162,7 @@ class link_method(QMainWindow):
             'name': 'denoise (gaussian)',
             'sigma': self.ui.lineEdit_28.text()
         }
-        self.Process(param_dict)
+        self.process_kwargs(param_dict)
 
     # function of method_8
     def setparam7(self):
@@ -165,7 +171,7 @@ class link_method(QMainWindow):
             'radius': self.ui.lineEdit_31.text(),
             'amount': self.ui.lineEdit.text()
         }
-        self.Process(param_dict)
+        self.process_kwargs(param_dict)
 
     # function of method_9
     def setparam8(self):
@@ -174,4 +180,5 @@ class link_method(QMainWindow):
             'kernel_size': self.ui.lineEdit_34.text(),
             'balance': self.ui.lineEdit_2.text()
         }
-        self.Process(param_dict)
+        self.process_kwargs(param_dict)
+

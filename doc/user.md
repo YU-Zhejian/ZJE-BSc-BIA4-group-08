@@ -70,7 +70,7 @@ Conda may forgot to update the `PATH` environment variable after activating corr
 
 ### Using the Commandline Interface
 
-Before, we need to create the preprocessor configuration file: in TOML format. This step can be done by Preprocessor Explorer, or use pre-trained preprocessing configurations available at `{PROJECT_ROOT}/pretrained_model/pp_*.toml`.
+Before, we need to create the preprocessor configuration file: in TOML format. This step can be done by Preprocessor Explorer, or use pre-trained preprocessing configurations available at `{PROJECT_ROOT}/pretrained/pp_*.toml`.
 
 An example of preprocessor pipeline config:
 
