@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>MainWindow</string>
+   <string>Classifier</string>
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QGridLayout" name="gridLayout">
@@ -73,7 +73,6 @@
      <string>Help</string>
     </property>
     <addaction name="actionOfficialSite"/>
-    <addaction name="actionAbout"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuRun"/>
@@ -81,26 +80,46 @@
   </widget>
   <widget class="QStatusBar" name="statusBar"/>
   <action name="actionOpen_Image_Folder">
+   <property name="icon">
+    <iconset resource="win95.qrc">
+     <normaloff>:/office/OPEN.BMP</normaloff>:/office/OPEN.BMP</iconset>
+   </property>
    <property name="text">
     <string>Open Image Folder</string>
    </property>
   </action>
   <action name="actionClose">
+   <property name="icon">
+    <iconset resource="win95.qrc">
+     <normaloff>:/office/DELETE.BMP</normaloff>:/office/DELETE.BMP</iconset>
+   </property>
    <property name="text">
     <string>Close</string>
    </property>
   </action>
   <action name="actionExecute">
+   <property name="icon">
+    <iconset resource="win95.qrc">
+     <normaloff>:/office/BEANY.BMP</normaloff>:/office/BEANY.BMP</iconset>
+   </property>
    <property name="text">
     <string>Execute</string>
    </property>
   </action>
   <action name="actionClear">
+   <property name="icon">
+    <iconset resource="win95.qrc">
+     <normaloff>:/office/WASTE.BMP</normaloff>:/office/WASTE.BMP</iconset>
+   </property>
    <property name="text">
     <string>Clear</string>
    </property>
   </action>
   <action name="actionOfficialSite">
+   <property name="icon">
+    <iconset resource="win95.qrc">
+     <normaloff>:/office/HELP.BMP</normaloff>:/office/HELP.BMP</iconset>
+   </property>
    <property name="text">
     <string>Official Site</string>
    </property>
@@ -111,21 +130,35 @@
    </property>
   </action>
   <action name="actionOpen_Preprocessor_Pipeline_Config">
+   <property name="icon">
+    <iconset resource="win95.qrc">
+     <normaloff>:/office/OPEN.BMP</normaloff>:/office/OPEN.BMP</iconset>
+   </property>
    <property name="text">
     <string>Open Preprocessor Pipeline Config</string>
    </property>
   </action>
   <action name="actionOpen_Machine_Learning_Model">
+   <property name="icon">
+    <iconset resource="win95.qrc">
+     <normaloff>:/office/OPEN.BMP</normaloff>:/office/OPEN.BMP</iconset>
+   </property>
    <property name="text">
     <string>Open Machine Learning Model</string>
    </property>
   </action>
   <action name="actionSave_Predicted_Outcome">
+   <property name="icon">
+    <iconset resource="win95.qrc">
+     <normaloff>:/office/SAVE.BMP</normaloff>:/office/SAVE.BMP</iconset>
+   </property>
    <property name="text">
     <string>Save Predicted Outcome...</string>
    </property>
   </action>
  </widget>
- <resources/>
+ <resources>
+  <include location="win95.qrc"/>
+ </resources>
  <connections/>
 </ui>
