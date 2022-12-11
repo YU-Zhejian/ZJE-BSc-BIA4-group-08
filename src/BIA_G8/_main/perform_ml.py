@@ -6,12 +6,12 @@ from BIA_G8.helper.ndarray_helper import scale_np_array
 from BIA_G8.model.classifier import load_classifier
 from BIA_G8.model.preprocesor_pipeline import PreprocessorPipeline
 
-
 decode_dict = {
-    0:"COVID",
-    1:"Normal",
-    2:"Viral Pneumonia"
-} # TODO: Have no idea wo convert this information, so hard coded.
+    0: "COVID",
+    1: "Normal",
+    2: "Viral Pneumonia"
+}  # TODO: Have no idea wo convert this information, so hard coded.
+
 
 @click.command
 @click.option("--preprocessor_pipeline_config_path", help="Path to preprocessor config")

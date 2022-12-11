@@ -24,6 +24,7 @@ classifiers = [
     "Programming Language :: R",
 ]
 requires-python = ">=3.8"
+url = "https://gitee.com/yuzjlab/2022-23-group-08"
 dynamic = ["version", "readme", "dependencies", "optional-dependencies"]
 
 [tool.setuptools]

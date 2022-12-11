@@ -12,8 +12,8 @@ from BIA_G8._ui.method_selector import Ui_MethodSelector
 from BIA_G8.model.preprocesor_pipeline import PreprocessorPipeline
 from BIA_G8.model.preprocessor import get_preprocessor, AbstractPreprocessor
 
-
 matplotlib.use("agg")
+
 
 class ImageDisplayDialog(QDialog):
     _img: npt.NDArray

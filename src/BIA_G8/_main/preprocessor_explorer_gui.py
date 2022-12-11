@@ -13,13 +13,13 @@ from BIA_G8._ui.preprocessor_explorer_main_page import Ui_PreprocessorExplorerMa
 _lh = get_lh(__name__)
 
 
-class HomePage(QMainWindow):
+class PreprocessorExplorerMainWindow(QMainWindow):
     _orig_image: Optional[npt.NDArray]
 
     def __init__(self):
         self._orig_image = None
         super().__init__()
-        _lh.info("HomePage Initializing...")
+        _lh.info("PreprocessorExplorer Main Window Initializing...")
         self.ui = Ui_PreprocessorExplorerMainWindow()
         self.ui.setupUi(self)
         self.ui.pushButton_3.clicked.connect(self.upload)
@@ -66,6 +66,6 @@ class HomePage(QMainWindow):
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
-    ui = HomePage()
+    ui = PreprocessorExplorerMainWindow()
     ui.show()
     sys.exit(app.exec_())
