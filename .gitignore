@@ -315,9 +315,14 @@ cython_debug/
 *.png
 *.tif
 *.tiff
-*.npy
-*.npz
+
+# Configurations
+*.toml
+!/pyproject.toml
+tmp/
 
 # Tables
 *.xls
 *.xlsx
+*.csv
+*.tsv

@@ -1,72 +1,174 @@
+"""
+Model -- Models for Preprocessing and Classification
+
+Here contains data structures and utilities for preprocessing and classification that should be called by the front end.
+"""
+
 from __future__ import annotations
 
-from abc import abstractmethod
+from typing import TypeVar, Callable, Union, Generic
 
-from typing import Any, Mapping, Type, TypeVar
+import BIA_G8
 
-import joblib
-import numpy.typing as npt
-import tomli
-from sklearn.neighbors import KNeighborsClassifier
-
-from BIA_G8.helper import io_helper
+_lh = BIA_G8.get_lh(__name__)
 
 
-class AbstractClassifier:
+class Unset:
     """
-    Abstract Model for extension
+    Indicator indicating that an argument was not set.
+    If instance of this class was passed,
+    the default value of an argument should be used.
+
+    :py:class:`Unset` should NOT be mixed with :py:class:`None`.
+    They are created for different purposes!
     """
 
+    def __repr__(self) -> str:
+        return "unset"
+
+    def __str__(self) -> str:
+        return repr(self)
+
+
+unset = Unset()
+"""The only instance of :py:class:`Unset`."""
+
+
+class LackingOptionalRequirementError(ValueError):
+    """
+    Exception indicating unmet dependencies.
+    """
+
+    def __init__(
+            self,
+            name: str,
+            conda_channel: str,
+            conda_name: str,
+            pypi_name: str,
+            url: str
+    ):
+        """
+        :param name: Name of the dependency. For example, ``XGBoost``.
+        :param conda_channel: Conda channel where this dependency can be found.
+            For example, ``conda-forge``.
+        :param conda_name: Name used to install using Conda. For example, ``py-xgboost-gpu``.
+        :param pypi_name: Name used to install using ``pip``. For example, ``xgboost``.
+        :param url: The project URL.
+        """
+        super().__init__(
+            f"Dependency {name} not found!\n"
+            f"Install it using: `conda install -c {conda_channel} {conda_name}`\n"
+            f"Install it using: `pip install {pypi_name}`\n"
+            f"See project URL: {url}"
+        )
+
+
+_ArgType = TypeVar("_ArgType")
+
+
+def argument_string_to_string(instr: str) -> Union[Unset, str]:
+    """
+    Parse a string to integer. Return :py:class:`Unset` if string is empty.
+
+    >>> argument_string_to_string("1")
+    '1'
+    >>> argument_string_to_string("")
+    unset
+    """
+    return unset if instr == "" else instr
+
+
+def argument_string_to_int(instr: str) -> Union[Unset, int]:
+    """
+    Parse a string to integer. Return :py:class:`Unset` if string is empty.
+
+    >>> argument_string_to_int("1")
+    1
+    >>> argument_string_to_int("")
+    unset
+    """
+    return unset if instr == "" else int(instr)
+
+
+def argument_string_to_float(instr: str) -> Union[Unset, float]:
+    """
+    Parse a string to float. Return :py:class:`Unset` if string is empty.
+
+    >>> argument_string_to_float("1")
+    1.0
+    >>> argument_string_to_float("")
+    unset
+    """
+    return unset if instr == "" else float(instr)
+
+
+class Argument(Generic[_ArgType]):
+    """
+    Parser and indicator of an argument. Used in frontend only.
+
+    At the backend we declare an argument like this:
+
+    >>> arg = Argument(name="arg", parse_str=argument_string_to_float, is_required=True, description="empty")
+    >>> print(repr(arg))
+    Argument ``arg`` (required: True) -- empty
+
+    And at frontend it can be inspected like this:
+
+    >>> arg.name
+    'arg'
+
+    And it can parse argument like this (by impleting the :py:func`object.__call__()` method.):
+
+    >>> arg("3.1415")
+    3.1415
+    """
     _name: str
+    _parse_str: Callable[[str], Union[_ArgType, Unset]]
+    _is_required: bool
+    _description: str
 
-    @abstractmethod
-    def save(self, model_abspath: str) -> None:
-        pass
+    def __init__(
+            self,
+            *,
+            name: str,
+            parse_str: Callable[[str], Union[_ArgType, Unset]],
+            is_required: bool = False,
+            description: str = "no argument description"
+    ):
+        self._name = name
+        self._is_required = is_required
+        self._parse_str = parse_str
+        self._description = description
 
-    @classmethod
-    @abstractmethod
-    def load(cls, model_abspath: str) -> AbstractClassifier:
-        pass
+    @property
+    def name(self) -> str:
+        """Argument name"""
+        return self._name
 
-    @abstractmethod
-    def fit(self, data: npt.NDArray, label: npt.NDArray) -> AbstractClassifier:
-        pass
+    @property
+    def description(self) -> str:
+        """Argument description"""
+        return self._description
 
-    @abstractmethod
-    def predict(self, data: npt.NDArray) -> npt.NDArray:
-        pass
+    @property
+    def is_required(self) -> bool:
+        """Whether the argument is required"""
+        return self._is_required
 
-    @classmethod
-    @abstractmethod
-    def new(self, **hyper_params) -> None:
-        pass
+    def __call__(self, in_str: str) -> Union[_ArgType, Unset]:
+        return self._parse_str(in_str)
+
+    def __repr__(self) -> str:
+        return f"Argument ``{self._name}`` (required: {self._is_required}) -- {self._description}"
+
+    def __str__(self) -> str:
+        return repr(self)
 
 
-_SKLearnModelType = TypeVar("_SKLearnModelType")
+class LackRequiredArgumentError(ValueError):
+    """Argument Parser Exception for lack of required argument"""
 
-
-class BaseSklearnClassifier(AbstractClassifier):
-    _model: _SKLearnModelType
-    _model_type: Type[_SKLearnModelType]
-
-    @classmethod
-    def new(cls, **hyper_params) -> BaseSklearnClassifier:
-        new_instance = cls()
-        new_instance._model = new_instance._model_type(**hyper_params)
-        return new_instance
-
-    def fit(self, data: npt.NDArray, label: npt.NDArray) -> BaseSklearnClassifier:
-        self._model.fit(X=data, y=label)
-        return self
-
-    def predict(self, data: npt.NDArray) -> npt.NDArray:
-        return self._model.predict(data)
-
-    @classmethod
-    def load(cls, model_abspath: str) -> BaseSklearnClassifier:
-        new_instance = cls()
-        new_instance._model = joblib.load(model_abspath)
-        return new_instance
-
-    def save(self, model_abspath: str) -> None:
-        joblib.dump(self._model, model_abspath)
+    def __init__(self, argument: Argument):
+        super().__init__(
+            f"Lack required arguments: {argument}"
+        )

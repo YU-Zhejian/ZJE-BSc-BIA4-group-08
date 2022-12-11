@@ -1,17 +1,20 @@
+"""
+General-purposed helpers for Numpy NDArray and Torch Tensor.
+"""
+
 __all__ = (
     "scale_np_array",
     "scale_torch_array",
     "describe"
 )
 
-import doctest
-from typing import Union, Tuple, TypeVar
+from typing import Union, Tuple, Optional
 
 import numpy as np
 import torch
 from numpy import typing as npt
 
-_Tensor = TypeVar("_Tensor", npt.NDArray[Union[float, int]], torch.Tensor)
+_Tensor = Union[npt.NDArray, torch.Tensor]
 
 
 def _scale_impl(
@@ -26,9 +29,10 @@ def _scale_impl(
 
 
 def scale_np_array(
-        x: npt.NDArray[Union[int, float]],
+        x: npt.NDArray,
+        domain: Optional[Tuple[Union[int, float], Union[int, float]]] = None,
         out_range: Tuple[Union[int, float], Union[int, float]] = (0, 1)
-) -> npt.NDArray[Union[int, float]]:
+) -> npt.NDArray:
     """
     Scale a Numpy array to specific range.
 
@@ -39,12 +43,14 @@ def scale_np_array(
     >>> scale_np_array(np.array([1,2,3,4,5]), (0, 1))
     array([0.  , 0.25, 0.5 , 0.75, 1.  ])
     """
-    domain = np.min(x), np.max(x)
+    if domain is None:
+        domain = np.min(x), np.max(x)
     return _scale_impl(x, out_range, domain)
 
 
 def scale_torch_array(
         x: torch.Tensor,
+        domain: Optional[Tuple[Union[int, float], Union[int, float]]] = None,
         out_range: Tuple[Union[int, float], Union[int, float]] = (0, 1)
 ) -> torch.Tensor:
     """
@@ -57,7 +63,8 @@ def scale_torch_array(
     >>> scale_torch_array(torch.tensor(np.array([1,2,3,4,5])), (0, 1))
     tensor([0.0000, 0.2500, 0.5000, 0.7500, 1.0000])
     """
-    domain = torch.min(x).item(), torch.max(x).item()
+    if domain is None:
+        domain = torch.min(x).item(), torch.max(x).item()
     return _scale_impl(x, out_range, domain)
 
 
@@ -67,7 +74,7 @@ def describe(array: _Tensor) -> str:
 
     Example:
 
-    # FIXME: int32 on Windows.
+    # FIXME: fails since int32 on Windows.
 
     >>> describe(np.array([0, 0, 1, 1]))
     'ndarray[int64] with shape=(4,); uniques=[0 1]'
@@ -112,7 +119,3 @@ class DimensionMismatchException(ValueError):
             f"\twhere {_arr1_name} is {describe(_arr1)}\n"
             f"\twhere {_arr2_name} is {describe(_arr2)}\n"
         )
-
-
-if __name__ == "__main__":
-    doctest.testmod()

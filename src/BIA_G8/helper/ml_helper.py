@@ -1,19 +1,29 @@
+"""
+General-purposed machine learning helpers.
+"""
+
+from __future__ import annotations
+
 __all__ = (
     "print_confusion_matrix",
-    "generate_encoder_decoder"
+    "generate_encoder_decoder",
+    "MachinelearningDatasetInterface"
 )
 
-import doctest
-from typing import List, Dict, Tuple, Callable
+from abc import abstractmethod, ABC
+from typing import Dict, Tuple, Callable, Iterable
 
 import numpy as np
 import numpy.typing as npt
 import prettytable
 
+from BIA_G8.helper import torch_helper
+
 
 def generate_encoder_decoder(
         encoder_dict: Dict[str, int]
 ) -> Tuple[Callable[[str], int], Callable[[int], str]]:
+    """Generate encoding and decoding function"""
     decoder_dict = {v: k for k, v in encoder_dict.items()}
 
     def encoder(label_str: str) -> int:
@@ -27,7 +37,7 @@ def generate_encoder_decoder(
 
 def print_confusion_matrix(
         matrix: npt.NDArray,
-        labels: List[str]
+        labels: Iterable[str]
 ) -> str:
     """
     Print confusion matrix using ``prettytable`` package.
@@ -47,6 +57,7 @@ def print_confusion_matrix(
     :param labels: Row and Column names.
     :return: Confusion matrix in string.
     """
+    labels = list(labels)
     table_length = matrix.shape[0]
     field_names = list(map(labels.__getitem__, range(table_length)))
     pt = prettytable.PrettyTable(("title", *field_names))
@@ -55,5 +66,46 @@ def print_confusion_matrix(
     return str(pt)
 
 
-if __name__ == '__main__':
-    doctest.testmod()
+class MachinelearningDatasetInterface(ABC):
+    """
+    Dataset that supports applying machine learning algorithms.
+    """
+
+    @abstractmethod
+    def __len__(self) -> int:
+        raise NotImplementedError
+
+    @property
+    @abstractmethod
+    def sklearn_dataset(self) -> Tuple[npt.NDArray, npt.NDArray]:
+        """
+        Prepare and return cached dataset for :py:mod:`sklearn`.
+
+        :return: A tuple of ``X`` and ``y`` for :py:func:`fit`-like functions.
+            For example, as is used in :external+sklearn:py:class:`sklearn.neighbors.KNeighborsClassifier`.
+        """
+        raise NotImplementedError
+
+    @property
+    @abstractmethod
+    def torch_dataset(self) -> torch_helper.DictBackedTorchDataSet:
+        """
+        Prepare and return cached dataset for :py:mod:`torch`.
+
+        :return: An iterable pytorch dataset.
+        """
+        raise NotImplementedError
+
+    @abstractmethod
+    def train_test_split(self, ratio: float = 0.7) -> Tuple[
+        MachinelearningDatasetInterface,
+        MachinelearningDatasetInterface
+    ]:
+        """
+        Split current dataset into training and testing dataset.
+        See: :py:func:`sklearn.model_selection.train_test_split()` for more details.
+
+        :param ratio: Train-test ratio.
+        :return: Two new datasets
+        """
+        raise NotImplementedError

@@ -67,7 +67,7 @@ from sklearn.manifold import TSNE
 
 from xgboost.sklearn import XGBClassifier
 
-from BIA_G8.covid_helper import covid_dataset
+from BIA_G8.data_analysis import covid_dataset
 from BIA_G8.helper import joblib_helper
 
 # %% [markdown]
@@ -127,11 +127,11 @@ def sklearn_get_accuracy(
         model_type: _ModelTypeType,
         model_kwds: Mapping[str, Any]
 ):
-    X, y = _ds.sklearn_dataset
-    X_train, X_test, y_train, y_test = train_test_split(X, y, shuffle=True)
+    x, y = _ds.sklearn_dataset
+    x_train, x_test, y_train, y_test = train_test_split(x, y, shuffle=True)
     model = model_type(**model_kwds)
-    model = model.fit(X=X_train, y=y_train)
-    pred = model.predict(X_test)
+    model = model.fit(X=x_train, y=y_train)
+    pred = model.predict(x_test)
     accuracy = np.sum(pred == y_test) / len(y_test) * 100
     return accuracy
 
@@ -141,7 +141,7 @@ def mean_sklearn_get_accuracy(
         model_type: _ModelTypeType,
         model_kwds: Optional[Mapping[str, Any]] = None,
         num_iter: int = 10,
-        parallel: bool = False,
+        _parallel: bool = False,
         joblib_kwds: Optional[Mapping[str, Any]] = None,
 ) -> List[float]:
     def dumb_train(_):
@@ -160,7 +160,7 @@ def mean_sklearn_get_accuracy(
     model_name = model_type.__name__
     if "base_estimator" in model_kwds:
         model_name += f" ({model_kwds['base_estimator'].__class__.__name__})"
-    if parallel:
+    if _parallel:
         retl = list(joblib_helper.parallel_map(
             dumb_train,
             tqdm(iterable=range(num_iter), desc=f"Training with {model_name}..."),
@@ -185,23 +185,23 @@ svm_accu = mean_sklearn_get_accuracy(ds, SVC)
 dt_accu = mean_sklearn_get_accuracy(
     ds,
     DecisionTreeClassifier,
-    parallel=parallel
+    _parallel=parallel
 )
 rdn_forest_accu = mean_sklearn_get_accuracy(
     ds,
     RandomForestClassifier,
-    parallel=parallel
+    _parallel=parallel
 )
 etc_accu = mean_sklearn_get_accuracy(
     ds,
     ExtraTreesClassifier,
-    parallel=parallel
+    _parallel=parallel
 )
 adaboost_dt_accu = mean_sklearn_get_accuracy(
     ds,
     AdaBoostClassifier,
     model_kwds={"base_estimator": DecisionTreeClassifier()},
-    parallel=parallel
+    _parallel=parallel
 )
 # gbc_accu = mean_sklearn_get_accuracy(
 #         ds,

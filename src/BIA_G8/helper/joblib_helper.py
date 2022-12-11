@@ -36,7 +36,7 @@ def parallel_map(
     :param f: Function to be applied around an iterable.
     :param input_iterable: Iterable where a function would be applied to.
     :param n_jobs: Number of parallel threads. Would be max available CPU number if not set.
-    :param backend: The backend to be used. Recommended to use ``loky``. You may also try ``threading`` if ``loky`` fails.
+    :param backend: The backend to be used. Recommended to use ``threading``.
     :return: Generated new iterable.
     """
     it: Iterable[_OutType] = joblib.Parallel(

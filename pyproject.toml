@@ -24,7 +24,7 @@ classifiers = [
     "Programming Language :: R",
 ]
 requires-python = ">=3.8"
-dynamic = ["version", "readme", "dependencies"]
+dynamic = ["version", "readme", "dependencies", "optional-dependencies"]
 
 [tool.setuptools]
 license-files = ["License.md", "Copying.md"]
@@ -33,6 +33,9 @@ license-files = ["License.md", "Copying.md"]
 version = { attr = "BIA_G8.__version__" }
 readme = { file = "Readme.md" }
 dependencies = { file = "requirements.txt" }
+
+[tool.setuptools.dynamic.optional-dependencies]
+dev = { file = "requirements.txt" }
 
 [tool.setuptools.packages.find]
 where = ["src"]

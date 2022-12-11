@@ -40,6 +40,7 @@ import pandas as pd
 import skimage.transform as skitrans
 
 import matplotlib.pyplot as plt
+import seaborn as sns
 
 from tqdm import tqdm
 
@@ -47,8 +48,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.manifold import TSNE
 
-
-from BIA_G8.covid_helper import covid_dataset
+from BIA_G8.data_analysis import covid_dataset
 from BIA_G8.helper import ml_helper
 
 # %%
@@ -62,7 +62,7 @@ encode, decode = ml_helper.generate_encoder_decoder({
 
 # %%
 ds = covid_dataset.CovidDataSet.parallel_from_directory(
-    "D:\\BIA-G8\\src\\ipynb\\COVID-19_Radiography_Dataset\\out",
+    os.path.join(THIS_DIR_PATH, "covid_image_new"),
     size=400,
     encode=encode, decode=decode
 ).parallel_apply(
@@ -100,7 +100,8 @@ accuracy = []
 for _ in tqdm(iterable=range(200)):
     X, y = ds.sklearn_dataset
     X_train, X_test, y_train, y_test = train_test_split(X, y, shuffle=True)
-    accuracy.append(np.sum(KNeighborsClassifier().fit(X=X_train, y=y_train).predict(X_test) == y_test) / len(y_test) * 100)
+    accuracy.append(
+        np.sum(KNeighborsClassifier().fit(X=X_train, y=y_train).predict(X_test) == y_test) / len(y_test) * 100)
 print(f"Accuracy: {np.mean(accuracy):4.2f}")
 
 # %%
@@ -108,9 +109,10 @@ import skimage.exposure as skiexp
 import numpy.typing as npt
 
 
-def adaphist(img:npt.NDArray) -> npt.NDArray:
-    q2,q95=np.percentile(img, (2, 95))
-    return skiexp.rescale_intensity(img,in_range=(q2,q95),out_range=(-1,1))
+def adaphist(img: npt.NDArray) -> npt.NDArray:
+    q2, q95 = np.percentile(img, (2, 95))
+    return skiexp.equalize_adapthist(skiexp.rescale_intensity(img, in_range=(q2, q95), out_range=(-1, 1)))
+
 
 ds_equalize_hist = ds.parallel_apply(
     adaphist
@@ -121,7 +123,8 @@ accuracy_new = []
 for _ in tqdm(iterable=range(200)):
     X, y = ds_equalize_hist.sklearn_dataset
     X_train, X_test, y_train, y_test = train_test_split(X, y, shuffle=True)
-    accuracy_new.append(np.sum(KNeighborsClassifier().fit(X=X_train, y=y_train).predict(X_test) == y_test) / len(y_test) * 100)
+    accuracy_new.append(
+        np.sum(KNeighborsClassifier().fit(X=X_train, y=y_train).predict(X_test) == y_test) / len(y_test) * 100)
 print(f"Accuracy: {np.mean(accuracy_new):4.2f}")
 
 # %%
