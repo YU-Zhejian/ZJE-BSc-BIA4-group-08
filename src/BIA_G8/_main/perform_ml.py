@@ -9,6 +9,8 @@ from BIA_G8.model.classifier import load_classifier
 from BIA_G8.model.preprocesor_pipeline import PreprocessorPipeline
 from BIA_G8.model.preprocessor import get_preprocessor
 
+decode_dict = {} # TODO: Have no idea wo convert this information, so hard coded.
+
 @click.command
 @click.option("--preprocessor_pipeline_config_path", help="Path to preprocessor config")
 @click.option("--classifier_configuration_paths", help="Path to classifier config")
@@ -27,7 +29,7 @@ def perform_ml(
     classifier = load_classifier(classifier_configuration_paths)
     preprocessed_image = pp.execute(orig_img)
     category = classifier.predict(preprocessed_image)
-    print(category)
+    print(decode_dict[category])
 
 if __name__ == "__main__":
     perform_ml()

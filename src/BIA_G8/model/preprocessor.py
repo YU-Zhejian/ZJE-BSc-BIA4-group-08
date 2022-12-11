@@ -281,7 +281,7 @@ class WienerDeblurPreprocessor(AbstractPreprocessor):
     description: Final[str] = "This preprocessor can deblur the images which is caused by the mild movement of patient"
 
     def _function(self, img: npt.NDArray, **kwargs) -> npt.NDArray:
-        kernel = np.ones(kwargs["kernel_size"])
+        kernel = np.ones(shape=(kwargs["kernel_size"], kwargs["kernel_size"]))
         balance = kwargs["balance"]
         return skiresort.wiener(img, psf=kernel / np.size(kernel), balance=balance)
 

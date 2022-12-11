@@ -4,7 +4,7 @@
 
 To participate in development of this project, you need to clone this project to your local computer using [Git](https://git-scm.com) from <https://gitee.com/yuzjlab/2022-23-group-08.git> or <https://github.com/BIA4-course/2022-23-Group-08>.
 
-The Python Coding Standard enforced in this project would be a modified (unpublished) version of [_Google Python Style_](https://google.github.io/styleguide/pyguide.html) (A Chinese version [here](https://zh-google-styleguide.readthedocs.io/en/latest/google-python-styleguide)).
+The Python Coding Standard enforced in this project would be [_Google Python Style_](https://google.github.io/styleguide/pyguide.html) (A Chinese version [here](https://zh-google-styleguide.readthedocs.io/en/latest/google-python-styleguide)).
 
 The Developing environment of this project changes rapidly since new machine-learning algorithms \& Implementations are frequently tested, aded or removed. Setup the development environment using [Conda](https://docs.conda.io/en/latest/) with configuration files at `{PROJECT_ROOT}/envs`. You may also use PIP-based virtual environment providers like [venv](https://docs.python.org/3/library/venv.html), [pipenv](https://pipenv.pypa.io/en/latest/index.html) or [virtualenv](https://virtualenv.pypa.io) with both `{PROJECT_ROOT}/requirements.txt` and `{PROJECT_ROOT}/requirements-dev.txt`.
 
