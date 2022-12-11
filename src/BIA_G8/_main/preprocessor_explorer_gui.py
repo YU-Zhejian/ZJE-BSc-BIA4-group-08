@@ -9,6 +9,7 @@ from PyQt5.QtWidgets import QFileDialog, QApplication, QMainWindow, QMessageBox
 from BIA_G8 import get_lh
 from BIA_G8._main._method_selector_gui import PreprocessorPipelineWindow
 from BIA_G8._ui.preprocessor_explorer_main_page import Ui_PreprocessorExplorerMainWindow
+from BIA_G8.helper import io_helper
 
 _lh = get_lh(__name__)
 
@@ -43,14 +44,15 @@ class PreprocessorExplorerMainWindow(QMainWindow):
             self,
             caption='Select File',
             directory=picture_dir,
-            filter='SKImage-Parsable Image Files (*.png *.jpg *.jpeg *.tif *.tiff);;All (*.*)'
+            filter='SKImage-Parsable Image Files (*.png *.jpg *.jpeg *.tif *.tiff);;Numpy (*.npy.xz);;All (*.*)'
         )
         if filename == "":
             QMessageBox.warning(self, 'WARNING', "You did not select any image.")
             return
         _lh.info("Homepage: get filename '%s'", filename)
         try:
-            self._orig_image = skiio.imread(filename)
+            self._orig_image = io_helper.read_np_xz(filename) if filename.endswith(".npy.xz") else skiio.imread(
+                filename)
         except Exception as e:
             QMessageBox.critical(self, 'ERROR', f"Exception {e} captured!")
             exit(1)

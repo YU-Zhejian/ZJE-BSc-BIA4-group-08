@@ -2,8 +2,8 @@
 import glob
 import os
 
-from PyQt5.uic import compileUi
 from PyQt5.pyrcc_main import processResourceFile
+from PyQt5.uic import compileUi
 
 
 def compile_all_ui():

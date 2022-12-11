@@ -1,35 +1,22 @@
-import glob
-import operator
-import os
 import sys
 import webbrowser
-from functools import reduce
 from typing import Optional, Dict
 
 import numpy.typing as npt
-import skimage.io as skiio
 from PyQt5.QtWidgets import QMainWindow, QApplication, QFileDialog, QMessageBox, QTableWidgetItem
 
 from BIA_G8 import get_lh
-from BIA_G8._main.perform_ml import decode_dict
+from BIA_G8._main import perform_ml
 from BIA_G8._ui.classification import Ui_ClassificationMainWindow
 from BIA_G8.model.classifier import ClassifierInterface, load_classifier
 from BIA_G8.model.preprocesor_pipeline import PreprocessorPipeline
 
 _lh = get_lh(__name__)
 
-VALID_IMAGE_EXTENSIONS = (
-    "png",
-    "jpg",
-    "jpeg",
-    "tif",
-    "tiff"
-)
-
 
 class ClassificationWindow(QMainWindow):
     _loaded_data: Optional[Dict[str, npt.NDArray]]
-    _prediction: Optional[Dict[str, str]]
+    _predictions: Optional[Dict[str, str]]
     _loaded_classifier: Optional[ClassifierInterface]
     _loaded_pp: Optional[PreprocessorPipeline]
 
@@ -77,18 +64,7 @@ class ClassificationWindow(QMainWindow):
             QMessageBox.warning(self, 'WARNING', "You did not select any directory.")
             return
         try:
-            self._loaded_data = {
-                filename: skiio.imread(filename)
-                for filename in list(reduce(
-                    operator.add,
-                    map(
-                        lambda ext: list(
-                            glob.glob(os.path.join(data_path, "**", f"*.{ext}"), recursive=True)
-                        ),
-                        VALID_IMAGE_EXTENSIONS
-                    )
-                ))
-            }
+            self._loaded_data = perform_ml.load_data(data_path)
         except Exception as e:
             QMessageBox.critical(self, 'ERROR', f"Exception {e} captured!")
             self._loaded_data = None
@@ -142,13 +118,13 @@ class ClassificationWindow(QMainWindow):
         self._loaded_data = None
         self._loaded_classifier = None
         self._loaded_pp = None
-        self._prediction = None
+        self._predictions = None
         self.ui.actionOpen_Machine_Learning_Model.setText("Open Machine Learning Model")
         self.ui.actionOpen_Image_Folder.setText("Open Image Folder")
         self.ui.actionOpen_Preprocessor_Pipeline_Config.setText("Open Preprocessor Pipeline Config")
 
     def save_predicted(self):
-        if self._prediction is None:
+        if self._predictions is None:
             QMessageBox.warning(self, 'WARNING', "Prediction had not been initiated done")
             return
         filename, _ = QFileDialog.getSaveFileName(
@@ -160,14 +136,7 @@ class ClassificationWindow(QMainWindow):
         if filename == "":
             QMessageBox.warning(self, 'WARNING', "You did not select any file.")
             return
-        with open(filename, "w") as writer:
-            writer.write(",".join((
-                "IMAGE_PATH", "PREDICTION"
-            )) + "\n")
-            for filename, prediction in self._prediction.items():
-                writer.write(",".join((
-                    f"\"{filename}\"", f"\"{prediction}\""
-                )) + "\n")
+        perform_ml.save(self._predictions, filename)
 
     def predict(self):
         self.statusBar().showMessage("Start prediction...")
@@ -182,30 +151,21 @@ class ClassificationWindow(QMainWindow):
                 "Pre-processing Pipeline, data or classifier is not loaded."
             )
             return
-        self._loaded_data = {
-            k: self._loaded_pp.execute(v)
-            for k, v in self._loaded_data.items()
-        }
+
         try:
-            self._prediction = {
-                k: v
-                for k, v in zip(
-                    self._loaded_data.keys(),
-                    map(
-                        lambda _k: decode_dict.get(_k, "UNKNOWN"),
-                        self._loaded_classifier.predicts(
-                            self._loaded_data.values()
-                        ))
-                )
-            }
+            self._predictions = perform_ml.predict(
+                self._loaded_data,
+                self._loaded_pp,
+                self._loaded_classifier
+            )
         except Exception as e:
             QMessageBox.critical(self, 'ERROR', f"Exception {e} captured!")
-            self._prediction = None
+            self._predictions = None
             return
-        self.ui.tableWidget.setRowCount(len(self._prediction))
+        self.ui.tableWidget.setRowCount(len(self._predictions))
         self.ui.tableWidget.setColumnCount(2)
         self.statusBar().showMessage("Updating table view...")
-        for i, (file_path, predict) in enumerate(self._prediction.items()):
+        for i, (file_path, predict) in enumerate(self._predictions.items()):
             self.ui.tableWidget.setItem(i, 0, QTableWidgetItem(file_path))
             self.ui.tableWidget.setItem(i, 1, QTableWidgetItem(predict))
 

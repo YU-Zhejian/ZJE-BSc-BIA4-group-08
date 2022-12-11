@@ -4,7 +4,6 @@ from glob import glob
 import click
 import skimage.io as skiio
 import skimage.transform as skitrans
-import skimage.exposure as skiexp
 import tqdm
 
 from BIA_G8 import get_lh
@@ -46,7 +45,7 @@ def main(images_dir: str, out_dir: str) -> None:
     for image_dirname in image_dirnames:
         image_paths = sorted(glob(os.path.join(image_dirname, "images", "*.png")))
         parallel_map(
-            #Convert these images to to masked ones.
+            # Convert these images to to masked ones.
             lambda image_and_mask_path: convert(*image_and_mask_path, out_dir),
             # Add progress bar.
             tqdm.tqdm(
