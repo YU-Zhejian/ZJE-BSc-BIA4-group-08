@@ -8,7 +8,7 @@ from PyQt5.QtWidgets import QFileDialog, QApplication, QMainWindow, QMessageBox
 
 from BIA_G8 import get_lh
 from BIA_G8._main._method_selector_gui import PreprocessorPipelineWindow
-from BIA_G8._ui.main_page import Ui_MainWindow
+from BIA_G8._ui.preprocessor_explorer_main_page import Ui_PreprocessorExplorerMainWindow
 
 _lh = get_lh(__name__)
 
@@ -20,7 +20,7 @@ class HomePage(QMainWindow):
         self._orig_image = None
         super().__init__()
         _lh.info("HomePage Initializing...")
-        self.ui = Ui_MainWindow()
+        self.ui = Ui_PreprocessorExplorerMainWindow()
         self.ui.setupUi(self)
         self.ui.pushButton_3.clicked.connect(self.upload)
         self.ui.pushButton.clicked.connect(self.open_model_selector)

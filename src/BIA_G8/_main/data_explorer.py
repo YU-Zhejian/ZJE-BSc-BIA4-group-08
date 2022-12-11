@@ -9,8 +9,12 @@ from BIA_G8.data_analysis.covid_dataset import CovidDataSet
 
 @click.command()
 @click.option("--dataset_path", help="Path to dataset")
-def main(dataset_path: str):
-    ds = CovidDataSet.parallel_from_directory(dataset_path).parallel_apply(
+@click.option("--size", help="Number of images to load. -1 for all", default=-1)
+def main(dataset_path: str, size: int):
+    ds = CovidDataSet.parallel_from_directory(
+        dataset_path,
+        size=size
+    ).parallel_apply(
         lambda img: img[:, :, 0] if len(img.shape) == 3 else img
     ).parallel_apply(
         lambda img: skitrans.resize(img, (256, 256))

@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>MainWindow</class>
- <widget class="QMainWindow" name="MainWindow">
+ <class>PreprocessorExplorerMainWindow</class>
+ <widget class="QMainWindow" name="PreprocessorExplorerMainWindow">
   <property name="geometry">
    <rect>
     <x>0</x>
     <y>0</y>
     <width>691</width>
-    <height>575</height>
+    <height>557</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -38,7 +38,7 @@ background:#fff
     <property name="frameShadow">
      <enum>QFrame::Raised</enum>
     </property>
-    <widget class="QWidget" name="">
+    <widget class="QWidget" name="layoutWidget">
      <property name="geometry">
       <rect>
        <x>20</x>
@@ -174,23 +174,6 @@ background:#fff
    <zorder>pushButton_3</zorder>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
-  <widget class="QMenuBar" name="menuBar">
-   <property name="geometry">
-    <rect>
-     <x>0</x>
-     <y>0</y>
-     <width>691</width>
-     <height>26</height>
-    </rect>
-   </property>
-   <widget class="QMenu" name="menuHelp">
-    <property name="title">
-     <string>Help</string>
-    </property>
-    <addaction name="actiondoc"/>
-   </widget>
-   <addaction name="menuHelp"/>
-  </widget>
   <action name="actiondoc">
    <property name="text">
     <string>doc</string>
