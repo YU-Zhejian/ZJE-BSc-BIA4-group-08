@@ -1,6 +1,6 @@
 .PHONY: dist
 dist:
-	python -m build
+	PYTHONPATH=$(CURDIR) python -m build
 
 .PHONY: doc
 doc:

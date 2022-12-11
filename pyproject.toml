@@ -2,6 +2,7 @@
 requires = [
     "setuptools",
     "wheel",
+    "pyqt5"
 ]
 build-backend = "setuptools.build_meta"
 
@@ -24,8 +25,10 @@ classifiers = [
     "Programming Language :: R",
 ]
 requires-python = ">=3.8"
-url = "https://gitee.com/yuzjlab/2022-23-group-08"
 dynamic = ["version", "readme", "dependencies", "optional-dependencies"]
+
+[project.urls]
+homepage = "https://gitee.com/yuzjlab/2022-23-group-08/"
 
 [tool.setuptools]
 license-files = ["License.md", "Copying.md"]

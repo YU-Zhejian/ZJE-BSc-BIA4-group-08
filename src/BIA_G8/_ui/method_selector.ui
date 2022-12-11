@@ -83,7 +83,7 @@ background:#cdd1d3
           <rect>
            <x>0</x>
            <y>0</y>
-           <width>145</width>
+           <width>151</width>
            <height>500</height>
           </rect>
          </property>
@@ -215,7 +215,7 @@ background:#cdd1d3
            <rect>
             <x>20</x>
             <y>20</y>
-            <width>151</width>
+            <width>431</width>
             <height>41</height>
            </rect>
           </property>
@@ -230,8 +230,8 @@ background:#cdd1d3
           <property name="geometry">
            <rect>
             <x>20</x>
-            <y>60</y>
-            <width>281</width>
+            <y>70</y>
+            <width>441</width>
             <height>31</height>
            </rect>
           </property>
@@ -278,7 +278,7 @@ background:#cdd1d3
            <rect>
             <x>20</x>
             <y>20</y>
-            <width>151</width>
+            <width>441</width>
             <height>41</height>
            </rect>
           </property>
@@ -294,7 +294,7 @@ background:#cdd1d3
            <rect>
             <x>20</x>
             <y>60</y>
-            <width>281</width>
+            <width>441</width>
             <height>51</height>
            </rect>
           </property>
@@ -341,7 +341,7 @@ background:#cdd1d3
            <rect>
             <x>20</x>
             <y>60</y>
-            <width>281</width>
+            <width>441</width>
             <height>51</height>
            </rect>
           </property>
@@ -360,7 +360,7 @@ background:#cdd1d3
            <rect>
             <x>20</x>
             <y>20</y>
-            <width>151</width>
+            <width>441</width>
             <height>41</height>
            </rect>
           </property>
@@ -404,7 +404,7 @@ background:#cdd1d3
            <rect>
             <x>20</x>
             <y>60</y>
-            <width>361</width>
+            <width>441</width>
             <height>51</height>
            </rect>
           </property>
@@ -423,7 +423,7 @@ background:#cdd1d3
            <rect>
             <x>20</x>
             <y>20</y>
-            <width>231</width>
+            <width>441</width>
             <height>41</height>
            </rect>
           </property>
@@ -483,7 +483,7 @@ background:#cdd1d3
            <rect>
             <x>20</x>
             <y>20</y>
-            <width>271</width>
+            <width>441</width>
             <height>41</height>
            </rect>
           </property>
@@ -499,7 +499,7 @@ background:#cdd1d3
            <rect>
             <x>20</x>
             <y>60</y>
-            <width>361</width>
+            <width>441</width>
             <height>51</height>
            </rect>
           </property>
@@ -575,7 +575,7 @@ background:#cdd1d3
            <rect>
             <x>20</x>
             <y>60</y>
-            <width>361</width>
+            <width>431</width>
             <height>51</height>
            </rect>
           </property>
@@ -594,7 +594,7 @@ background:#cdd1d3
            <rect>
             <x>20</x>
             <y>20</y>
-            <width>271</width>
+            <width>441</width>
             <height>41</height>
            </rect>
           </property>
@@ -709,7 +709,7 @@ background:#cdd1d3
            <rect>
             <x>20</x>
             <y>20</y>
-            <width>271</width>
+            <width>441</width>
             <height>41</height>
            </rect>
           </property>
@@ -725,7 +725,7 @@ background:#cdd1d3
            <rect>
             <x>20</x>
             <y>60</y>
-            <width>361</width>
+            <width>441</width>
             <height>51</height>
            </rect>
           </property>
@@ -744,7 +744,7 @@ background:#cdd1d3
            <rect>
             <x>20</x>
             <y>180</y>
-            <width>391</width>
+            <width>431</width>
             <height>71</height>
            </rect>
           </property>
@@ -817,7 +817,7 @@ background:#cdd1d3
            <rect>
             <x>20</x>
             <y>20</y>
-            <width>271</width>
+            <width>431</width>
             <height>41</height>
            </rect>
           </property>
@@ -833,7 +833,7 @@ background:#cdd1d3
            <rect>
             <x>20</x>
             <y>60</y>
-            <width>361</width>
+            <width>431</width>
             <height>51</height>
            </rect>
           </property>
@@ -852,7 +852,7 @@ background:#cdd1d3
            <rect>
             <x>20</x>
             <y>140</y>
-            <width>401</width>
+            <width>431</width>
             <height>61</height>
            </rect>
           </property>
@@ -897,7 +897,7 @@ background:#cdd1d3
            <rect>
             <x>20</x>
             <y>230</y>
-            <width>451</width>
+            <width>431</width>
             <height>51</height>
            </rect>
           </property>
@@ -970,7 +970,7 @@ background:#cdd1d3
            <rect>
             <x>20</x>
             <y>60</y>
-            <width>361</width>
+            <width>431</width>
             <height>51</height>
            </rect>
           </property>
@@ -989,7 +989,7 @@ background:#cdd1d3
            <rect>
             <x>20</x>
             <y>20</y>
-            <width>271</width>
+            <width>431</width>
             <height>41</height>
            </rect>
           </property>
@@ -1005,7 +1005,7 @@ background:#cdd1d3
            <rect>
             <x>20</x>
             <y>150</y>
-            <width>401</width>
+            <width>431</width>
             <height>51</height>
            </rect>
           </property>
@@ -1050,7 +1050,7 @@ background:#cdd1d3
            <rect>
             <x>20</x>
             <y>230</y>
-            <width>421</width>
+            <width>441</width>
             <height>61</height>
            </rect>
           </property>
@@ -1120,7 +1120,7 @@ background:#e2e1e4
       </rect>
      </property>
      <property name="text">
-      <string>Save &amp; Exit</string>
+      <string>Save &amp;&amp; Exit</string>
      </property>
     </widget>
    </widget>
